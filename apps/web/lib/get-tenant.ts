@@ -35,8 +35,9 @@ export async function requireTenantContext() {
       .where(eq(members.userId, session.user.id))
       .limit(1);
 
-    if (membership.length > 0) {
-      tenantId = membership[0].organizationId;
+    const first = membership[0];
+    if (first) {
+      tenantId = first.organizationId;
     }
   }
 
