@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Phase 8 complete (verification deferred to deploy)
-last_updated: "2026-04-21T19:40:44.953Z"
+stopped_at: Completed 09-01-PLAN.md
+last_updated: "2026-04-21T19:45:17.058Z"
 last_activity: 2026-04-21
 progress:
   total_phases: 10
   completed_phases: 7
   total_plans: 31
-  completed_plans: 24
-  percent: 77
+  completed_plans: 25
+  percent: 81
 ---
 
 # Project State
@@ -73,6 +73,7 @@ Progress: [███░░░░░░░] 33%
 | Phase 08-replay-sharing P01 | 3min | 2 tasks | 5 files |
 | Phase 08-replay-sharing P02 | 3min | 2 tasks | 4 files |
 | Phase 08-replay-sharing P03 | 2min | 1 tasks | 5 files |
+| Phase 09-operator-console-sentinel P01 | 3min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -118,6 +119,8 @@ Recent decisions affecting current work:
 - [Phase 08-replay-sharing]: Tenant iteration for token lookup (O(tenants)) instead of public lookup table
 - [Phase 08-replay-sharing]: Read-only plan/question cards inlined in ReplayMessageList to decouple from dashboard components
 - [Phase 08-replay-sharing]: Expandable table row for audit log instead of dialog -- keeps context inline
+- [Phase 09]: Operator role as boolean flag on users table (Year-1 simplicity)
+- [Phase 09]: CLI provisioning creates standalone Better Auth instance (no Next.js deps)
 
 ### Pending Todos
 
@@ -137,8 +140,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: --stopped-at
-Stopped at: Phase 8 complete (verification deferred to deploy)
-Resume file: --resume-file
+Last session: 2026-04-21T19:45:17.056Z
+Stopped at: Completed 09-01-PLAN.md
+Resume file: None
 
 **Planned Phase:** 5 (Transcript UI) — 3 plans — 2026-04-21T18:27:48.173Z

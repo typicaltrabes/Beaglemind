@@ -85,9 +85,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Operator & Sentinel
 
-- [ ] **OPER-01**: Tenant provisioning via admin script (create tenant schema, seed config, invite first user)
+- [x] **OPER-01**: Tenant provisioning via admin script (create tenant schema, seed config, invite first user)
 - [ ] **OPER-02**: Operator console web UI — system health, running agents, active runs, cost overview
-- [ ] **OPER-03**: Sentinel Phase A — passive logging of agent behavior (drift scores, quality signals)
+- [x] **OPER-03**: Sentinel Phase A — passive logging of agent behavior (drift scores, quality signals)
 - [ ] **OPER-04**: Sentinel pane visible in Studio mode for operator-role users
 - [ ] **OPER-05**: Break-glass flow — operator can access tenant conversation content with time-boxed authorization
 - [ ] **OPER-06**: Customer-visible audit log — tenant admin sees when operator accessed their data
@@ -205,9 +205,9 @@ Deferred to future release. Tracked but not in current roadmap.
 | MOBI-03 | Phase 10 | Pending |
 | MOBI-04 | Phase 10 | Pending |
 | MOBI-05 | Phase 10 | Pending |
-| OPER-01 | Phase 9 | Pending |
+| OPER-01 | Phase 9 | Complete |
 | OPER-02 | Phase 9 | Pending |
-| OPER-03 | Phase 9 | Pending |
+| OPER-03 | Phase 9 | Complete |
 | OPER-04 | Phase 9 | Pending |
 | OPER-05 | Phase 9 | Pending |
 | OPER-06 | Phase 9 | Pending |
