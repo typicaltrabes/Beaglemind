@@ -63,8 +63,8 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **ARTF-01**: Artifacts stored in MinIO with bucket-per-tenant isolation
 - [x] **ARTF-02**: Artifact card in transcript with filename, size, inline preview for docx/pdf
 - [x] **ARTF-03**: User can download artifacts from completed runs
-- [ ] **ARTF-04**: Run history page with search and status filters (pending/running/completed/cancelled)
-- [ ] **ARTF-05**: Per-run cost visibility (read from LiteLLM metrics)
+- [x] **ARTF-04**: Run history page with search and status filters (pending/running/completed/cancelled)
+- [x] **ARTF-05**: Per-run cost visibility (read from LiteLLM metrics)
 
 ### Replay & Sharing
 
@@ -192,8 +192,8 @@ Deferred to future release. Tracked but not in current roadmap.
 | ARTF-01 | Phase 7 | Complete |
 | ARTF-02 | Phase 7 | Complete |
 | ARTF-03 | Phase 7 | Complete |
-| ARTF-04 | Phase 7 | Pending |
-| ARTF-05 | Phase 7 | Pending |
+| ARTF-04 | Phase 7 | Complete |
+| ARTF-05 | Phase 7 | Complete |
 | REPL-01 | Phase 8 | Pending |
 | REPL-02 | Phase 8 | Pending |
 | REPL-03 | Phase 8 | Pending |
