@@ -174,12 +174,13 @@ Plans:
   2. Operator console shows system health, running agents, active runs, and cost overview in a web UI
   3. Sentinel Phase A passively logs agent behavior (drift scores, quality signals) and the sentinel pane is visible in Studio mode for operator-role users
   4. Operator can perform break-glass access to tenant conversation content with time-boxed authorization, and the tenant admin sees an entry in their audit log
-**Plans**: TBD
+**Plans**: 3 plans
 **UI hint**: yes
 
 Plans:
-- [ ] 09-01: TBD
-- [ ] 09-02: TBD
+- [ ] 09-01-PLAN.md -- CLI provisioning script, operator role flag, break-glass audit schema, sentinel data flow
+- [ ] 09-02-PLAN.md -- Operator dashboard with health cards, stats, active runs, aggregated sentinel view
+- [ ] 09-03-PLAN.md -- Break-glass access flow with time-boxed authorization and customer audit log
 
 ### Phase 10: Mobile PWA
 **Goal**: Users can install the console as a mobile app, receive push notifications for governance events, and handle question queue and digest from their phone
@@ -214,5 +215,5 @@ Note: Phase 7 and Phase 9 depend on Phase 4 and Phase 3 respectively, not on Pha
 | 6. Clean & Studio Modes | 0/2 | Planned | - |
 | 7. Artifacts & Run History | 0/2 | Planned | - |
 | 8. Replay & Sharing | 0/3 | Planned | - |
-| 9. Operator Console & Sentinel | 0/2 | Not started | - |
+| 9. Operator Console & Sentinel | 0/3 | Planned | - |
 | 10. Mobile PWA | 0/2 | Not started | - |
