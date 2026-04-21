@@ -89,8 +89,8 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **OPER-02**: Operator console web UI — system health, running agents, active runs, cost overview
 - [x] **OPER-03**: Sentinel Phase A — passive logging of agent behavior (drift scores, quality signals)
 - [x] **OPER-04**: Sentinel pane visible in Studio mode for operator-role users
-- [ ] **OPER-05**: Break-glass flow — operator can access tenant conversation content with time-boxed authorization
-- [ ] **OPER-06**: Customer-visible audit log — tenant admin sees when operator accessed their data
+- [x] **OPER-05**: Break-glass flow — operator can access tenant conversation content with time-boxed authorization
+- [x] **OPER-06**: Customer-visible audit log — tenant admin sees when operator accessed their data
 
 ### Infrastructure & Deployment
 
@@ -209,8 +209,8 @@ Deferred to future release. Tracked but not in current roadmap.
 | OPER-02 | Phase 9 | Complete |
 | OPER-03 | Phase 9 | Complete |
 | OPER-04 | Phase 9 | Complete |
-| OPER-05 | Phase 9 | Pending |
-| OPER-06 | Phase 9 | Pending |
+| OPER-05 | Phase 9 | Complete |
+| OPER-06 | Phase 9 | Complete |
 | INFR-01 | Phase 1 | Pending |
 | INFR-02 | Phase 1 | Pending |
 | INFR-03 | Phase 1 | Pending |
