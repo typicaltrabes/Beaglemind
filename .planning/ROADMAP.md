@@ -91,7 +91,7 @@ Plans:
 **UI hint**: yes
 
 Plans:
-- [ ] 04-01-PLAN.md -- Schema extension (6 domain tables), dependencies, shadcn init, state machine, Hub client
+- [x] 04-01-PLAN.md -- Schema extension (6 domain tables), dependencies, shadcn init, state machine, Hub client
 - [x] 04-02-PLAN.md -- Hub API gaps: /runs/approve, /runs/questions/answer routes, fix /runs/start transition
 - [ ] 04-03-PLAN.md -- Next.js API routes (projects, runs, approve, stop, answer, SSE stream, artifact download)
 - [ ] 04-04-PLAN.md -- Zustand stores, SSE hook, TanStack Query hooks, QueryProvider

@@ -29,8 +29,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Research Sprint Workflow
 
-- [ ] **WORK-01**: User can create a new project
-- [ ] **WORK-02**: User can start a research sprint by sending a prompt to Mo
+- [x] **WORK-01**: User can create a new project
+- [x] **WORK-02**: User can start a research sprint by sending a prompt to Mo
 - [ ] **WORK-03**: Mo generates a plan with cost estimate; user sees plan-approval card
 - [x] **WORK-04**: Run does not proceed (no API spend) until user approves the plan
 - [ ] **WORK-05**: Agents queue clarifying questions instead of self-authorizing; user sees question queue
@@ -167,8 +167,8 @@ Deferred to future release. Tracked but not in current roadmap.
 | CONN-04 | Phase 3 | Complete |
 | CONN-05 | Phase 3 | Complete |
 | CONN-06 | Phase 3 | Complete |
-| WORK-01 | Phase 4 | Pending |
-| WORK-02 | Phase 4 | Pending |
+| WORK-01 | Phase 4 | Complete |
+| WORK-02 | Phase 4 | Complete |
 | WORK-03 | Phase 4 | Pending |
 | WORK-04 | Phase 4 | Complete |
 | WORK-05 | Phase 4 | Pending |
