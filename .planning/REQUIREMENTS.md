@@ -41,13 +41,13 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Transcript UI
 
-- [ ] **TRAN-01**: Real-time streaming transcript via SSE — agent messages appear as they're produced
+- [x] **TRAN-01**: Real-time streaming transcript via SSE — agent messages appear as they're produced
 - [x] **TRAN-02**: Agent names and roles visible in transcript (color-coded per wireframes: Mo=gold, Jarvis=teal, Sentinel=purple, User=blue)
 - [x] **TRAN-03**: Scene auto-naming — transcript organized into labeled scenes with dividers
 - [x] **TRAN-04**: Scene collapse — long inter-agent exchanges collapsed behind "X and Y exchanged N messages" fold in Clean mode
 - [x] **TRAN-05**: Live TLDR banner at top of project — running summary of "Where we are"
-- [ ] **TRAN-06**: Virtualized message list for long transcripts (react-virtuoso or equivalent)
-- [ ] **TRAN-07**: Writers' Room as the primary transcript view
+- [x] **TRAN-06**: Virtualized message list for long transcripts (react-virtuoso or equivalent)
+- [x] **TRAN-07**: Writers' Room as the primary transcript view
 
 ### Clean & Studio Modes
 
@@ -176,13 +176,13 @@ Deferred to future release. Tracked but not in current roadmap.
 | WORK-07 | Phase 4 | Complete |
 | WORK-08 | Phase 4 | Complete |
 | WORK-09 | Phase 4 | Complete |
-| TRAN-01 | Phase 5 | Pending |
+| TRAN-01 | Phase 5 | Complete |
 | TRAN-02 | Phase 5 | Complete |
 | TRAN-03 | Phase 5 | Complete |
 | TRAN-04 | Phase 5 | Complete |
 | TRAN-05 | Phase 5 | Complete |
-| TRAN-06 | Phase 5 | Pending |
-| TRAN-07 | Phase 5 | Pending |
+| TRAN-06 | Phase 5 | Complete |
+| TRAN-07 | Phase 5 | Complete |
 | MODE-01 | Phase 6 | Pending |
 | MODE-02 | Phase 6 | Pending |
 | MODE-03 | Phase 6 | Pending |
