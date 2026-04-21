@@ -9,12 +9,12 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Authentication & Tenancy
 
-- [ ] **AUTH-01**: User can sign up with email and password (invite-only — admin creates invitation)
+- [x] **AUTH-01**: User can sign up with email and password (invite-only — admin creates invitation)
 - [x] **AUTH-02**: User can log in and session persists across browser refresh (database sessions, not JWT)
 - [ ] **AUTH-03**: User can enable MFA / 2FA on their account
-- [ ] **AUTH-04**: User can log out from any page
+- [x] **AUTH-04**: User can log out from any page
 - [ ] **AUTH-05**: Admin can invite users to a tenant via email
-- [ ] **AUTH-06**: Tenant isolation enforced at middleware layer — every request scoped to tenant schema before business logic runs
+- [x] **AUTH-06**: Tenant isolation enforced at middleware layer — every request scoped to tenant schema before business logic runs
 - [ ] **AUTH-07**: Per-tenant PostgreSQL schema provisioned via admin script
 - [x] **AUTH-08**: Organization-based tenancy via Better Auth Organizations plugin (org = tenant)
 
@@ -153,12 +153,12 @@ Deferred to future release. Tracked but not in current roadmap.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | Phase 2 | Pending |
+| AUTH-01 | Phase 2 | Complete |
 | AUTH-02 | Phase 2 | Complete |
 | AUTH-03 | Phase 2 | Pending |
-| AUTH-04 | Phase 2 | Pending |
+| AUTH-04 | Phase 2 | Complete |
 | AUTH-05 | Phase 2 | Pending |
-| AUTH-06 | Phase 2 | Pending |
+| AUTH-06 | Phase 2 | Complete |
 | AUTH-07 | Phase 2 | Pending |
 | AUTH-08 | Phase 2 | Complete |
 | CONN-01 | Phase 3 | Pending |
