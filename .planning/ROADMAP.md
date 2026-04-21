@@ -108,12 +108,13 @@ Plans:
   3. Transcript auto-segments into labeled scenes with dividers; long inter-agent exchanges collapse behind a fold in Clean mode
   4. A live TLDR banner at the top of the project shows a running summary of current status
   5. Long transcripts (500+ messages) scroll smoothly via virtualized rendering
-**Plans**: TBD
+**Plans**: 3 plans
 **UI hint**: yes
 
 Plans:
-- [ ] 05-01: TBD
-- [ ] 05-02: TBD
+- [ ] 05-01-PLAN.md -- Event types + agent config + scene grouping + avatar/message/divider components
+- [ ] 05-02-PLAN.md -- Collapse fold algorithm/component + TLDR banner component
+- [ ] 05-03-PLAN.md -- react-virtuoso MessageList rewrite + Writers Room integration in run page
 
 ### Phase 6: Clean & Studio Modes
 **Goal**: Users can switch between a streamlined Clean reading mode and a power-user Studio mode with full process visibility and agent control
@@ -207,8 +208,8 @@ Note: Phase 7 and Phase 9 depend on Phase 4 and Phase 3 respectively, not on Pha
 | 1. Foundation & Infrastructure | 1/3 | Planned | - |
 | 2. Authentication & Tenancy | 3/3 | Planned | - |
 | 3. Agent Connection Hub | 2/3 | Planned | - |
-| 4. Research Sprint Workflow | 0/6 | Planned | - |
-| 5. Transcript UI | 0/2 | Not started | - |
+| 4. Research Sprint Workflow | 6/6 | Planned | - |
+| 5. Transcript UI | 0/3 | Planned | - |
 | 6. Clean & Studio Modes | 0/2 | Not started | - |
 | 7. Artifacts & Run History | 0/2 | Not started | - |
 | 8. Replay & Sharing | 0/2 | Not started | - |
