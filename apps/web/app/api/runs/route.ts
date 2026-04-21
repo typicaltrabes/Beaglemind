@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod/v4';
+import { eq, desc } from 'drizzle-orm';
 import { requireTenantContext, getTenantDb } from '@/lib/get-tenant';
 import { hubClient } from '@/lib/api/hub-client';
 
@@ -9,6 +10,27 @@ const CreateRunBody = z.object({
   projectId: z.string().uuid(),
   prompt: z.string().min(1),
 });
+
+export async function GET(request: Request) {
+  try {
+    const { tenantId } = await requireTenantContext();
+    const { db: tdb, schema } = getTenantDb(tenantId);
+
+    const url = new URL(request.url);
+    const projectId = url.searchParams.get('projectId');
+
+    const query = tdb.select().from(schema.runs).orderBy(desc(schema.runs.createdAt));
+
+    const rows = projectId
+      ? await query.where(eq(schema.runs.projectId, projectId))
+      : await query;
+
+    return NextResponse.json(rows);
+  } catch (error) {
+    console.error('GET /api/runs error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
 
 export async function POST(request: Request) {
   try {
