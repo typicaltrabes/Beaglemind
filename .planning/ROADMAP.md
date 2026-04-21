@@ -87,13 +87,16 @@ Plans:
   3. When agents have clarifying questions, they appear in a question queue and user can answer them inline
   4. User can stop a running sprint with a single Stop button and the run transitions to cancelled
   5. Completed run delivers downloadable artifacts and the run state machine correctly tracks all transitions (pending through completed/cancelled)
-**Plans**: TBD
+**Plans**: 6 plans
 **UI hint**: yes
 
 Plans:
-- [ ] 04-01: TBD
-- [ ] 04-02: TBD
-- [ ] 04-03: TBD
+- [ ] 04-01-PLAN.md -- Schema extension (6 domain tables), dependencies, shadcn init, state machine, Hub client
+- [ ] 04-02-PLAN.md -- Hub API gaps: /runs/approve, /runs/questions/answer routes, fix /runs/start transition
+- [ ] 04-03-PLAN.md -- Next.js API routes (projects, runs, approve, stop, answer, SSE stream, artifact download)
+- [ ] 04-04-PLAN.md -- Zustand stores, SSE hook, TanStack Query hooks, QueryProvider
+- [ ] 04-05-PLAN.md -- Dashboard layout with sidebar, project list, question queue, project/run pages
+- [ ] 04-06-PLAN.md -- Transcript components: plan card, question card, artifact card, message list, composer
 
 ### Phase 5: Transcript UI
 **Goal**: Users can watch agents think out loud in a real-time streaming transcript organized into named, collapsible scenes with a live summary
@@ -203,8 +206,8 @@ Note: Phase 7 and Phase 9 depend on Phase 4 and Phase 3 respectively, not on Pha
 |-------|----------------|--------|-----------|
 | 1. Foundation & Infrastructure | 1/3 | Planned | - |
 | 2. Authentication & Tenancy | 3/3 | Planned | - |
-| 3. Agent Connection Hub | 0/3 | Planned | - |
-| 4. Research Sprint Workflow | 0/3 | Not started | - |
+| 3. Agent Connection Hub | 2/3 | Planned | - |
+| 4. Research Sprint Workflow | 0/6 | Planned | - |
 | 5. Transcript UI | 0/2 | Not started | - |
 | 6. Clean & Studio Modes | 0/2 | Not started | - |
 | 7. Artifacts & Run History | 0/2 | Not started | - |
