@@ -80,8 +80,8 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **MOBI-01**: Responsive layout works on mobile browsers (Tailwind responsive)
 - [x] **MOBI-02**: PWA manifest + service worker for installable app shell
 - [x] **MOBI-03**: Push notifications for question-queue items and plan-approval requests
-- [ ] **MOBI-04**: Mobile question queue view — answer agent questions from phone
-- [ ] **MOBI-05**: Overnight digest view — summary of what happened while user was away
+- [x] **MOBI-04**: Mobile question queue view — answer agent questions from phone
+- [x] **MOBI-05**: Overnight digest view — summary of what happened while user was away
 
 ### Operator & Sentinel
 
@@ -203,8 +203,8 @@ Deferred to future release. Tracked but not in current roadmap.
 | MOBI-01 | Phase 10 | Complete |
 | MOBI-02 | Phase 10 | Complete |
 | MOBI-03 | Phase 10 | Complete |
-| MOBI-04 | Phase 10 | Pending |
-| MOBI-05 | Phase 10 | Pending |
+| MOBI-04 | Phase 10 | Complete |
+| MOBI-05 | Phase 10 | Complete |
 | OPER-01 | Phase 9 | Complete |
 | OPER-02 | Phase 9 | Complete |
 | OPER-03 | Phase 9 | Complete |

@@ -21,7 +21,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 7: Artifacts & Run History** - MinIO artifact storage, inline preview, download, run history with search and cost
 - [ ] **Phase 8: Replay & Sharing** - Tokenized share links scoped to Clean-mode content, revocable, time-boxed, audit-logged
 - [x] **Phase 9: Operator Console & Sentinel** - Tenant provisioning, operator dashboard, sentinel passive logging, break-glass with audit (completed 2026-04-21)
-- [ ] **Phase 10: Mobile PWA** - Installable PWA, push notifications, mobile question queue, overnight digest
+- [x] **Phase 10: Mobile PWA** - Installable PWA, push notifications, mobile question queue, overnight digest (completed 2026-04-21)
 
 ## Phase Details
 
@@ -198,7 +198,7 @@ Plans:
 Plans:
 - [x] 10-01-PLAN.md -- Responsive layout: hamburger sidebar, sticky composer, mobile process drawer overlay
 - [x] 10-02-PLAN.md -- PWA manifest + Serwist service worker, push notifications via VAPID/web-push
-- [ ] 10-03-PLAN.md -- Mobile landing page with question queue cards, quick-answer, and overnight digest
+- [x] 10-03-PLAN.md -- Mobile landing page with question queue cards, quick-answer, and overnight digest
 
 ## Progress
 
@@ -217,4 +217,4 @@ Note: Phase 7 and Phase 9 depend on Phase 4 and Phase 3 respectively, not on Pha
 | 7. Artifacts & Run History | 0/2 | Planned | - |
 | 8. Replay & Sharing | 0/3 | Planned | - |
 | 9. Operator Console & Sentinel | 3/3 | Complete   | 2026-04-21 |
-| 10. Mobile PWA | 2/3 | In Progress|  |
+| 10. Mobile PWA | 3/3 | Complete   | 2026-04-21 |
