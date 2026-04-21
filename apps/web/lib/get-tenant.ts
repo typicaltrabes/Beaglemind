@@ -22,7 +22,28 @@ export async function requireTenantContext() {
     redirect('/login');
   }
 
-  const tenantId = session.session.activeOrganizationId;
+  // Try activeOrganizationId from session first
+  let tenantId = session.session.activeOrganizationId;
+
+  // Fallback: if no active org, look up the user's first org membership
+  if (!tenantId) {
+    try {
+      const orgs = await auth.api.listOrganizations({
+        headers: await headers(),
+      });
+      if (orgs && orgs.length > 0) {
+        tenantId = orgs[0].id;
+        // Set it as active for future requests
+        await auth.api.setActiveOrganization({
+          headers: await headers(),
+          body: { organizationId: tenantId },
+        });
+      }
+    } catch {
+      // If org lookup fails, fall through to redirect
+    }
+  }
+
   if (!tenantId) {
     redirect('/no-org');
   }
