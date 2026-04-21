@@ -130,7 +130,7 @@ Plans:
 
 Plans:
 - [x] 06-01-PLAN.md -- Mode context provider, header toggle, mode-aware collapse-fold and composer with Studio controls
-- [ ] 06-02-PLAN.md -- Process drawer (sentinel, cost, fork sections), interrupt button, run page layout integration
+- [x] 06-02-PLAN.md -- Process drawer (sentinel, cost, fork sections), interrupt button, run page layout integration
 
 ### Phase 7: Artifacts & Run History
 **Goal**: Users can browse their run history, view delivered artifacts with inline previews, and track per-run costs
