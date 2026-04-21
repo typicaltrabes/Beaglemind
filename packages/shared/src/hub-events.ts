@@ -9,6 +9,7 @@ export const MessageType = z.enum([
   'state_transition',
   'system',
   'tldr_update',
+  'sentinel_flag',
 ]);
 
 // Scene metadata convention (set by Mo on events):

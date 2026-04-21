@@ -48,6 +48,20 @@ export function SentinelSection({ events, eventOrder }: SentinelSectionProps) {
 
       const meta = event.metadata as Record<string, unknown> | undefined;
 
+      // Check for sentinel_flag event type (Sam sends these directly)
+      if (event.type === 'sentinel_flag') {
+        result.push({
+          text:
+            typeof (event.content as Record<string, unknown>).text === 'string'
+              ? ((event.content as Record<string, unknown>).text as string)
+              : 'Sentinel flag',
+          severity:
+            (meta?.severity as 'warning' | 'critical' | 'info') ?? 'info',
+          timestamp: event.timestamp,
+        });
+        continue;
+      }
+
       // Check for sentinel flag in metadata
       if (meta?.sentinelFlag) {
         result.push({
