@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useEffect } from 'react';
+import { use, useEffect, useState } from 'react';
 import { useRunStream } from '@/lib/hooks/use-sse';
 import { useRunStore } from '@/lib/stores/run-store';
 import { useUIStore } from '@/lib/stores/ui-store';
@@ -8,12 +8,13 @@ import { useStopRun } from '@/lib/hooks/use-run-actions';
 import { useMode } from '@/lib/mode-context';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { SquareIcon } from 'lucide-react';
+import { SquareIcon, Share2 } from 'lucide-react';
 import { MessageList } from '@/components/transcript/message-list';
 import { TldrBanner } from '@/components/transcript/tldr-banner';
 import { Composer } from '@/components/transcript/composer';
 import { ProcessDrawer } from '@/components/studio/process-drawer';
 import { InterruptButton } from '@/components/studio/interrupt-button';
+import { ShareDialog } from '@/components/share/share-dialog';
 
 const STATUS_STYLES: Record<string, string> = {
   pending: 'bg-gray-600/20 text-gray-400',
@@ -55,6 +56,8 @@ export default function RunPage({
     stopRun.mutate(runId);
   }
 
+  const [shareOpen, setShareOpen] = useState(false);
+  const isCompleted = status === 'completed';
   const isExecuting = status === 'executing' || status === 'approved';
 
   return (
@@ -67,6 +70,17 @@ export default function RunPage({
         <span className="text-sm text-gray-400">Run</span>
         <span className="truncate text-xs text-gray-600">{runId}</span>
         {isStudio && <InterruptButton runId={runId} />}
+        {isCompleted && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShareOpen(true)}
+            className="ml-auto"
+          >
+            <Share2 className="size-3.5" />
+            Share Replay
+          </Button>
+        )}
         {isExecuting && (
           <Button
             variant="destructive"
@@ -92,6 +106,9 @@ export default function RunPage({
 
       {/* Composer */}
       <Composer runId={runId} />
+
+      {/* Share dialog */}
+      <ShareDialog runId={runId} open={shareOpen} onOpenChange={setShareOpen} />
     </div>
   );
 }
