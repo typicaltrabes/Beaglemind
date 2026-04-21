@@ -179,7 +179,7 @@ Plans:
 
 Plans:
 - [x] 09-01-PLAN.md -- CLI provisioning script, operator role flag, break-glass audit schema, sentinel data flow
-- [ ] 09-02-PLAN.md -- Operator dashboard with health cards, stats, active runs, aggregated sentinel view
+- [x] 09-02-PLAN.md -- Operator dashboard with health cards, stats, active runs, aggregated sentinel view
 - [ ] 09-03-PLAN.md -- Break-glass access flow with time-boxed authorization and customer audit log
 
 ### Phase 10: Mobile PWA
