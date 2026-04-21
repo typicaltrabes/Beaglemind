@@ -1,6 +1,6 @@
 services:
   console-web:
-    image: ghcr.io/beaglemind/console-web:latest
+    image: ghcr.io/typicaltrabes/console-web:latest
     build:
       context: ..
       dockerfile: apps/web/Dockerfile
@@ -21,7 +21,7 @@ services:
           memory: 512M
 
   console-agent-hub:
-    image: ghcr.io/beaglemind/console-agent-hub:latest
+    image: ghcr.io/typicaltrabes/console-agent-hub:latest
     build:
       context: ..
       dockerfile: apps/agent-hub/Dockerfile
@@ -37,7 +37,7 @@ services:
           memory: 256M
 
   console-worker:
-    image: ghcr.io/beaglemind/console-worker:latest
+    image: ghcr.io/typicaltrabes/console-worker:latest
     build:
       context: ..
       dockerfile: apps/worker/Dockerfile
