@@ -1,7 +1,7 @@
 FROM node:22-slim
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable
+RUN corepack enable && apt-get update && apt-get install -y openssh-client && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
