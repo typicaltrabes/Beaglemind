@@ -77,7 +77,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Mobile & PWA
 
-- [ ] **MOBI-01**: Responsive layout works on mobile browsers (Tailwind responsive)
+- [x] **MOBI-01**: Responsive layout works on mobile browsers (Tailwind responsive)
 - [ ] **MOBI-02**: PWA manifest + service worker for installable app shell
 - [ ] **MOBI-03**: Push notifications for question-queue items and plan-approval requests
 - [ ] **MOBI-04**: Mobile question queue view — answer agent questions from phone
@@ -200,7 +200,7 @@ Deferred to future release. Tracked but not in current roadmap.
 | REPL-04 | Phase 8 | Complete |
 | REPL-05 | Phase 8 | Complete |
 | REPL-06 | Phase 8 | Complete |
-| MOBI-01 | Phase 10 | Pending |
+| MOBI-01 | Phase 10 | Complete |
 | MOBI-02 | Phase 10 | Pending |
 | MOBI-03 | Phase 10 | Pending |
 | MOBI-04 | Phase 10 | Pending |
