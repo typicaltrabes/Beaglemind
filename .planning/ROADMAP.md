@@ -96,7 +96,7 @@ Plans:
 - [x] 04-03-PLAN.md -- Next.js API routes (projects, runs, approve, stop, answer, SSE stream, artifact download)
 - [x] 04-04-PLAN.md -- Zustand stores, SSE hook, TanStack Query hooks, QueryProvider
 - [ ] 04-05-PLAN.md -- Dashboard layout with sidebar, project list, question queue, project/run pages
-- [ ] 04-06-PLAN.md -- Transcript components: plan card, question card, artifact card, message list, composer
+- [x] 04-06-PLAN.md -- Transcript components: plan card, question card, artifact card, message list, composer
 
 ### Phase 5: Transcript UI
 **Goal**: Users can watch agents think out loud in a real-time streaming transcript organized into named, collapsible scenes with a live summary
