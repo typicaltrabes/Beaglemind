@@ -8,6 +8,8 @@
     "start": "next start"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "3.1033.0",
+    "@aws-sdk/s3-request-presigner": "3.1033.0",
     "@base-ui/react": "^1.4.1",
     "@beagle-console/db": "workspace:*",
     "@beagle-console/shared": "workspace:*",
