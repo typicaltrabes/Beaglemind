@@ -113,7 +113,7 @@ Plans:
 
 Plans:
 - [x] 05-01-PLAN.md -- Event types + agent config + scene grouping + avatar/message/divider components
-- [ ] 05-02-PLAN.md -- Collapse fold algorithm/component + TLDR banner component
+- [x] 05-02-PLAN.md -- Collapse fold algorithm/component + TLDR banner component
 - [ ] 05-03-PLAN.md -- react-virtuoso MessageList rewrite + Writers Room integration in run page
 
 ### Phase 6: Clean & Studio Modes
