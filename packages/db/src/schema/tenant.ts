@@ -96,5 +96,27 @@ export function createTenantSchema(tenantId: string) {
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   });
 
-  return { schema, runs, messages, events, projects, plans, questions, artifacts, stateTransitions };
+  // --- Share Links (Phase 8 D-02) ---
+  const shareLinks = schema.table('share_links', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    runId: uuid('run_id').notNull().references(() => runs.id),
+    token: text('token').notNull(),
+    createdBy: uuid('created_by').notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    revokedAt: timestamp('revoked_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  }, (t) => [
+    uniqueIndex('share_links_token_idx').on(t.token),
+  ]);
+
+  // --- Replay Views (Phase 8 D-10) ---
+  const replayViews = schema.table('replay_views', {
+    id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+    shareLinkId: uuid('share_link_id').notNull().references(() => shareLinks.id),
+    viewerIp: text('viewer_ip').notNull(),
+    userAgent: text('user_agent'),
+    viewedAt: timestamp('viewed_at', { withTimezone: true }).defaultNow().notNull(),
+  });
+
+  return { schema, runs, messages, events, projects, plans, questions, artifacts, stateTransitions, shareLinks, replayViews };
 }
