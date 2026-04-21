@@ -2,6 +2,8 @@ import { auth } from './auth';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { db, createTenantSchema } from '@beagle-console/db';
+import { eq } from 'drizzle-orm';
+import { members } from '@beagle-console/db/schema/auth-schema';
 
 /**
  * Server-side full session + organization validation (D-08, D-09).
@@ -10,7 +12,7 @@ import { db, createTenantSchema } from '@beagle-console/db';
  * Called from server components and API route handlers.
  *
  * - No session -> redirect to /login
- * - No activeOrganizationId -> redirect to /no-org
+ * - No org membership -> redirect to /no-org
  * - Returns { session, tenantId } for downstream use
  */
 export async function requireTenantContext() {
@@ -23,24 +25,18 @@ export async function requireTenantContext() {
   }
 
   // Try activeOrganizationId from session first
-  let tenantId = session.session.activeOrganizationId;
+  let tenantId: string | null = session.session.activeOrganizationId ?? null;
 
-  // Fallback: if no active org, look up the user's first org membership
+  // Fallback: query members table directly for user's first org
   if (!tenantId) {
-    try {
-      const orgs = await auth.api.listOrganizations({
-        headers: await headers(),
-      });
-      if (orgs && orgs.length > 0) {
-        tenantId = orgs[0].id;
-        // Set it as active for future requests
-        await auth.api.setActiveOrganization({
-          headers: await headers(),
-          body: { organizationId: tenantId },
-        });
-      }
-    } catch {
-      // If org lookup fails, fall through to redirect
+    const membership = await db
+      .select({ organizationId: members.organizationId })
+      .from(members)
+      .where(eq(members.userId, session.user.id))
+      .limit(1);
+
+    if (membership.length > 0) {
+      tenantId = membership[0].organizationId;
     }
   }
 
