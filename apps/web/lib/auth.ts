@@ -11,7 +11,16 @@ export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL,
   database: drizzleAdapter(db, {
     provider: 'pg',
-    schema: authSchema,
+    schema: {
+      user: authSchema.users,
+      session: authSchema.sessions,
+      account: authSchema.accounts,
+      verification: authSchema.verifications,
+      organization: authSchema.organizations,
+      member: authSchema.members,
+      invitation: authSchema.invitations,
+      twoFactor: authSchema.twoFactors,
+    },
   }),
   emailAndPassword: {
     enabled: true,

@@ -70,6 +70,15 @@ export const invitations = shared.table('invitations', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 });
 
+export const verifications = shared.table('verifications', {
+  id: text('id').primaryKey(),
+  identifier: text('identifier').notNull(),
+  value: text('value').notNull(),
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
+
 export const twoFactors = shared.table('two_factors', {
   id: text('id').primaryKey(),
   userId: text('user_id').notNull().references(() => users.id),
