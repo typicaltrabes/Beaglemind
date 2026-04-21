@@ -35,6 +35,7 @@ export class AgentRegistry {
       const conn = new ManagedConnection({
         agentId: agent.id,
         url: agent.url,
+        token: (agent as any).token,
         pingIntervalMs: this.pingIntervalMs,
         pongTimeoutMs: this.pongTimeoutMs,
         onMessage: this.onMessage,

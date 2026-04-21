@@ -7,6 +7,7 @@ const MAX_OUTBOUND_QUEUE = 100;
 export interface ManagedConnectionConfig {
   agentId: string;
   url: string;
+  token?: string;
   pingIntervalMs: number;
   pongTimeoutMs: number;
   onMessage: (agentId: string, data: unknown) => void;
@@ -31,7 +32,10 @@ export class ManagedConnection {
     this.setState('connecting');
     this.log.info({ url: this.cfg.url }, 'Connecting to agent');
 
-    const ws = new WebSocket(this.cfg.url);
+    const wsOptions = this.cfg.token
+      ? { headers: { Authorization: `Bearer ${this.cfg.token}` } }
+      : undefined;
+    const ws = new WebSocket(this.cfg.url, wsOptions);
     this.ws = ws;
 
     ws.on('open', () => {
