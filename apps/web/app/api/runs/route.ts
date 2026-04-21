@@ -55,6 +55,16 @@ export async function POST(request: Request) {
 
     const run = rows[0]!;
 
+    // Persist user prompt as first event (once, before agents)
+    await tdb.insert(schema.events).values({
+      runId: run.id,
+      sequenceNumber: 0,
+      type: 'agent_message',
+      agentId: 'user',
+      content: { text: prompt },
+      metadata: {},
+    });
+
     // Send to ALL agents in parallel — they each respond independently
     const agents = ['mo', 'jarvis', 'sam', 'herman'];
     await Promise.allSettled(

@@ -28,9 +28,9 @@ export function MobileDrawerWrapper({
     return () => mql.removeEventListener('change', handleChange);
   }, []);
 
-  // Desktop: render inline (passthrough)
+  // Desktop: don't render anything — the inline drawer handles it
   if (!isMobile) {
-    return <>{children}</>;
+    return null;
   }
 
   // Mobile: full-screen overlay

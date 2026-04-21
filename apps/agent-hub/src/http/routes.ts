@@ -156,17 +156,8 @@ export async function handleRunStart(
       sudoUser: agentBridge.sudoUser,
     };
 
-    // Persist user prompt as the first event
-    await router.persistAndPublish(parsed.tenantId, {
-      type: 'agent_message',
-      agentId: 'user',
-      runId: parsed.runId,
-      tenantId: parsed.tenantId,
-      content: { text: parsed.prompt },
-      metadata: {},
-    });
-
     // Send prompt via CLI bridge (async — don't await, let it run in background)
+    // Note: user prompt event is persisted by the web app, not here (avoids duplicates when called per-agent)
     sendToAgent(bridgeCfg, parsed.prompt).then(async (result) => {
       if (result) {
         // Publish agent response as an event
@@ -177,16 +168,6 @@ export async function handleRunStart(
           tenantId: parsed.tenantId,
           content: { text: result.text },
           metadata: { durationMs: result.durationMs, openclawRunId: result.runId },
-        });
-
-        // Mark run as completed
-        await router.persistAndPublish(parsed.tenantId, {
-          type: 'state_transition',
-          agentId: 'system',
-          runId: parsed.runId,
-          tenantId: parsed.tenantId,
-          content: { from: 'executing', to: 'completed' },
-          metadata: {},
         });
 
         log.info({ runId: parsed.runId, agentId: parsed.targetAgent }, 'Agent response received via CLI bridge');
