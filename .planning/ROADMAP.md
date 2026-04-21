@@ -38,7 +38,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 3 plans
 
 Plans:
-- [ ] 01-01-PLAN.md -- Monorepo scaffold with all packages, Drizzle schema, tenant utilities, vault resolver
+- [x] 01-01-PLAN.md -- Monorepo scaffold with all packages, Drizzle schema, tenant utilities, vault resolver
 - [ ] 01-02-PLAN.md -- Dockerfiles, Docker Compose, BeagleHQ deployment, Caddy config
 - [ ] 01-03-PLAN.md -- GitHub Actions CI/CD pipeline
 

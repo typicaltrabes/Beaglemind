@@ -98,8 +98,8 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **INFR-02**: Caddy reverse proxy config for console.beaglemind.ai with auto-TLS
 - [ ] **INFR-03**: Docker memory limits on all containers (VPS has ~5GB available for console)
 - [ ] **INFR-04**: CI/CD pipeline (GitHub Actions → deploy to BeagleHQ)
-- [ ] **INFR-05**: Monorepo structure: apps/web, apps/agent-hub, apps/worker, packages/db, packages/shared
-- [ ] **INFR-06**: Per-tenant Obsidian vault wiring (agents read/write through tenant-aware path resolver)
+- [x] **INFR-05**: Monorepo structure: apps/web, apps/agent-hub, apps/worker, packages/db, packages/shared
+- [x] **INFR-06**: Per-tenant Obsidian vault wiring (agents read/write through tenant-aware path resolver)
 
 ## v2 Requirements
 
@@ -215,8 +215,8 @@ Deferred to future release. Tracked but not in current roadmap.
 | INFR-02 | Phase 1 | Pending |
 | INFR-03 | Phase 1 | Pending |
 | INFR-04 | Phase 1 | Pending |
-| INFR-05 | Phase 1 | Pending |
-| INFR-06 | Phase 1 | Pending |
+| INFR-05 | Phase 1 | Complete |
+| INFR-06 | Phase 1 | Complete |
 
 **Coverage:**
 - v1 requirements: 64 total
