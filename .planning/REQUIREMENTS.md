@@ -153,13 +153,76 @@ Deferred to future release. Tracked but not in current roadmap.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| (populated during roadmap creation) | | |
+| AUTH-01 | Phase 2 | Pending |
+| AUTH-02 | Phase 2 | Pending |
+| AUTH-03 | Phase 2 | Pending |
+| AUTH-04 | Phase 2 | Pending |
+| AUTH-05 | Phase 2 | Pending |
+| AUTH-06 | Phase 2 | Pending |
+| AUTH-07 | Phase 2 | Pending |
+| AUTH-08 | Phase 2 | Pending |
+| CONN-01 | Phase 3 | Pending |
+| CONN-02 | Phase 3 | Pending |
+| CONN-03 | Phase 3 | Pending |
+| CONN-04 | Phase 3 | Pending |
+| CONN-05 | Phase 3 | Pending |
+| CONN-06 | Phase 3 | Pending |
+| WORK-01 | Phase 4 | Pending |
+| WORK-02 | Phase 4 | Pending |
+| WORK-03 | Phase 4 | Pending |
+| WORK-04 | Phase 4 | Pending |
+| WORK-05 | Phase 4 | Pending |
+| WORK-06 | Phase 4 | Pending |
+| WORK-07 | Phase 4 | Pending |
+| WORK-08 | Phase 4 | Pending |
+| WORK-09 | Phase 4 | Pending |
+| TRAN-01 | Phase 5 | Pending |
+| TRAN-02 | Phase 5 | Pending |
+| TRAN-03 | Phase 5 | Pending |
+| TRAN-04 | Phase 5 | Pending |
+| TRAN-05 | Phase 5 | Pending |
+| TRAN-06 | Phase 5 | Pending |
+| TRAN-07 | Phase 5 | Pending |
+| MODE-01 | Phase 6 | Pending |
+| MODE-02 | Phase 6 | Pending |
+| MODE-03 | Phase 6 | Pending |
+| MODE-04 | Phase 6 | Pending |
+| MODE-05 | Phase 6 | Pending |
+| MODE-06 | Phase 6 | Pending |
+| ARTF-01 | Phase 7 | Pending |
+| ARTF-02 | Phase 7 | Pending |
+| ARTF-03 | Phase 7 | Pending |
+| ARTF-04 | Phase 7 | Pending |
+| ARTF-05 | Phase 7 | Pending |
+| REPL-01 | Phase 8 | Pending |
+| REPL-02 | Phase 8 | Pending |
+| REPL-03 | Phase 8 | Pending |
+| REPL-04 | Phase 8 | Pending |
+| REPL-05 | Phase 8 | Pending |
+| REPL-06 | Phase 8 | Pending |
+| MOBI-01 | Phase 10 | Pending |
+| MOBI-02 | Phase 10 | Pending |
+| MOBI-03 | Phase 10 | Pending |
+| MOBI-04 | Phase 10 | Pending |
+| MOBI-05 | Phase 10 | Pending |
+| OPER-01 | Phase 9 | Pending |
+| OPER-02 | Phase 9 | Pending |
+| OPER-03 | Phase 9 | Pending |
+| OPER-04 | Phase 9 | Pending |
+| OPER-05 | Phase 9 | Pending |
+| OPER-06 | Phase 9 | Pending |
+| INFR-01 | Phase 1 | Pending |
+| INFR-02 | Phase 1 | Pending |
+| INFR-03 | Phase 1 | Pending |
+| INFR-04 | Phase 1 | Pending |
+| INFR-05 | Phase 1 | Pending |
+| INFR-06 | Phase 1 | Pending |
 
 **Coverage:**
-- v1 requirements: 51 total
-- Mapped to phases: 0
-- Unmapped: 51 ⚠️
+- v1 requirements: 64 total
+- Mapped to phases: 64
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-04-21*
-*Last updated: 2026-04-21 after initial definition*
+*Last updated: 2026-04-21 after roadmap creation*
