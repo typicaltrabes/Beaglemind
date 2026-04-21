@@ -5,11 +5,13 @@
   "scripts": {
     "build": "tsc",
     "generate": "drizzle-kit generate",
-    "migrate": "tsx src/migrate.ts"
+    "migrate": "tsx src/migrate.ts",
+    "provision-tenant": "tsx src/scripts/provision-tenant-cli.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.1033.0",
     "@aws-sdk/s3-request-presigner": "3.1033.0",
+    "better-auth": "^1.6.5",
     "drizzle-orm": "0.45.2",
     "postgres": "3.4.7"
   },

@@ -118,5 +118,17 @@ export function createTenantSchema(tenantId: string) {
     viewedAt: timestamp('viewed_at', { withTimezone: true }).defaultNow().notNull(),
   });
 
-  return { schema, runs, messages, events, projects, plans, questions, artifacts, stateTransitions, shareLinks, replayViews };
+  // --- Break-Glass Audit (Phase 9 D-09, D-10) ---
+  const breakGlassAudit = schema.table('break_glass_audit', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    operatorId: text('operator_id').notNull(),
+    operatorEmail: text('operator_email').notNull(),
+    reason: text('reason').notNull(),
+    grantedAt: timestamp('granted_at', { withTimezone: true }).notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    revokedAt: timestamp('revoked_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  });
+
+  return { schema, runs, messages, events, projects, plans, questions, artifacts, stateTransitions, shareLinks, replayViews, breakGlassAudit };
 }
