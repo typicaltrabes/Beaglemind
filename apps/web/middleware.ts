@@ -19,8 +19,8 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // API auth routes are public
-  if (pathname.startsWith('/api/auth')) {
+  // API auth routes and accept-invite are public
+  if (pathname.startsWith('/api/auth') || pathname.startsWith('/api/accept-invite')) {
     return NextResponse.next();
   }
 
