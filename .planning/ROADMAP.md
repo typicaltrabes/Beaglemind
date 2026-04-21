@@ -192,12 +192,13 @@ Plans:
   3. User receives push notifications when a plan needs approval or a question is queued
   4. User can answer agent questions from the mobile question queue view
   5. Overnight digest view summarizes what agents did while the user was away
-**Plans**: TBD
+**Plans**: 3 plans
 **UI hint**: yes
 
 Plans:
-- [ ] 10-01: TBD
-- [ ] 10-02: TBD
+- [ ] 10-01-PLAN.md -- Responsive layout: hamburger sidebar, sticky composer, mobile process drawer overlay
+- [ ] 10-02-PLAN.md -- PWA manifest + Serwist service worker, push notifications via VAPID/web-push
+- [ ] 10-03-PLAN.md -- Mobile landing page with question queue cards, quick-answer, and overnight digest
 
 ## Progress
 
@@ -216,4 +217,4 @@ Note: Phase 7 and Phase 9 depend on Phase 4 and Phase 3 respectively, not on Pha
 | 7. Artifacts & Run History | 0/2 | Planned | - |
 | 8. Replay & Sharing | 0/3 | Planned | - |
 | 9. Operator Console & Sentinel | 0/3 | Planned | - |
-| 10. Mobile PWA | 0/2 | Not started | - |
+| 10. Mobile PWA | 0/3 | Planned | - |
