@@ -54,14 +54,18 @@ export async function POST(request: Request) {
 
     const run = rows[0]!;
 
-    // Persist user prompt as the first event
-    // (fire-and-forget — don't block the response)
-    hubClient.startRun({
-      runId: run.id,
-      tenantId,
-      prompt,
-      targetAgent: 'jarvis',
-    }).catch(() => {});
+    // Send to Hub — await it so errors are visible
+    try {
+      await hubClient.startRun({
+        runId: run.id,
+        tenantId,
+        prompt,
+        targetAgent: 'jarvis',
+      });
+    } catch (hubErr: any) {
+      // Log but don't fail the run creation — Jarvis will respond async
+      console.error('Hub startRun error (non-fatal):', hubErr?.message ?? hubErr);
+    }
 
     return NextResponse.json(run, { status: 201 });
   } catch (error) {
