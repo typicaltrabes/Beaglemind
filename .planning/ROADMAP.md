@@ -161,7 +161,7 @@ Plans:
 **UI hint**: yes
 
 Plans:
-- [ ] 08-01-PLAN.md -- Schema (share_links + replay_views), share link generation/revocation API, share dialog on run page
+- [x] 08-01-PLAN.md -- Schema (share_links + replay_views), share link generation/revocation API, share dialog on run page
 - [ ] 08-02-PLAN.md -- Public replay page with server-side Clean-mode event filtering and view logging
 - [ ] 08-03-PLAN.md -- Shared links management page with revocation controls and audit log views
 
