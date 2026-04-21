@@ -9,6 +9,7 @@ export const runtime = 'nodejs';
 const CreateRunBody = z.object({
   projectId: z.string().uuid(),
   prompt: z.string().min(1),
+  targetAgent: z.enum(['jarvis', 'mo', 'sam', 'herman']).default('mo'),
 });
 
 export async function GET(request: Request) {
@@ -38,7 +39,7 @@ export async function POST(request: Request) {
     const { db: tdb, schema } = getTenantDb(tenantId);
 
     const body = await request.json();
-    const { projectId, prompt } = CreateRunBody.parse(body);
+    const { projectId, prompt, targetAgent } = CreateRunBody.parse(body);
 
     // Create run as 'executing' directly — skip plan approval for now
     const rows = await tdb
@@ -54,18 +55,20 @@ export async function POST(request: Request) {
 
     const run = rows[0]!;
 
-    // Send to Hub — await it so errors are visible
-    try {
-      await hubClient.startRun({
-        runId: run.id,
-        tenantId,
-        prompt,
-        targetAgent: 'jarvis',
-      });
-    } catch (hubErr: any) {
-      // Log but don't fail the run creation — Jarvis will respond async
-      console.error('Hub startRun error (non-fatal):', hubErr?.message ?? hubErr);
-    }
+    // Send to ALL agents in parallel — they each respond independently
+    const agents = ['mo', 'jarvis', 'sam', 'herman'];
+    await Promise.allSettled(
+      agents.map(agent =>
+        hubClient.startRun({
+          runId: run.id,
+          tenantId,
+          prompt,
+          targetAgent: agent,
+        }).catch(err => {
+          console.error(`Hub startRun error for ${agent} (non-fatal):`, err?.message ?? err);
+        })
+      )
+    );
 
     return NextResponse.json(run, { status: 201 });
   } catch (error) {
