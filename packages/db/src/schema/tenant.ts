@@ -1,14 +1,16 @@
 import { pgSchema, uuid, text, timestamp, integer, jsonb, uniqueIndex } from 'drizzle-orm/pg-core';
 
 export function createTenantSchema(tenantId: string) {
-  const schema = pgSchema(`tenant_${tenantId}`);
+  // Sanitize tenant ID: replace hyphens with underscores for valid Postgres schema names
+  const safeId = tenantId.replace(/-/g, '_');
+  const schema = pgSchema(`tenant_${safeId}`);
 
   // --- Projects (D-01) ---
   const projects = schema.table('projects', {
     id: uuid('id').primaryKey().defaultRandom(),
     name: text('name').notNull(),
     description: text('description'),
-    createdBy: uuid('created_by').notNull(),
+    createdBy: text('created_by').notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   });
@@ -21,7 +23,7 @@ export function createTenantSchema(tenantId: string) {
     parentRunId: uuid('parent_run_id'),
     status: text('status').notNull().default('pending'),
     prompt: text('prompt'),
-    createdBy: uuid('created_by').notNull(),
+    createdBy: text('created_by').notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   });
@@ -101,7 +103,7 @@ export function createTenantSchema(tenantId: string) {
     id: uuid('id').primaryKey().defaultRandom(),
     runId: uuid('run_id').notNull().references(() => runs.id),
     token: text('token').notNull(),
-    createdBy: uuid('created_by').notNull(),
+    createdBy: text('created_by').notNull(),
     expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
     revokedAt: timestamp('revoked_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
