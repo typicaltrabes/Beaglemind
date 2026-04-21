@@ -1,15 +1,27 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { History, Share2 } from 'lucide-react';
+import { History, Share2, Shield } from 'lucide-react';
 import { ProjectList } from './project-list';
 import { QuestionQueue } from './question-queue';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useUIStore } from '@/lib/stores/ui-store';
+import { orgClient } from '@/lib/auth-client';
 
 export function Sidebar() {
   const sidebarOpen = useUIStore((s) => s.sidebarOpen);
+  const [isOwner, setIsOwner] = useState(false);
+
+  useEffect(() => {
+    orgClient
+      .getActiveMember()
+      .then((res) => {
+        if (res.data?.role === 'owner') setIsOwner(true);
+      })
+      .catch(() => {});
+  }, []);
 
   if (!sidebarOpen) return null;
 
@@ -32,6 +44,15 @@ export function Sidebar() {
           <Share2 className="size-4" />
           Shared Links
         </Link>
+        {isOwner && (
+          <Link
+            href="/audit-log"
+            className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <Shield className="size-4" />
+            Audit Log
+          </Link>
+        )}
         <Separator className="my-2" />
         <QuestionQueue />
       </ScrollArea>
