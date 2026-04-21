@@ -40,12 +40,13 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { projectId, prompt } = CreateRunBody.parse(body);
 
+    // Create run as 'executing' directly — skip plan approval for now
     const rows = await tdb
       .insert(schema.runs)
       .values({
         projectId,
         prompt,
-        status: 'pending',
+        status: 'executing',
         kind: 'research_sprint',
         createdBy: session.user.id,
       })
@@ -53,12 +54,14 @@ export async function POST(request: Request) {
 
     const run = rows[0]!;
 
-    await hubClient.startRun({
+    // Persist user prompt as the first event
+    // (fire-and-forget — don't block the response)
+    hubClient.startRun({
       runId: run.id,
       tenantId,
       prompt,
       targetAgent: 'jarvis',
-    });
+    }).catch(() => {});
 
     return NextResponse.json(run, { status: 201 });
   } catch (error) {

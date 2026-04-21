@@ -6,12 +6,12 @@ import type { OpenClawOutbound } from '@beagle-console/shared';
 import { createChildLogger } from '../logger';
 import { sendToAgent, type OpenClawBridgeConfig } from '../connections/openclaw-cli-bridge';
 
-// Agent SSH host mapping — which host to SSH into for each agent
-const AGENT_SSH_HOSTS: Record<string, string> = {
-  jarvis: 'root@142.93.76.133',
-  mo: 'lucas@46.225.56.122',
-  sam: 'lucas@46.225.56.122',
-  herman: 'lucas@46.225.56.122',
+// Agent SSH bridge config — which host to SSH into and optional sudo user
+const AGENT_BRIDGE_CONFIG: Record<string, { sshHost: string; sudoUser?: string }> = {
+  jarvis: { sshHost: 'root@142.93.76.133' },
+  mo: { sshHost: 'lucas@46.225.56.122', sudoUser: 'mo' },
+  sam: { sshHost: 'lucas@46.225.56.122', sudoUser: 'sam' },
+  herman: { sshHost: 'lucas@46.225.56.122', sudoUser: 'herman' },
 };
 
 const log = createChildLogger({ component: 'http-routes' });
@@ -123,13 +123,24 @@ export async function handleRunStart(
   };
 
   // Try CLI bridge first (reliable), fall back to WebSocket
-  const sshHost = AGENT_SSH_HOSTS[parsed.targetAgent];
-  if (sshHost) {
+  const agentBridge = AGENT_BRIDGE_CONFIG[parsed.targetAgent];
+  if (agentBridge) {
     const bridgeCfg: OpenClawBridgeConfig = {
       agentId: parsed.targetAgent,
-      sshHost,
+      sshHost: agentBridge.sshHost,
       sessionId: `beagle-console-${parsed.runId}`,
+      sudoUser: agentBridge.sudoUser,
     };
+
+    // Persist user prompt as the first event
+    await router.persistAndPublish(parsed.tenantId, {
+      type: 'agent_message',
+      agentId: 'user',
+      runId: parsed.runId,
+      tenantId: parsed.tenantId,
+      content: { text: parsed.prompt },
+      metadata: {},
+    });
 
     // Send prompt via CLI bridge (async — don't await, let it run in background)
     sendToAgent(bridgeCfg, parsed.prompt).then(async (result) => {
@@ -143,6 +154,17 @@ export async function handleRunStart(
           content: { text: result.text },
           metadata: { durationMs: result.durationMs, openclawRunId: result.runId },
         });
+
+        // Mark run as completed
+        await router.persistAndPublish(parsed.tenantId, {
+          type: 'state_transition',
+          agentId: 'system',
+          runId: parsed.runId,
+          tenantId: parsed.tenantId,
+          content: { from: 'executing', to: 'completed' },
+          metadata: {},
+        });
+
         log.info({ runId: parsed.runId, agentId: parsed.targetAgent }, 'Agent response received via CLI bridge');
       }
     }).catch((err) => {

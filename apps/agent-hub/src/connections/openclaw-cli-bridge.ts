@@ -9,6 +9,7 @@ export interface OpenClawBridgeConfig {
   agentId: string;
   sshHost: string;
   sessionId: string;
+  sudoUser?: string; // Run openclaw as this user (e.g. 'mo', 'sam') via sudo -u
 }
 
 export async function sendToAgent(
@@ -16,7 +17,10 @@ export async function sendToAgent(
   message: string,
 ): Promise<{ text: string; runId: string; durationMs: number } | null> {
   const escapedMessage = message.replace(/'/g, "'\\''");
-  const cmd = `ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 ${cfg.sshHost} "timeout 120 openclaw agent --message '${escapedMessage}' --session-id '${cfg.sessionId}' --agent main --json 2>/dev/null"`;
+  const openclawCmd = cfg.sudoUser
+    ? `sudo -u ${cfg.sudoUser} openclaw agent --message '${escapedMessage}' --session-id '${cfg.sessionId}' --agent main --json 2>/dev/null`
+    : `openclaw agent --message '${escapedMessage}' --session-id '${cfg.sessionId}' --agent main --json 2>/dev/null`;
+  const cmd = `ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 ${cfg.sshHost} "timeout 120 ${openclawCmd}"`;
   
   log.info({ agentId: cfg.agentId, messageLength: message.length }, 'Sending message to agent via CLI bridge');
 
