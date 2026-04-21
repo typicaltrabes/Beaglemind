@@ -12,6 +12,7 @@ interface UIActions {
   setActiveProject: (id: string | null) => void;
   setActiveRun: (id: string | null) => void;
   toggleSidebar: () => void;
+  setSidebarOpen: (open: boolean) => void;
 }
 
 export const useUIStore = create<UIState & UIActions>()((set) => ({
@@ -22,4 +23,5 @@ export const useUIStore = create<UIState & UIActions>()((set) => ({
   setActiveProject: (id: string | null) => set({ activeProjectId: id }),
   setActiveRun: (id: string | null) => set({ activeRunId: id }),
   toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
+  setSidebarOpen: (open: boolean) => set({ sidebarOpen: open }),
 }));
