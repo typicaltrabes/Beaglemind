@@ -131,10 +131,10 @@ export function Composer({ runId }: ComposerProps) {
   const VERBOSITY_LABELS = ['Quiet', 'Brief', 'Normal', 'Detailed', 'Full'];
 
   return (
-    <div className="border-t border-border bg-card p-3">
+    <div className="sticky bottom-0 z-20 border-t border-border bg-card p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
       {/* Studio toolbar */}
       {isStudio && (
-        <div className="mb-2 flex items-center gap-3 border-b border-white/5 px-2 py-1.5">
+        <div className="mb-2 flex flex-wrap items-center gap-3 border-b border-white/5 px-2 py-1.5">
           {/* @-mention badge */}
           {targetAgent ? (
             <span
