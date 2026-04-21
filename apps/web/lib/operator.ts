@@ -32,3 +32,18 @@ export async function requireOperator() {
   if (!user?.isOp) redirect('/dashboard');
   return { session, userId: session.user.id };
 }
+
+/**
+ * Operator check for API route handlers.
+ * Returns session info or null (no redirect — caller returns 403).
+ */
+export async function requireOperatorApi() {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) return null;
+  const [user] = await db
+    .select({ isOp: users.isOperator })
+    .from(users)
+    .where(eq(users.id, session.user.id));
+  if (!user?.isOp) return null;
+  return { session, userId: session.user.id };
+}
