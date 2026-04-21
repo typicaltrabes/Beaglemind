@@ -145,8 +145,8 @@ Plans:
 **UI hint**: yes
 
 Plans:
-- [ ] 07-01-PLAN.md -- Artifact preview: mammoth DOCX conversion API, PDF iframe preview, slide-over panel, extended artifact card
-- [ ] 07-02-PLAN.md -- Run history page: API with joins/filters, table with status/cost/search, cost badge, sidebar nav
+- [x] 07-01-PLAN.md -- Artifact preview: mammoth DOCX conversion API, PDF iframe preview, slide-over panel, extended artifact card
+- [x] 07-02-PLAN.md -- Run history page: API with joins/filters, table with status/cost/search, cost badge, sidebar nav
 
 ### Phase 8: Replay & Sharing
 **Goal**: Users can generate tokenized share links that let external viewers watch a Clean-mode replay of any completed run, with full audit trail

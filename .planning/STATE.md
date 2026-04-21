@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Phase 6 complete
-last_updated: "2026-04-21T19:12:57.779Z"
+stopped_at: Completed 07-01-PLAN.md
+last_updated: "2026-04-21T19:22:48.512Z"
 last_activity: 2026-04-21
 progress:
   total_phases: 10
-  completed_phases: 5
-  total_plans: 20
-  completed_plans: 19
-  percent: 95
+  completed_phases: 6
+  total_plans: 23
+  completed_plans: 21
+  percent: 91
 ---
 
 # Project State
@@ -68,6 +68,7 @@ Progress: [███░░░░░░░] 33%
 | Phase 05-transcript-ui P03 | 188s | 2 tasks | 3 files |
 | Phase 06-clean-studio-modes P01 | 3min | 2 tasks | 6 files |
 | Phase 06-clean-studio-modes P02 | 4min | 2 tasks | 7 files |
+| Phase 07-artifacts-run-history P01 | 2min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -107,6 +108,7 @@ Recent decisions affecting current work:
 - [Phase 05-transcript-ui]: Run page IS the Writers Room - minimal shell with header + TldrBanner + MessageList + Composer (D-18)
 - [Phase 06-clean-studio-modes]: DashboardShell client component extracts client-side layout from server component layout.tsx
 - [Phase 06-clean-studio-modes]: System message interrupt via existing /messages endpoint (Hub lacks dedicated /interrupt route)
+- [Phase 07-artifacts-run-history]: Used @base-ui/react Dialog as slide-over panel instead of shadcn Sheet to match existing UI primitive pattern
 
 ### Pending Todos
 
@@ -126,8 +128,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: --stopped-at
-Stopped at: Phase 6 complete
-Resume file: --resume-file
+Last session: 2026-04-21T19:22:48.509Z
+Stopped at: Completed 07-01-PLAN.md
+Resume file: None
 
 **Planned Phase:** 5 (Transcript UI) — 3 plans — 2026-04-21T18:27:48.173Z
