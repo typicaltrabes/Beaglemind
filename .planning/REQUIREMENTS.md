@@ -20,10 +20,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Agent Connection
 
-- [ ] **CONN-01**: Agent Connection Hub connects to OpenClaw agents on Agents VPS via WebSocket
+- [x] **CONN-01**: Agent Connection Hub connects to OpenClaw agents on Agents VPS via WebSocket
 - [ ] **CONN-02**: Console channel plugin built and deployed on Mo (OpenClaw integration)
 - [ ] **CONN-03**: Messages assigned monotonic sequence numbers at Hub before persistence/broadcast
-- [ ] **CONN-04**: WebSocket reconnection with exponential backoff + jitter (browser and agent connections)
+- [x] **CONN-04**: WebSocket reconnection with exponential backoff + jitter (browser and agent connections)
 - [ ] **CONN-05**: Message persistence to event store (PostgreSQL) before broadcasting
 - [ ] **CONN-06**: Redis pub/sub bridge between Agent Hub and Next.js SSE endpoints
 
@@ -161,10 +161,10 @@ Deferred to future release. Tracked but not in current roadmap.
 | AUTH-06 | Phase 2 | Complete |
 | AUTH-07 | Phase 2 | Complete |
 | AUTH-08 | Phase 2 | Complete |
-| CONN-01 | Phase 3 | Pending |
+| CONN-01 | Phase 3 | Complete |
 | CONN-02 | Phase 3 | Pending |
 | CONN-03 | Phase 3 | Pending |
-| CONN-04 | Phase 3 | Pending |
+| CONN-04 | Phase 3 | Complete |
 | CONN-05 | Phase 3 | Pending |
 | CONN-06 | Phase 3 | Pending |
 | WORK-01 | Phase 4 | Pending |
