@@ -31,6 +31,11 @@ services:
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - REDIS_URL=${REDIS_URL}
+      - AGENT_MO_URL=ws://46.225.56.122:18789/ws?senderId=console-hub&senderName=Console
+      - AGENT_SAM_URL=ws://46.225.56.122:18790/ws?senderId=console-hub&senderName=Console
+      - AGENT_HERMAN_URL=ws://46.225.56.122:19000/ws?senderId=console-hub&senderName=Console
+      - PORT=3001
+      - LOG_LEVEL=info
     deploy:
       resources:
         limits:

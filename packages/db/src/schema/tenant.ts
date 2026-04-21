@@ -1,4 +1,4 @@
-import { pgSchema, uuid, text, timestamp, integer, jsonb } from 'drizzle-orm/pg-core';
+import { pgSchema, uuid, text, timestamp, integer, jsonb, uniqueIndex } from 'drizzle-orm/pg-core';
 
 export function createTenantSchema(tenantId: string) {
   const schema = pgSchema(`tenant_${tenantId}`);
@@ -22,5 +22,18 @@ export function createTenantSchema(tenantId: string) {
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   });
 
-  return { schema, runs, messages };
+  const events = schema.table('events', {
+    id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+    runId: uuid('run_id').notNull().references(() => runs.id),
+    sequenceNumber: integer('sequence_number').notNull(),
+    type: text('type').notNull(),
+    agentId: text('agent_id').notNull(),
+    content: jsonb('content').notNull(),
+    metadata: jsonb('metadata'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  }, (t) => [
+    uniqueIndex('events_run_seq_idx').on(t.runId, t.sequenceNumber),
+  ]);
+
+  return { schema, runs, messages, events };
 }

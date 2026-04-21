@@ -11,6 +11,8 @@ export const RunStatus = z.enum([
 
 export type RunStatus = z.infer<typeof RunStatus>;
 
-export const AgentName = z.enum(['mo', 'jarvis', 'sentinel', 'user']);
+export const AgentName = z.enum(['mo', 'jarvis', 'sentinel', 'sam', 'herman', 'user']);
 
 export type AgentName = z.infer<typeof AgentName>;
+
+export * from './hub-events';
