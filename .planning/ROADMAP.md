@@ -56,7 +56,7 @@ Plans:
 **UI hint**: yes
 
 Plans:
-- [ ] 02-01-PLAN.md -- Better Auth schema, server/client config, API route, email utility
+- [x] 02-01-PLAN.md -- Better Auth schema, server/client config, API route, email utility
 - [ ] 02-02-PLAN.md -- Auth UI pages (login, no-org, dashboard), edge middleware, tenant context utility
 - [ ] 02-03-PLAN.md -- MFA setup/challenge, invite acceptance flow, extended provisioning, tenant isolation tests
 
