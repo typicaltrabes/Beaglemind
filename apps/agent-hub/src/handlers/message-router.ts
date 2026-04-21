@@ -2,6 +2,7 @@ import { OpenClawInbound, type HubEventEnvelope } from '@beagle-console/shared';
 import type { EventStore, PersistInput } from '../events/event-store';
 import type { RedisPublisher } from '../bridge/redis-publisher';
 import type { Logger } from 'pino';
+import { notifyPlanApproval, notifyQuestion } from '../notifications/push-service';
 
 /**
  * Map an OpenClaw inbound message to a partial HubEventEnvelope (D-05, D-06).
@@ -102,10 +103,37 @@ export class MessageRouter {
   /**
    * Persist an event directly (used by HTTP routes for user/system events).
    * Also publishes to Redis after persistence.
+   * Triggers push notifications for governance events (D-08).
    */
   async persistAndPublish(tenantId: string, event: PersistInput): Promise<HubEventEnvelope> {
     const persisted = await this.eventStore.persist(tenantId, event);
     await this.publisher.publish(persisted);
+
+    // D-08: Trigger push notifications for governance events
+    // Wrapped in try/catch so push failures never break the event pipeline
+    this.triggerPushNotification(persisted).catch((err) => {
+      this.log.error({ err, type: persisted.type }, 'Push notification failed (non-blocking)');
+    });
+
     return persisted;
+  }
+
+  /**
+   * Fire push notification for plan_proposal and question events.
+   * Extracts projectId from event content/metadata for the notification URL.
+   */
+  private async triggerPushNotification(event: HubEventEnvelope): Promise<void> {
+    const content = event.content as Record<string, unknown>;
+    const metadata = (event.metadata ?? {}) as Record<string, unknown>;
+    const projectId = (content.projectId ?? metadata.projectId ?? '') as string;
+
+    if (event.type === 'plan_proposal') {
+      const planName = (content.planName ?? content.text ?? 'New plan') as string;
+      await notifyPlanApproval(event.tenantId, event.runId, projectId, planName);
+    } else if (event.type === 'question') {
+      const agentName = event.agentId;
+      const questionText = (content.text ?? content.question ?? '') as string;
+      await notifyQuestion(event.tenantId, event.runId, projectId, agentName, questionText);
+    }
   }
 }

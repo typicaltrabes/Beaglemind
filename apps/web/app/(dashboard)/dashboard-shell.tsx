@@ -4,6 +4,7 @@ import { ModeProvider } from '@/lib/mode-context';
 import { ModeToggle } from '@/components/mode-toggle';
 import { Sidebar } from '@/components/sidebar/sidebar';
 import { LogoutButton } from './logout-button';
+import { PushPermission } from '@/components/push-permission';
 import { useUIStore } from '@/lib/stores/ui-store';
 import { Menu } from 'lucide-react';
 
@@ -34,6 +35,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               <LogoutButton />
             </div>
           </header>
+          <PushPermission />
           <main className="flex-1">{children}</main>
         </div>
       </div>
