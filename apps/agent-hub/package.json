@@ -12,7 +12,8 @@
     "@beagle-console/shared": "workspace:*",
     "ioredis": "^5.10.1",
     "pino": "^10.3.1",
-    "ws": "8.20.0"
+    "ws": "8.20.0",
+    "zod": "4.3.6"
   },
   "devDependencies": {
     "@types/node": "^25.6.0",
