@@ -20,6 +20,10 @@
     ".": {
       "import": "./src/index.ts",
       "types": "./src/index.ts"
+    },
+    "./schema/auth-schema": {
+      "import": "./src/schema/auth-schema.ts",
+      "types": "./src/schema/auth-schema.ts"
     }
   }
 }

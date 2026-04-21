@@ -1,4 +1,5 @@
 export * from './schema/shared.js';
+export * from './schema/auth-schema.js';
 export { createTenantSchema } from './schema/tenant.js';
 export { db, queryClient } from './client.js';
 export { resolveVaultPath } from './vault-resolver.js';

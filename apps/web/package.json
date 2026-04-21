@@ -8,16 +8,20 @@
     "start": "next start"
   },
   "dependencies": {
+    "@beagle-console/db": "workspace:*",
+    "@beagle-console/shared": "workspace:*",
+    "better-auth": "^1.6.5",
     "next": "15.5.15",
+    "qrcode": "^1.5.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "@beagle-console/db": "workspace:*",
-    "@beagle-console/shared": "workspace:*"
+    "resend": "^6.12.2"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "latest",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "latest",
     "@types/react-dom": "latest",
-    "tailwindcss": "latest",
-    "@tailwindcss/postcss": "latest"
+    "tailwindcss": "latest"
   }
 }
