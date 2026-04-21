@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Completed 06-02-PLAN.md
-last_updated: "2026-04-21T19:12:32.507Z"
+stopped_at: Phase 6 complete
+last_updated: "2026-04-21T19:12:57.779Z"
 last_activity: 2026-04-21
 progress:
   total_phases: 10
@@ -126,8 +126,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-04-21T19:12:32.504Z
-Stopped at: Completed 06-02-PLAN.md
-Resume file: None
+Last session: --stopped-at
+Stopped at: Phase 6 complete
+Resume file: --resume-file
 
 **Planned Phase:** 5 (Transcript UI) — 3 plans — 2026-04-21T18:27:48.173Z
