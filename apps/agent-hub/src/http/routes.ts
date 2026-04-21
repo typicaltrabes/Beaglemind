@@ -4,6 +4,15 @@ import type { AgentRegistry } from '../connections/agent-registry';
 import type { MessageRouter } from '../handlers/message-router';
 import type { OpenClawOutbound } from '@beagle-console/shared';
 import { createChildLogger } from '../logger';
+import { sendToAgent, type OpenClawBridgeConfig } from '../connections/openclaw-cli-bridge';
+
+// Agent SSH host mapping — which host to SSH into for each agent
+const AGENT_SSH_HOSTS: Record<string, string> = {
+  jarvis: 'root@142.93.76.133',
+  mo: 'lucas@46.225.56.122',
+  sam: 'lucas@46.225.56.122',
+  herman: 'lucas@46.225.56.122',
+};
 
 const log = createChildLogger({ component: 'http-routes' });
 
@@ -113,12 +122,36 @@ export async function handleRunStart(
     },
   };
 
-  // Send prompt to target agent
-  registry.send(parsed.targetAgent, outbound);
+  // Try CLI bridge first (reliable), fall back to WebSocket
+  const sshHost = AGENT_SSH_HOSTS[parsed.targetAgent];
+  if (sshHost) {
+    const bridgeCfg: OpenClawBridgeConfig = {
+      agentId: parsed.targetAgent,
+      sshHost,
+      sessionId: `beagle-console-${parsed.runId}`,
+    };
 
-  // NOTE: No state_transition here. The run starts as 'pending' (set by Next.js API).
-  // Mo will send a plan_proposal event which triggers pending -> planned in Next.js.
-  // The full lifecycle is: pending -> planned -> approved -> executing (D-07).
+    // Send prompt via CLI bridge (async — don't await, let it run in background)
+    sendToAgent(bridgeCfg, parsed.prompt).then(async (result) => {
+      if (result) {
+        // Publish agent response as an event
+        await router.persistAndPublish(parsed.tenantId, {
+          type: 'agent_message',
+          agentId: parsed.targetAgent,
+          runId: parsed.runId,
+          tenantId: parsed.tenantId,
+          content: { text: result.text },
+          metadata: { durationMs: result.durationMs, openclawRunId: result.runId },
+        });
+        log.info({ runId: parsed.runId, agentId: parsed.targetAgent }, 'Agent response received via CLI bridge');
+      }
+    }).catch((err) => {
+      log.error({ error: err.message, runId: parsed.runId }, 'CLI bridge failed');
+    });
+  } else {
+    // Fall back to WebSocket
+    registry.send(parsed.targetAgent, outbound);
+  }
 
   log.info({ runId: parsed.runId, targetAgent: parsed.targetAgent }, 'Run started');
   return { ok: true, runId: parsed.runId };
