@@ -7,7 +7,7 @@ import { EventStore } from './events/event-store';
 import { redisPub, closeRedis } from './bridge/redis-client';
 import { RedisPublisher } from './bridge/redis-publisher';
 import { MessageRouter } from './handlers/message-router';
-import { handleSend, handleRunStart, handleRunStop } from './http/routes';
+import { handleSend, handleRunStart, handleRunStop, handleRunApprove, handleQuestionAnswer } from './http/routes';
 import { db } from '@beagle-console/db';
 
 // --- Event pipeline setup ---
@@ -123,6 +123,30 @@ const server = createServer(async (req: IncomingMessage, res: ServerResponse) =>
       sendJson(res, 200, result);
     } catch (err: any) {
       logger.error({ err, path: '/runs/stop' }, 'Error handling /runs/stop');
+      sendJson(res, err.name === 'ZodError' ? 400 : 500, { error: err.message });
+    }
+    return;
+  }
+
+  if (req.method === 'POST' && url.pathname === '/runs/approve') {
+    try {
+      const body = await readJsonBody(req);
+      const result = await handleRunApprove(body, registry, messageRouter);
+      sendJson(res, 200, result);
+    } catch (err: any) {
+      logger.error({ err, path: '/runs/approve' }, 'Error handling /runs/approve');
+      sendJson(res, err.name === 'ZodError' ? 400 : 500, { error: err.message });
+    }
+    return;
+  }
+
+  if (req.method === 'POST' && url.pathname === '/runs/questions/answer') {
+    try {
+      const body = await readJsonBody(req);
+      const result = await handleQuestionAnswer(body, registry, messageRouter);
+      sendJson(res, 200, result);
+    } catch (err: any) {
+      logger.error({ err, path: '/runs/questions/answer' }, 'Error handling /runs/questions/answer');
       sendJson(res, err.name === 'ZodError' ? 400 : 500, { error: err.message });
     }
     return;
