@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Phase 5 complete
-last_updated: "2026-04-21T18:39:34.180Z"
+stopped_at: Completed 06-01-PLAN.md
+last_updated: "2026-04-21T19:07:19.235Z"
 last_activity: 2026-04-21
 progress:
   total_phases: 10
   completed_phases: 4
-  total_plans: 18
-  completed_plans: 17
-  percent: 94
+  total_plans: 20
+  completed_plans: 18
+  percent: 90
 ---
 
 # Project State
@@ -66,6 +66,7 @@ Progress: [███░░░░░░░] 33%
 | Phase 05-transcript-ui P01 | 2min | 2 tasks | 6 files |
 | Phase 05-transcript-ui P02 | 2min | 2 tasks | 3 files |
 | Phase 05-transcript-ui P03 | 188s | 2 tasks | 3 files |
+| Phase 06-clean-studio-modes P01 | 3min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -103,6 +104,7 @@ Recent decisions affecting current work:
 - [Phase 05-transcript-ui]: CollapseFold uses renderEvent callback for parent-controlled expansion; detectCollapsibleRanges is pure function
 - [Phase 05-transcript-ui]: Flat RenderItem union type (scene-divider|event|collapse-fold) as Virtuoso data model for heterogeneous list
 - [Phase 05-transcript-ui]: Run page IS the Writers Room - minimal shell with header + TldrBanner + MessageList + Composer (D-18)
+- [Phase 06-clean-studio-modes]: DashboardShell client component extracts client-side layout from server component layout.tsx
 
 ### Pending Todos
 
@@ -122,8 +124,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: --stopped-at
-Stopped at: Phase 5 complete
-Resume file: --resume-file
+Last session: 2026-04-21T19:07:19.233Z
+Stopped at: Completed 06-01-PLAN.md
+Resume file: None
 
 **Planned Phase:** 5 (Transcript UI) — 3 plans — 2026-04-21T18:27:48.173Z

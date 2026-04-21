@@ -51,11 +51,11 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Clean & Studio Modes
 
-- [ ] **MODE-01**: Clean mode is the default — agent names visible, scenes collapsed, single Stop button, no power tools
-- [ ] **MODE-02**: Studio mode toggle in header — process drawer, @-mention bar, verbosity dial, Interrupt button, fork button
-- [ ] **MODE-03**: No role-gating — every Year-1 user can toggle between Clean and Studio
+- [x] **MODE-01**: Clean mode is the default — agent names visible, scenes collapsed, single Stop button, no power tools
+- [x] **MODE-02**: Studio mode toggle in header — process drawer, @-mention bar, verbosity dial, Interrupt button, fork button
+- [x] **MODE-03**: No role-gating — every Year-1 user can toggle between Clean and Studio
 - [ ] **MODE-04**: Process drawer in Studio shows sentinel data, cost tracking, fork/branch info
-- [ ] **MODE-05**: @-mention allows directing messages to specific agents in Studio
+- [x] **MODE-05**: @-mention allows directing messages to specific agents in Studio
 - [ ] **MODE-06**: Interrupt button in Studio allows stopping a specific agent mid-flight
 
 ### Artifacts & History
@@ -183,11 +183,11 @@ Deferred to future release. Tracked but not in current roadmap.
 | TRAN-05 | Phase 5 | Complete |
 | TRAN-06 | Phase 5 | Complete |
 | TRAN-07 | Phase 5 | Complete |
-| MODE-01 | Phase 6 | Pending |
-| MODE-02 | Phase 6 | Pending |
-| MODE-03 | Phase 6 | Pending |
+| MODE-01 | Phase 6 | Complete |
+| MODE-02 | Phase 6 | Complete |
+| MODE-03 | Phase 6 | Complete |
 | MODE-04 | Phase 6 | Pending |
-| MODE-05 | Phase 6 | Pending |
+| MODE-05 | Phase 6 | Complete |
 | MODE-06 | Phase 6 | Pending |
 | ARTF-01 | Phase 7 | Pending |
 | ARTF-02 | Phase 7 | Pending |
