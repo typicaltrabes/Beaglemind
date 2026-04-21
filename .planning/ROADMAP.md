@@ -58,7 +58,7 @@ Plans:
 Plans:
 - [x] 02-01-PLAN.md -- Better Auth schema, server/client config, API route, email utility
 - [x] 02-02-PLAN.md -- Auth UI pages (login, no-org, dashboard), edge middleware, tenant context utility
-- [ ] 02-03-PLAN.md -- MFA setup/challenge, invite acceptance flow, extended provisioning, tenant isolation tests
+- [x] 02-03-PLAN.md -- MFA setup/challenge, invite acceptance flow, extended provisioning, tenant isolation tests
 
 ### Phase 3: Agent Connection Hub
 **Goal**: Console can establish and maintain reliable bidirectional communication with OpenClaw agents on the Agents VPS
