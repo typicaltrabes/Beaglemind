@@ -157,12 +157,13 @@ Plans:
   2. External viewer sees the Writers' Room transcript in Clean mode only -- no sentinel data, no drawer, no Studio signals
   3. Content filtering happens server-side at the renderer level -- the share-link API returns a Clean-mode projection, not client-side hiding
   4. Tenant admin can revoke any share link and every replay view is logged with viewer, timestamp, and IP in a customer audit view
-**Plans**: TBD
+**Plans**: 3 plans
 **UI hint**: yes
 
 Plans:
-- [ ] 08-01: TBD
-- [ ] 08-02: TBD
+- [ ] 08-01-PLAN.md -- Schema (share_links + replay_views), share link generation/revocation API, share dialog on run page
+- [ ] 08-02-PLAN.md -- Public replay page with server-side Clean-mode event filtering and view logging
+- [ ] 08-03-PLAN.md -- Shared links management page with revocation controls and audit log views
 
 ### Phase 9: Operator Console & Sentinel
 **Goal**: Operators can monitor system health, provision tenants, observe agent behavior via sentinel logging, and access tenant data through audited break-glass
@@ -212,6 +213,6 @@ Note: Phase 7 and Phase 9 depend on Phase 4 and Phase 3 respectively, not on Pha
 | 5. Transcript UI | 0/3 | Planned | - |
 | 6. Clean & Studio Modes | 0/2 | Planned | - |
 | 7. Artifacts & Run History | 0/2 | Planned | - |
-| 8. Replay & Sharing | 0/2 | Not started | - |
+| 8. Replay & Sharing | 0/3 | Planned | - |
 | 9. Operator Console & Sentinel | 0/2 | Not started | - |
 | 10. Mobile PWA | 0/2 | Not started | - |
