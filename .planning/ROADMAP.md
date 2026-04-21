@@ -125,12 +125,12 @@ Plans:
   2. User can toggle to Studio mode via header control and immediately sees process drawer, @-mention bar, verbosity dial, and interrupt button
   3. Process drawer in Studio displays sentinel data, per-agent cost tracking, and fork/branch info in real time
   4. User can @-mention a specific agent to direct a message to them, and interrupt a specific agent mid-flight
-**Plans**: TBD
+**Plans**: 2 plans
 **UI hint**: yes
 
 Plans:
-- [ ] 06-01: TBD
-- [ ] 06-02: TBD
+- [ ] 06-01-PLAN.md -- Mode context provider, header toggle, mode-aware collapse-fold and composer with Studio controls
+- [ ] 06-02-PLAN.md -- Process drawer (sentinel, cost, fork sections), interrupt button, run page layout integration
 
 ### Phase 7: Artifacts & Run History
 **Goal**: Users can browse their run history, view delivered artifacts with inline previews, and track per-run costs
@@ -210,7 +210,7 @@ Note: Phase 7 and Phase 9 depend on Phase 4 and Phase 3 respectively, not on Pha
 | 3. Agent Connection Hub | 2/3 | Planned | - |
 | 4. Research Sprint Workflow | 6/6 | Planned | - |
 | 5. Transcript UI | 0/3 | Planned | - |
-| 6. Clean & Studio Modes | 0/2 | Not started | - |
+| 6. Clean & Studio Modes | 0/2 | Planned | - |
 | 7. Artifacts & Run History | 0/2 | Not started | - |
 | 8. Replay & Sharing | 0/2 | Not started | - |
 | 9. Operator Console & Sentinel | 0/2 | Not started | - |
