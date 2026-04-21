@@ -32,11 +32,11 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **WORK-01**: User can create a new project
 - [ ] **WORK-02**: User can start a research sprint by sending a prompt to Mo
 - [ ] **WORK-03**: Mo generates a plan with cost estimate; user sees plan-approval card
-- [ ] **WORK-04**: Run does not proceed (no API spend) until user approves the plan
+- [x] **WORK-04**: Run does not proceed (no API spend) until user approves the plan
 - [ ] **WORK-05**: Agents queue clarifying questions instead of self-authorizing; user sees question queue
-- [ ] **WORK-06**: User can answer queued questions inline in the transcript
+- [x] **WORK-06**: User can answer queued questions inline in the transcript
 - [ ] **WORK-07**: User can stop a running sprint via single Stop button in Clean mode
-- [ ] **WORK-08**: Run state machine tracks transitions: pending → planned → approved → executing → completed/cancelled
+- [x] **WORK-08**: Run state machine tracks transitions: pending → planned → approved → executing → completed/cancelled
 - [ ] **WORK-09**: Completed run delivers artifacts (files) that user can view and download
 
 ### Transcript UI
@@ -170,11 +170,11 @@ Deferred to future release. Tracked but not in current roadmap.
 | WORK-01 | Phase 4 | Pending |
 | WORK-02 | Phase 4 | Pending |
 | WORK-03 | Phase 4 | Pending |
-| WORK-04 | Phase 4 | Pending |
+| WORK-04 | Phase 4 | Complete |
 | WORK-05 | Phase 4 | Pending |
-| WORK-06 | Phase 4 | Pending |
+| WORK-06 | Phase 4 | Complete |
 | WORK-07 | Phase 4 | Pending |
-| WORK-08 | Phase 4 | Pending |
+| WORK-08 | Phase 4 | Complete |
 | WORK-09 | Phase 4 | Pending |
 | TRAN-01 | Phase 5 | Pending |
 | TRAN-02 | Phase 5 | Pending |
