@@ -35,7 +35,7 @@ export async function POST(request: Request) {
       runId: run.id,
       tenantId,
       prompt,
-      targetAgent: 'mo',
+      targetAgent: 'jarvis',
     });
 
     return NextResponse.json(run, { status: 201 });
