@@ -8,7 +8,14 @@ export const MessageType = z.enum([
   'artifact',
   'state_transition',
   'system',
+  'tldr_update',
 ]);
+
+// Scene metadata convention (set by Mo on events):
+//   metadata.sceneId: string — groups events into scenes
+//   metadata.sceneName: string — human-readable scene label
+// tldr_update content convention:
+//   content.summary: string — running TLDR text for the banner
 
 export type MessageType = z.infer<typeof MessageType>;
 

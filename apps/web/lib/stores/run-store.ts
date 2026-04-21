@@ -4,6 +4,12 @@ import { create } from 'zustand';
 import type { HubEventEnvelope } from '@beagle-console/shared';
 import type { RunStatus } from '@/lib/state-machine';
 
+export interface Scene {
+  id: string;
+  name: string;
+  eventSequences: number[];  // sequence numbers belonging to this scene
+}
+
 interface RunState {
   runId: string | null;
   events: Record<number, HubEventEnvelope>;
@@ -16,6 +22,9 @@ interface RunState {
   unansweredQuestions: HubEventEnvelope[];
   artifacts: HubEventEnvelope[];
   messages: HubEventEnvelope[];
+  scenes: Scene[];
+  currentSceneId: string | null;
+  tldrSummary: string | null;
 }
 
 interface RunActions {
@@ -36,6 +45,9 @@ const INITIAL_STATE: RunState = {
   unansweredQuestions: [],
   artifacts: [],
   messages: [],
+  scenes: [],
+  currentSceneId: null,
+  tldrSummary: null,
 };
 
 function deriveState(events: Record<number, HubEventEnvelope>, eventOrder: number[]) {
@@ -43,10 +55,25 @@ function deriveState(events: Record<number, HubEventEnvelope>, eventOrder: numbe
   const unansweredQuestions: HubEventEnvelope[] = [];
   const artifacts: HubEventEnvelope[] = [];
   const messages: HubEventEnvelope[] = [];
+  const scenes: Scene[] = [];
+  let currentSceneId: string | null = null;
+  let tldrSummary: string | null = null;
+
+  // Map from sceneId to index in scenes array
+  const sceneIndex = new Map<string, number>();
 
   for (const seq of eventOrder) {
     const event = events[seq];
     if (!event) continue;
+
+    // Extract TLDR updates (metadata-only, not pushed to messages)
+    if (event.type === 'tldr_update') {
+      if (typeof event.content.summary === 'string') {
+        tldrSummary = event.content.summary;
+      }
+      // Do NOT push tldr_update into messages array
+      continue;
+    }
 
     messages.push(event);
 
@@ -59,9 +86,56 @@ function deriveState(events: Record<number, HubEventEnvelope>, eventOrder: numbe
     if (event.type === 'artifact') {
       artifacts.push(event);
     }
+
+    // Scene grouping
+    const meta = event.metadata as Record<string, unknown> | undefined;
+    const eventSceneId = typeof meta?.sceneId === 'string' ? meta.sceneId : null;
+
+    if (eventSceneId && eventSceneId !== currentSceneId) {
+      // New scene detected
+      currentSceneId = eventSceneId;
+      let sceneName = typeof meta?.sceneName === 'string' ? meta.sceneName : '';
+
+      // If sceneName missing, derive from first agent_message content
+      if (!sceneName && event.type === 'agent_message') {
+        const text = typeof event.content.text === 'string' ? event.content.text : '';
+        sceneName = text.length > 50 ? text.slice(0, 50) + '...' : text;
+      }
+
+      sceneIndex.set(eventSceneId, scenes.length);
+      scenes.push({ id: eventSceneId, name: sceneName, eventSequences: [seq] });
+    } else if (eventSceneId && sceneIndex.has(eventSceneId)) {
+      // Existing scene
+      const idx = sceneIndex.get(eventSceneId)!;
+      scenes[idx]!.eventSequences.push(seq);
+    } else if (currentSceneId && sceneIndex.has(currentSceneId)) {
+      // No sceneId on event — assign to current scene
+      const idx = sceneIndex.get(currentSceneId)!;
+      scenes[idx]!.eventSequences.push(seq);
+    } else {
+      // No scenes exist yet — create synthetic unscened group
+      if (!sceneIndex.has('unscened')) {
+        currentSceneId = 'unscened';
+        sceneIndex.set('unscened', scenes.length);
+        scenes.push({ id: 'unscened', name: '', eventSequences: [seq] });
+      } else {
+        const idx = sceneIndex.get('unscened')!;
+        scenes[idx]!.eventSequences.push(seq);
+      }
+    }
+
+    // If this is the first agent_message in a scene that has no name yet, derive name
+    if (event.type === 'agent_message') {
+      const activeSceneIdx = sceneIndex.get(currentSceneId ?? 'unscened');
+      const activeScene = activeSceneIdx !== undefined ? scenes[activeSceneIdx] : undefined;
+      if (activeScene && !activeScene.name && activeScene.id !== 'unscened') {
+        const text = typeof event.content.text === 'string' ? event.content.text : '';
+        activeScene.name = text.length > 50 ? text.slice(0, 50) + '...' : text;
+      }
+    }
   }
 
-  return { plan, unansweredQuestions, artifacts, messages };
+  return { plan, unansweredQuestions, artifacts, messages, scenes, currentSceneId, tldrSummary };
 }
 
 function processEvent(
