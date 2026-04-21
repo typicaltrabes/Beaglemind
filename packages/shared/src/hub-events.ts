@@ -61,7 +61,7 @@ export const OpenClawOutbound = z.object({
   customData: z.object({
     runId: z.string(),
     tenantId: z.string(),
-  }),
+  }).catchall(z.unknown()),
 });
 
 export type OpenClawOutbound = z.infer<typeof OpenClawOutbound>;

@@ -27,6 +27,21 @@ const RunStopBody = z.object({
   tenantId: z.string().uuid(),
 });
 
+// T-04-03: Zod validation on approve body
+const RunApproveBody = z.object({
+  runId: z.string().uuid(),
+  tenantId: z.string().uuid(),
+});
+
+// T-04-04: Zod validation on question answer body
+const QuestionAnswerBody = z.object({
+  runId: z.string().uuid(),
+  tenantId: z.string().uuid(),
+  questionId: z.string().uuid(),
+  answer: z.string(),
+  agentId: z.string(), // which agent asked the question
+});
+
 /**
  * POST /send -- relay a user message to the correct agent via WebSocket.
  * Also persists a user event through the pipeline.
@@ -101,15 +116,9 @@ export async function handleRunStart(
   // Send prompt to target agent
   registry.send(parsed.targetAgent, outbound);
 
-  // Persist state_transition event
-  await router.persistAndPublish(parsed.tenantId, {
-    type: 'state_transition',
-    agentId: 'system',
-    runId: parsed.runId,
-    tenantId: parsed.tenantId,
-    content: { from: 'pending', to: 'executing' },
-    metadata: { targetAgent: parsed.targetAgent },
-  });
+  // NOTE: No state_transition here. The run starts as 'pending' (set by Next.js API).
+  // Mo will send a plan_proposal event which triggers pending -> planned in Next.js.
+  // The full lifecycle is: pending -> planned -> approved -> executing (D-07).
 
   log.info({ runId: parsed.runId, targetAgent: parsed.targetAgent }, 'Run started');
   return { ok: true, runId: parsed.runId };
@@ -140,5 +149,89 @@ export async function handleRunStop(
   clearActiveRun();
 
   log.info({ runId: parsed.runId }, 'Run stopped');
+  return { ok: true };
+}
+
+/**
+ * POST /runs/approve -- send approval signal to Mo and publish state transitions.
+ * Transitions: planned -> approved -> executing (D-09).
+ */
+export async function handleRunApprove(
+  body: unknown,
+  registry: AgentRegistry,
+  router: MessageRouter,
+): Promise<{ ok: true }> {
+  const parsed = RunApproveBody.parse(body);
+
+  // Send approval signal to Mo
+  const outbound: OpenClawOutbound = {
+    type: 'chat.send',
+    content: '[SYSTEM] Plan approved. Proceed with execution.',
+    messageId: `msg_${randomUUID()}`,
+    senderId: `console_${parsed.tenantId}`,
+    senderName: 'Console Hub',
+    chatType: 'direct',
+    customData: { runId: parsed.runId, tenantId: parsed.tenantId },
+  };
+  registry.send('mo', outbound);
+
+  // Persist planned -> approved transition (triggered by user)
+  await router.persistAndPublish(parsed.tenantId, {
+    type: 'state_transition',
+    agentId: 'system',
+    runId: parsed.runId,
+    tenantId: parsed.tenantId,
+    content: { from: 'planned', to: 'approved', triggeredBy: 'user' },
+    metadata: {},
+  });
+
+  // Immediately transition approved -> executing (triggered by system)
+  await router.persistAndPublish(parsed.tenantId, {
+    type: 'state_transition',
+    agentId: 'system',
+    runId: parsed.runId,
+    tenantId: parsed.tenantId,
+    content: { from: 'approved', to: 'executing', triggeredBy: 'system' },
+    metadata: {},
+  });
+
+  log.info({ runId: parsed.runId }, 'Run approved');
+  return { ok: true };
+}
+
+/**
+ * POST /runs/questions/answer -- forward a user's answer to the asking agent (D-15).
+ * Also persists the answer as a user event.
+ */
+export async function handleQuestionAnswer(
+  body: unknown,
+  registry: AgentRegistry,
+  router: MessageRouter,
+): Promise<{ ok: true }> {
+  const parsed = QuestionAnswerBody.parse(body);
+
+  // Forward answer to the asking agent
+  const outbound: OpenClawOutbound = {
+    type: 'chat.send',
+    content: `[ANSWER to Q-${parsed.questionId}] ${parsed.answer}`,
+    messageId: `msg_${randomUUID()}`,
+    senderId: `console_${parsed.tenantId}`,
+    senderName: 'Console Hub',
+    chatType: 'direct',
+    customData: { runId: parsed.runId, tenantId: parsed.tenantId, questionId: parsed.questionId },
+  };
+  registry.send(parsed.agentId, outbound);
+
+  // Persist user answer as an event
+  await router.persistAndPublish(parsed.tenantId, {
+    type: 'agent_message',
+    agentId: 'user',
+    runId: parsed.runId,
+    tenantId: parsed.tenantId,
+    content: { text: parsed.answer, questionId: parsed.questionId, isAnswer: true },
+    metadata: { targetAgent: parsed.agentId },
+  });
+
+  log.info({ runId: parsed.runId, questionId: parsed.questionId, agentId: parsed.agentId }, 'Question answered');
   return { ok: true };
 }
