@@ -70,11 +70,12 @@ Plans:
   3. Messages arrive at the Hub with monotonic sequence numbers and are persisted to PostgreSQL before being broadcast
   4. When a WebSocket connection drops, it reconnects automatically with exponential backoff and jitter
   5. Messages published by Agent Hub appear on Redis pub/sub channels and are consumable by Next.js SSE endpoints
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 03-01: TBD
-- [ ] 03-02: TBD
+- [ ] 03-01-PLAN.md -- Shared types, events schema, Hub connection layer with reconnect, health/status endpoints
+- [ ] 03-02-PLAN.md -- OpenClaw WebSocket plugin deployment on Agents VPS (Mo, Sam, Herman)
+- [ ] 03-03-PLAN.md -- Event persistence, sequence numbering, Redis pub/sub bridge, message routing, HTTP API
 
 ### Phase 4: Research Sprint Workflow
 **Goal**: A user can run a complete research sprint from prompt to delivered artifacts, with governance gates (plan approval, question queue) enforced throughout
@@ -201,8 +202,8 @@ Note: Phase 7 and Phase 9 depend on Phase 4 and Phase 3 respectively, not on Pha
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation & Infrastructure | 1/3 | Planned | - |
-| 2. Authentication & Tenancy | 0/3 | Planned | - |
-| 3. Agent Connection Hub | 0/2 | Not started | - |
+| 2. Authentication & Tenancy | 3/3 | Planned | - |
+| 3. Agent Connection Hub | 0/3 | Planned | - |
 | 4. Research Sprint Workflow | 0/3 | Not started | - |
 | 5. Transcript UI | 0/2 | Not started | - |
 | 6. Clean & Studio Modes | 0/2 | Not started | - |
