@@ -2,23 +2,84 @@ import { createServer, type IncomingMessage, type ServerResponse } from 'node:ht
 import { config } from './config';
 import { logger } from './logger';
 import { AgentRegistry } from './connections/agent-registry';
+import { SequenceCounter } from './events/sequence-counter';
+import { EventStore } from './events/event-store';
+import { redisPub, closeRedis } from './bridge/redis-client';
+import { RedisPublisher } from './bridge/redis-publisher';
+import { MessageRouter } from './handlers/message-router';
+import { handleSend, handleRunStart, handleRunStop } from './http/routes';
+import { db } from '@beagle-console/db';
+
+// --- Event pipeline setup ---
+
+const sequenceCounter = new SequenceCounter();
+const eventStore = new EventStore(db, sequenceCounter);
+const redisPublisher = new RedisPublisher(redisPub);
+const messageRouter = new MessageRouter(eventStore, redisPublisher, logger);
+
+// --- Active run context (single active run at a time) ---
+
+let activeRunId: string | null = null;
+let activeTenantId: string | null = null;
+
+function setActiveRun(runId: string, tenantId: string): void {
+  activeRunId = runId;
+  activeTenantId = tenantId;
+  logger.info({ runId, tenantId }, 'Active run set');
+}
+
+function clearActiveRun(): void {
+  logger.info({ runId: activeRunId }, 'Active run cleared');
+  if (activeRunId) {
+    sequenceCounter.reset(activeRunId);
+  }
+  activeRunId = null;
+  activeTenantId = null;
+}
+
+// --- Agent registry with message routing ---
 
 const registry = new AgentRegistry(
   config.agents,
   config.pingIntervalMs,
   config.pongTimeoutMs,
   (agentId, data) => {
-    // Message handler -- wired to event persistence + Redis in Plan 03
-    logger.debug({ agentId, data }, 'Received message from agent');
+    if (!activeRunId || !activeTenantId) {
+      logger.warn({ agentId }, 'Received agent message but no active run, dropping');
+      return;
+    }
+    messageRouter.handleAgentMessage(agentId, data, activeRunId, activeTenantId).catch((err) => {
+      logger.error({ err, agentId }, 'Failed to route agent message');
+    });
   },
 );
+
+// --- HTTP helpers ---
 
 function sendJson(res: ServerResponse, status: number, body: unknown): void {
   res.writeHead(status, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify(body));
 }
 
-const server = createServer((req: IncomingMessage, res: ServerResponse) => {
+function readJsonBody(req: IncomingMessage): Promise<unknown> {
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    req.on('data', (chunk: Buffer) => chunks.push(chunk));
+    req.on('end', () => {
+      try {
+        const body = JSON.parse(Buffer.concat(chunks).toString());
+        resolve(body);
+      } catch (err) {
+        reject(new Error('Invalid JSON body'));
+      }
+    });
+    req.on('error', reject);
+  });
+}
+
+// --- HTTP server ---
+
+const server = createServer(async (req: IncomingMessage, res: ServerResponse) => {
   const url = new URL(req.url ?? '/', `http://${req.headers.host ?? 'localhost'}`);
 
   if (req.method === 'GET' && url.pathname === '/health') {
@@ -31,19 +92,39 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
     return;
   }
 
-  // Placeholder endpoints -- wired in Plan 03 (event persistence + Redis bridge)
   if (req.method === 'POST' && url.pathname === '/send') {
-    sendJson(res, 501, { error: 'Not implemented — wired in Plan 03' });
+    try {
+      const body = await readJsonBody(req);
+      const result = await handleSend(body, registry, messageRouter);
+      sendJson(res, 200, result);
+    } catch (err: any) {
+      logger.error({ err, path: '/send' }, 'Error handling /send');
+      sendJson(res, err.name === 'ZodError' ? 400 : 500, { error: err.message });
+    }
     return;
   }
 
   if (req.method === 'POST' && url.pathname === '/runs/start') {
-    sendJson(res, 501, { error: 'Not implemented — wired in Plan 03' });
+    try {
+      const body = await readJsonBody(req);
+      const result = await handleRunStart(body, registry, messageRouter, setActiveRun);
+      sendJson(res, 200, result);
+    } catch (err: any) {
+      logger.error({ err, path: '/runs/start' }, 'Error handling /runs/start');
+      sendJson(res, err.name === 'ZodError' ? 400 : 500, { error: err.message });
+    }
     return;
   }
 
   if (req.method === 'POST' && url.pathname === '/runs/stop') {
-    sendJson(res, 501, { error: 'Not implemented — wired in Plan 03' });
+    try {
+      const body = await readJsonBody(req);
+      const result = await handleRunStop(body, messageRouter, clearActiveRun);
+      sendJson(res, 200, result);
+    } catch (err: any) {
+      logger.error({ err, path: '/runs/stop' }, 'Error handling /runs/stop');
+      sendJson(res, err.name === 'ZodError' ? 400 : 500, { error: err.message });
+    }
     return;
   }
 
@@ -66,6 +147,9 @@ server.listen(config.port, () => {
 function shutdown(signal: string) {
   logger.info({ signal }, 'Shutting down Agent Hub');
   registry.closeAll();
+  closeRedis().catch((err) => {
+    logger.error({ err }, 'Error closing Redis');
+  });
   server.close(() => {
     logger.info('HTTP server closed');
     process.exit(0);
