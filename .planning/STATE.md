@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Completed 10-01-PLAN.md
-last_updated: "2026-04-21T19:57:18.440Z"
+stopped_at: Completed 10-02-PLAN.md
+last_updated: "2026-04-21T20:05:47.107Z"
 last_activity: 2026-04-21
 progress:
   total_phases: 10
   completed_phases: 8
   total_plans: 31
-  completed_plans: 28
-  percent: 90
+  completed_plans: 29
+  percent: 94
 ---
 
 # Project State
@@ -77,6 +77,7 @@ Progress: [███░░░░░░░] 33%
 | Phase 09-operator-console-sentinel P02 | 4min | 2 tasks | 11 files |
 | Phase 09-operator-console-sentinel P03 | 4min | 2 tasks | 12 files |
 | Phase 10-mobile-pwa P01 | 2min | 2 tasks | 6 files |
+| Phase 10-mobile-pwa P02 | 6min | 2 tasks | 16 files |
 
 ## Accumulated Context
 
@@ -128,6 +129,9 @@ Recent decisions affecting current work:
 - [Phase 09-operator-console-sentinel]: Break-glass 4hr time-boxed access with server-side expiry enforcement
 - [Phase 09-operator-console-sentinel]: Audit log visible to org owners/admins via Better Auth orgClient role check
 - [Phase 10-mobile-pwa]: matchMedia JS listener for mobile detection to support backdrop click handlers
+- [Phase 10-mobile-pwa]: Excluded sw.ts from main tsconfig (WebWorker types conflict with DOM)
+- [Phase 10-mobile-pwa]: No FK on pushSubscriptions.userId to avoid circular import shared.ts<->auth-schema.ts
+- [Phase 10-mobile-pwa]: Push trigger fire-and-forget from MessageRouter.persistAndPublish so push failures never break event pipeline
 
 ### Pending Todos
 
@@ -147,8 +151,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-04-21T19:57:18.437Z
-Stopped at: Completed 10-01-PLAN.md
+Last session: 2026-04-21T20:05:47.105Z
+Stopped at: Completed 10-02-PLAN.md
 Resume file: None
 
 **Planned Phase:** 5 (Transcript UI) — 3 plans — 2026-04-21T18:27:48.173Z

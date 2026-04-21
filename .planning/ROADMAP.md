@@ -197,7 +197,7 @@ Plans:
 
 Plans:
 - [x] 10-01-PLAN.md -- Responsive layout: hamburger sidebar, sticky composer, mobile process drawer overlay
-- [ ] 10-02-PLAN.md -- PWA manifest + Serwist service worker, push notifications via VAPID/web-push
+- [x] 10-02-PLAN.md -- PWA manifest + Serwist service worker, push notifications via VAPID/web-push
 - [ ] 10-03-PLAN.md -- Mobile landing page with question queue cards, quick-answer, and overnight digest
 
 ## Progress
@@ -217,4 +217,4 @@ Note: Phase 7 and Phase 9 depend on Phase 4 and Phase 3 respectively, not on Pha
 | 7. Artifacts & Run History | 0/2 | Planned | - |
 | 8. Replay & Sharing | 0/3 | Planned | - |
 | 9. Operator Console & Sentinel | 3/3 | Complete   | 2026-04-21 |
-| 10. Mobile PWA | 1/3 | In Progress|  |
+| 10. Mobile PWA | 2/3 | In Progress|  |
