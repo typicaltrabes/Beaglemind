@@ -163,7 +163,7 @@ Plans:
 Plans:
 - [x] 08-01-PLAN.md -- Schema (share_links + replay_views), share link generation/revocation API, share dialog on run page
 - [x] 08-02-PLAN.md -- Public replay page with server-side Clean-mode event filtering and view logging
-- [ ] 08-03-PLAN.md -- Shared links management page with revocation controls and audit log views
+- [x] 08-03-PLAN.md -- Shared links management page with revocation controls and audit log views
 
 ### Phase 9: Operator Console & Sentinel
 **Goal**: Operators can monitor system health, provision tenants, observe agent behavior via sentinel logging, and access tenant data through audited break-glass
