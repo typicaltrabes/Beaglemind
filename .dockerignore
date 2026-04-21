@@ -1,7 +1,10 @@
 node_modules
 .next
+dist
 .git
 .github
 *.md
 .env*
 .planning
+.vscode
+*.tsbuildinfo

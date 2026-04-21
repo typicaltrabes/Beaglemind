@@ -1,0 +1,101 @@
+services:
+  console-web:
+    image: ghcr.io/beaglemind/console-web:latest
+    build:
+      context: ..
+      dockerfile: apps/web/Dockerfile
+    restart: unless-stopped
+    networks:
+      - beaglehq_backend
+      - beaglehq_frontend
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - MINIO_ENDPOINT=minio
+      - MINIO_PORT=9000
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  console-agent-hub:
+    image: ghcr.io/beaglemind/console-agent-hub:latest
+    build:
+      context: ..
+      dockerfile: apps/agent-hub/Dockerfile
+    restart: unless-stopped
+    networks:
+      - beaglehq_backend
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  console-worker:
+    image: ghcr.io/beaglemind/console-worker:latest
+    build:
+      context: ..
+      dockerfile: apps/worker/Dockerfile
+    restart: unless-stopped
+    networks:
+      - beaglehq_backend
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - MINIO_ENDPOINT=minio
+      - MINIO_PORT=9000
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+    networks:
+      - beaglehq_backend
+    volumes:
+      - minio_data:/data
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ACCESS_KEY}
+      - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY}
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_started
+    entrypoint: >
+      /bin/sh -c "
+      sleep 5;
+      mc alias set local http://minio:9000 $${MINIO_ACCESS_KEY} $${MINIO_SECRET_KEY};
+      mc mb local/system --ignore-existing;
+      echo 'MinIO initialization complete';
+      "
+    networks:
+      - beaglehq_backend
+    environment:
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+    restart: "no"
+
+networks:
+  beaglehq_backend:
+    external: true
+  beaglehq_frontend:
+    external: true
+
+volumes:
+  minio_data:
