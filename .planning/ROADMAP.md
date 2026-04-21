@@ -35,11 +35,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Pushing to main on GitHub triggers a CI/CD pipeline that deploys to BeagleHQ automatically
   4. Monorepo structure exists with apps/web, apps/agent-hub, apps/worker, packages/db, packages/shared and builds cleanly
   5. Tenant schema migration script creates a new per-tenant schema in PostgreSQL and the vault path resolver maps tenant ID to Obsidian vault location
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 01-01: TBD
-- [ ] 01-02: TBD
+- [ ] 01-01-PLAN.md -- Monorepo scaffold with all packages, Drizzle schema, tenant utilities, vault resolver
+- [ ] 01-02-PLAN.md -- Dockerfiles, Docker Compose, BeagleHQ deployment, Caddy config
+- [ ] 01-03-PLAN.md -- GitHub Actions CI/CD pipeline
 
 ### Phase 2: Authentication & Tenancy
 **Goal**: Users can securely sign in to a tenant-isolated environment where every request is scoped to their organization
@@ -198,7 +199,7 @@ Note: Phase 7 and Phase 9 depend on Phase 4 and Phase 3 respectively, not on Pha
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Infrastructure | 0/2 | Not started | - |
+| 1. Foundation & Infrastructure | 0/3 | Planned | - |
 | 2. Authentication & Tenancy | 0/2 | Not started | - |
 | 3. Agent Connection Hub | 0/2 | Not started | - |
 | 4. Research Sprint Workflow | 0/3 | Not started | - |
