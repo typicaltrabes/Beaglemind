@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronRight } from 'lucide-react';
 import type { HubEventEnvelope } from '@beagle-console/shared';
 import type { CollapsibleRange } from '@/lib/scene-utils';
 import { getAgentConfig } from '@/lib/agent-config';
+import { useMode } from '@/lib/mode-context';
 
 function formatTime(iso: string): string {
   const d = new Date(iso);
@@ -25,7 +26,13 @@ interface CollapseFoldProps {
 }
 
 export function CollapseFold({ range, events, renderEvent }: CollapseFoldProps) {
-  const [expanded, setExpanded] = useState(false);
+  const { mode } = useMode();
+  const [expanded, setExpanded] = useState(mode === 'studio');
+
+  // Reset expanded state when mode changes
+  useEffect(() => {
+    setExpanded(mode === 'studio');
+  }, [mode]);
 
   const agentLabel = formatAgentNames(range.agentIds);
   const timeSpan = `${formatTime(range.startTime)} \u2014 ${formatTime(range.endTime)}`;
