@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Completed 08-01-PLAN.md
-last_updated: "2026-04-21T19:31:04.575Z"
+stopped_at: Completed 08-02-PLAN.md
+last_updated: "2026-04-21T19:36:06.400Z"
 last_activity: 2026-04-21
 progress:
   total_phases: 10
   completed_phases: 6
-  total_plans: 27
-  completed_plans: 22
-  percent: 81
+  total_plans: 28
+  completed_plans: 23
+  percent: 82
 ---
 
 # Project State
@@ -71,6 +71,7 @@ Progress: [███░░░░░░░] 33%
 | Phase 07-artifacts-run-history P01 | 2min | 2 tasks | 4 files |
 | Phase 07 P02 | 3min | 2 tasks | 6 files |
 | Phase 08-replay-sharing P01 | 3min | 2 tasks | 5 files |
+| Phase 08-replay-sharing P02 | 3min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -113,6 +114,8 @@ Recent decisions affecting current work:
 - [Phase 07-artifacts-run-history]: Used @base-ui/react Dialog as slide-over panel instead of shadcn Sheet to match existing UI primitive pattern
 - [Phase 07]: Drizzle SQL subqueries for artifact count and cost aggregation inline in SELECT
 - [Phase 08-replay-sharing]: Used visual copied state on button instead of toast library (no sonner in project)
+- [Phase 08-replay-sharing]: Tenant iteration for token lookup (O(tenants)) instead of public lookup table
+- [Phase 08-replay-sharing]: Read-only plan/question cards inlined in ReplayMessageList to decouple from dashboard components
 
 ### Pending Todos
 
@@ -132,8 +135,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-04-21T19:31:04.573Z
-Stopped at: Completed 08-01-PLAN.md
+Last session: 2026-04-21T19:36:06.398Z
+Stopped at: Completed 08-02-PLAN.md
 Resume file: None
 
 **Planned Phase:** 5 (Transcript UI) — 3 plans — 2026-04-21T18:27:48.173Z

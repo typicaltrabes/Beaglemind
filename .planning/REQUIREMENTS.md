@@ -71,9 +71,9 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **REPL-01**: Replay share-link — tokenized URL scoped to Clean-mode content only
 - [x] **REPL-02**: Share links are revocable by tenant admin
 - [x] **REPL-03**: Share links expire (default 30 days, configurable per tenant)
-- [ ] **REPL-04**: External viewers see Writers' Room transcript — no sentinel data, no drawer, no Studio signals
-- [ ] **REPL-05**: Every replay view logged to customer audit view (viewer, timestamp, IP)
-- [ ] **REPL-06**: Content filtering at renderer level — share-link API returns Clean-mode projection only (server-side, not client-side hiding)
+- [x] **REPL-04**: External viewers see Writers' Room transcript — no sentinel data, no drawer, no Studio signals
+- [x] **REPL-05**: Every replay view logged to customer audit view (viewer, timestamp, IP)
+- [x] **REPL-06**: Content filtering at renderer level — share-link API returns Clean-mode projection only (server-side, not client-side hiding)
 
 ### Mobile & PWA
 
@@ -197,9 +197,9 @@ Deferred to future release. Tracked but not in current roadmap.
 | REPL-01 | Phase 8 | Complete |
 | REPL-02 | Phase 8 | Complete |
 | REPL-03 | Phase 8 | Complete |
-| REPL-04 | Phase 8 | Pending |
-| REPL-05 | Phase 8 | Pending |
-| REPL-06 | Phase 8 | Pending |
+| REPL-04 | Phase 8 | Complete |
+| REPL-05 | Phase 8 | Complete |
+| REPL-06 | Phase 8 | Complete |
 | MOBI-01 | Phase 10 | Pending |
 | MOBI-02 | Phase 10 | Pending |
 | MOBI-03 | Phase 10 | Pending |
