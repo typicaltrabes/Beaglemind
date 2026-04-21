@@ -5,12 +5,15 @@ import { useRunStream } from '@/lib/hooks/use-sse';
 import { useRunStore } from '@/lib/stores/run-store';
 import { useUIStore } from '@/lib/stores/ui-store';
 import { useStopRun } from '@/lib/hooks/use-run-actions';
+import { useMode } from '@/lib/mode-context';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { SquareIcon } from 'lucide-react';
 import { MessageList } from '@/components/transcript/message-list';
 import { TldrBanner } from '@/components/transcript/tldr-banner';
 import { Composer } from '@/components/transcript/composer';
+import { ProcessDrawer } from '@/components/studio/process-drawer';
+import { InterruptButton } from '@/components/studio/interrupt-button';
 
 const STATUS_STYLES: Record<string, string> = {
   pending: 'bg-gray-600/20 text-gray-400',
@@ -33,6 +36,9 @@ export default function RunPage({
 
   // Read store state
   const status = useRunStore((s) => s.status);
+
+  const { mode } = useMode();
+  const isStudio = mode === 'studio';
 
   const stopRun = useStopRun();
 
@@ -60,6 +66,7 @@ export default function RunPage({
         </Badge>
         <span className="text-sm text-gray-400">Run</span>
         <span className="truncate text-xs text-gray-600">{runId}</span>
+        {isStudio && <InterruptButton runId={runId} />}
         {isExecuting && (
           <Button
             variant="destructive"
@@ -74,10 +81,13 @@ export default function RunPage({
         )}
       </div>
 
-      {/* Transcript area — Writers' Room (D-18) */}
-      <div className="relative flex-1 overflow-hidden">
-        <TldrBanner />
-        <MessageList runId={runId} />
+      {/* Transcript area + optional drawer */}
+      <div className="relative flex flex-1 overflow-hidden">
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <TldrBanner />
+          <MessageList runId={runId} />
+        </div>
+        {isStudio && <ProcessDrawer runId={runId} />}
       </div>
 
       {/* Composer */}
