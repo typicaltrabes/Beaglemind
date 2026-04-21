@@ -33,6 +33,7 @@
     "@types/qrcode": "^1.5.6",
     "@types/react": "latest",
     "@types/react-dom": "latest",
-    "tailwindcss": "latest"
+    "tailwindcss": "latest",
+    "vitest": "^4.1.5"
   }
 }
