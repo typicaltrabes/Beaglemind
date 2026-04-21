@@ -28,7 +28,7 @@ const RunStartBody = z.object({
   runId: z.string().uuid(),
   tenantId: z.string().uuid(),
   prompt: z.string(),
-  targetAgent: z.string().default('mo'),
+  targetAgent: z.string().default('jarvis'),
 });
 
 const RunStopBody = z.object({
