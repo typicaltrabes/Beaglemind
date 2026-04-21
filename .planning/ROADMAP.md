@@ -141,12 +141,12 @@ Plans:
   2. Artifact cards appear in the transcript with filename, size, and inline preview for docx/pdf files
   3. Run history page lists all runs with search and status filters (pending/running/completed/cancelled)
   4. Each run displays its total cost sourced from LiteLLM metrics
-**Plans**: TBD
+**Plans**: 2 plans
 **UI hint**: yes
 
 Plans:
-- [ ] 07-01: TBD
-- [ ] 07-02: TBD
+- [ ] 07-01-PLAN.md -- Artifact preview: mammoth DOCX conversion API, PDF iframe preview, slide-over panel, extended artifact card
+- [ ] 07-02-PLAN.md -- Run history page: API with joins/filters, table with status/cost/search, cost badge, sidebar nav
 
 ### Phase 8: Replay & Sharing
 **Goal**: Users can generate tokenized share links that let external viewers watch a Clean-mode replay of any completed run, with full audit trail
@@ -211,7 +211,7 @@ Note: Phase 7 and Phase 9 depend on Phase 4 and Phase 3 respectively, not on Pha
 | 4. Research Sprint Workflow | 6/6 | Planned | - |
 | 5. Transcript UI | 0/3 | Planned | - |
 | 6. Clean & Studio Modes | 0/2 | Planned | - |
-| 7. Artifacts & Run History | 0/2 | Not started | - |
+| 7. Artifacts & Run History | 0/2 | Planned | - |
 | 8. Replay & Sharing | 0/2 | Not started | - |
 | 9. Operator Console & Sentinel | 0/2 | Not started | - |
 | 10. Mobile PWA | 0/2 | Not started | - |
