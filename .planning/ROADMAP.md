@@ -95,7 +95,7 @@ Plans:
 - [x] 04-02-PLAN.md -- Hub API gaps: /runs/approve, /runs/questions/answer routes, fix /runs/start transition
 - [x] 04-03-PLAN.md -- Next.js API routes (projects, runs, approve, stop, answer, SSE stream, artifact download)
 - [x] 04-04-PLAN.md -- Zustand stores, SSE hook, TanStack Query hooks, QueryProvider
-- [ ] 04-05-PLAN.md -- Dashboard layout with sidebar, project list, question queue, project/run pages
+- [x] 04-05-PLAN.md -- Dashboard layout with sidebar, project list, question queue, project/run pages
 - [x] 04-06-PLAN.md -- Transcript components: plan card, question card, artifact card, message list, composer
 
 ### Phase 5: Transcript UI
