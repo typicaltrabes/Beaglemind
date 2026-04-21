@@ -9,6 +9,7 @@ export const users = shared.table('users', {
   image: text('image'),
   twoFactorEnabled: boolean('two_factor_enabled'),
   isOperator: boolean('is_operator').notNull().default(false),
+  lastActiveAt: timestamp('last_active_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
