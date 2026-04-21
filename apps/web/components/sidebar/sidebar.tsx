@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { History } from 'lucide-react';
+import { History, Share2 } from 'lucide-react';
 import { ProjectList } from './project-list';
 import { QuestionQueue } from './question-queue';
 import { Separator } from '@/components/ui/separator';
@@ -24,6 +24,13 @@ export function Sidebar() {
         >
           <History className="size-4" />
           Run History
+        </Link>
+        <Link
+          href="/shared-links"
+          className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <Share2 className="size-4" />
+          Shared Links
         </Link>
         <Separator className="my-2" />
         <QuestionQueue />
