@@ -52,12 +52,13 @@ Plans:
   3. Admin can invite a new user to their tenant via email; that user lands in the correct organization
   4. Every API request is scoped to the tenant schema via middleware -- a user in Tenant A cannot see Tenant B data even by manipulating requests
   5. Tenant provisioning script creates a new org, its PostgreSQL schema, and seeds initial config
-**Plans**: TBD
+**Plans**: 3 plans
 **UI hint**: yes
 
 Plans:
-- [ ] 02-01: TBD
-- [ ] 02-02: TBD
+- [ ] 02-01-PLAN.md -- Better Auth schema, server/client config, API route, email utility
+- [ ] 02-02-PLAN.md -- Auth UI pages (login, no-org, dashboard), edge middleware, tenant context utility
+- [ ] 02-03-PLAN.md -- MFA setup/challenge, invite acceptance flow, extended provisioning, tenant isolation tests
 
 ### Phase 3: Agent Connection Hub
 **Goal**: Console can establish and maintain reliable bidirectional communication with OpenClaw agents on the Agents VPS
@@ -199,8 +200,8 @@ Note: Phase 7 and Phase 9 depend on Phase 4 and Phase 3 respectively, not on Pha
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Infrastructure | 0/3 | Planned | - |
-| 2. Authentication & Tenancy | 0/2 | Not started | - |
+| 1. Foundation & Infrastructure | 1/3 | Planned | - |
+| 2. Authentication & Tenancy | 0/3 | Planned | - |
 | 3. Agent Connection Hub | 0/2 | Not started | - |
 | 4. Research Sprint Workflow | 0/3 | Not started | - |
 | 5. Transcript UI | 0/2 | Not started | - |
