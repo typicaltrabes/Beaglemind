@@ -36,10 +36,11 @@ export function Composer({ runId }: ComposerProps) {
   const { mode } = useMode();
   const isStudio = mode === 'studio';
 
-  const isTerminal = status === 'completed' || status === 'cancelled';
+  const isCancelled = status === 'cancelled';
   const isPlanned = status === 'planned';
   const isExecuting = status === 'executing';
-  const canSend = !isTerminal && !isPlanned && input.trim().length > 0;
+  // Allow sending on completed runs to continue the conversation
+  const canSend = !isCancelled && !isPlanned && input.trim().length > 0;
 
   // Close mention dropdown on escape or click outside
   useEffect(() => {
@@ -119,7 +120,7 @@ export function Composer({ runId }: ComposerProps) {
   }
 
   function getPlaceholder(): string {
-    if (isTerminal) return `Run ${status}`;
+    if (isCancelled) return `Run ${status}`;
     if (isPlanned) return 'Awaiting your approval...';
     if (targetAgent) {
       const name = AGENT_CONFIG[targetAgent]?.displayName ?? targetAgent;
@@ -225,7 +226,7 @@ export function Composer({ runId }: ComposerProps) {
           onChange={handleChange}
           onKeyDown={handleKeyDown}
           placeholder={getPlaceholder()}
-          disabled={isTerminal || isPlanned}
+          disabled={isCancelled || isPlanned}
           className="min-h-[40px] max-h-[120px] resize-none"
           rows={1}
         />

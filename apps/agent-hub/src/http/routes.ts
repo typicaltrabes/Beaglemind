@@ -76,9 +76,6 @@ export async function handleSend(
     },
   };
 
-  // Send to agent via WebSocket
-  registry.send(parsed.agentId, outbound);
-
   // Persist user message as an event
   await router.persistAndPublish(parsed.tenantId, {
     type: 'agent_message',
@@ -88,6 +85,33 @@ export async function handleSend(
     content: { text: parsed.content },
     metadata: { targetAgent: parsed.agentId },
   });
+
+  // Send to agent via CLI bridge (reliable), fall back to WebSocket
+  const agentBridge = AGENT_BRIDGE_CONFIG[parsed.agentId];
+  if (agentBridge) {
+    const bridgeCfg: OpenClawBridgeConfig = {
+      agentId: parsed.agentId,
+      sshHost: agentBridge.sshHost,
+      sessionId: `beagle-console-${parsed.runId}`,
+      sudoUser: agentBridge.sudoUser,
+    };
+    sendToAgent(bridgeCfg, parsed.content).then(async (result) => {
+      if (result) {
+        await router.persistAndPublish(parsed.tenantId, {
+          type: 'agent_message',
+          agentId: parsed.agentId,
+          runId: parsed.runId,
+          tenantId: parsed.tenantId,
+          content: { text: result.text },
+          metadata: { durationMs: result.durationMs },
+        });
+      }
+    }).catch((err) => {
+      log.error({ error: err.message, agentId: parsed.agentId }, 'CLI bridge send failed');
+    });
+  } else {
+    registry.send(parsed.agentId, outbound);
+  }
 
   log.info({ agentId: parsed.agentId, runId: parsed.runId }, 'User message sent');
   return { ok: true };
