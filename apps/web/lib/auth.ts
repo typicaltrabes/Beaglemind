@@ -24,7 +24,7 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
-    disableSignUp: true, // D-05: invite-only, no public registration
+    disableSignUp: process.env.ALLOW_SIGNUP === 'true' ? false : true, // D-05: invite-only, no public registration
   },
   session: {
     expiresIn: 60 * 60 * 24 * 7, // 7 days
