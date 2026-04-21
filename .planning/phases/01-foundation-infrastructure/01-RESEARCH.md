@@ -869,32 +869,18 @@ export default {
 | A5 | Existing Caddyfile is at `/opt/beaglehq/caddy/Caddyfile` and can be edited to add new site block | Pattern 6 | Caddy config location wrong, or Caddy uses different config format |
 | A6 | Vault directories are at `/home/lucas/Dropbox/Vaults/{tenant-slug}` | Pattern 9 | Vault resolver returns wrong paths |
 
-## Open Questions
 
-1. **Exact Postgres/Redis container names on BeagleHQ**
-   - What we know: BeagleHQ runs Postgres 17.4 and Redis 7.x in Docker
-   - What's unclear: Exact container names as they appear on `beaglehq_backend` network
-   - Recommendation: SSH to BeagleHQ and run `docker network inspect beaglehq_backend` before writing connection strings
+## Open Questions (RESOLVED)
 
-2. **BeagleHQ Caddyfile format and location**
-   - What we know: Caddy is running, beaglemind.ai works
-   - What's unclear: Exact Caddyfile location and whether it uses imports or a single file
-   - Recommendation: SSH and inspect `/opt/beaglehq/caddy/` directory
+1. **Exact Postgres/Redis container names on BeagleHQ** -- RESOLVED: discovered at execution time via SSH per Plan 01-02 T1. Plan 01-02 T1 action explicitly SSHes to BeagleHQ to discover container names before writing connection strings.
 
-3. **Postgres user/password for new database**
-   - What we know: Credentials are in `/opt/beaglehq/.env`
-   - What's unclear: Whether to use the same superuser or create a dedicated user for beagle_console
-   - Recommendation: Create a dedicated `beagle_console` Postgres user with limited permissions (not superuser)
+2. **BeagleHQ Caddyfile format and location** -- RESOLVED: discovered at execution time via SSH per Plan 01-02 T1. Plan 01-02 T2 reads the existing Caddyfile before modifying it.
 
-4. **GitHub org name for GHCR**
-   - What we know: "GitHub repo under BeagleMind org" (D-16)
-   - What's unclear: Exact org slug on GitHub (beaglemind? BeagleMind? beagle-mind?)
-   - Recommendation: Verify org exists on GitHub, create if needed
+3. **Postgres user/password for new database** -- RESOLVED: discovered at execution time via SSH per Plan 01-02 T1. Plan 01-02 T1 reads /opt/beaglehq/.env to get credentials.
 
-5. **STRATO DNS management**
-   - What we know: beaglemind.ai DNS is managed at STRATO
-   - What's unclear: Whether Lucas has STRATO login access on this machine
-   - Recommendation: Create DNS A record as first task, allow propagation time
+4. **GitHub org name for GHCR** -- RESOLVED: `beaglemind` org per D-16. Plan 01-03 uses lowercase `beaglemind` as GHCR org path (GitHub lowercases org names in GHCR URLs).
+
+5. **STRATO DNS management** -- RESOLVED: delegated to user via user_setup DNS task in Plan 01-02. User creates A record at STRATO; Plan 01-02 T2 checkpoint verifies after DNS propagation.
 
 ## Environment Availability
 
