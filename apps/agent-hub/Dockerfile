@@ -39,4 +39,4 @@ USER node
 EXPOSE 3001
 ENV PORT=3001
 
-CMD ["node", "apps/agent-hub/dist/index.js"]
+CMD ["node", "--experimental-specifier-resolution=node", "apps/agent-hub/dist/index.js"]
