@@ -1,0 +1,19 @@
+{
+  "name": "@beagle-console/agent-hub",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "ws": "8.20.0",
+    "@beagle-console/db": "workspace:*",
+    "@beagle-console/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/ws": "latest",
+    "tsx": "latest"
+  }
+}

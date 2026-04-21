@@ -1,0 +1,23 @@
+{
+  "name": "@beagle-console/web",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "next": "15.5.15",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "@beagle-console/db": "workspace:*",
+    "@beagle-console/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "tailwindcss": "latest",
+    "@tailwindcss/postcss": "latest"
+  }
+}

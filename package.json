@@ -1,0 +1,22 @@
+{
+  "name": "beagle-console",
+  "private": true,
+  "packageManager": "pnpm@10.33.0",
+  "scripts": {
+    "dev:web": "pnpm --filter @beagle-console/web dev",
+    "dev:hub": "pnpm --filter @beagle-console/agent-hub dev",
+    "dev:worker": "pnpm --filter @beagle-console/worker dev",
+    "build": "pnpm -r build",
+    "lint": "biome check .",
+    "format": "biome format --write .",
+    "db:generate": "pnpm --filter @beagle-console/db generate",
+    "db:migrate": "pnpm --filter @beagle-console/db migrate"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "latest",
+    "@types/node": "^25.6.0",
+    "drizzle-kit": "latest",
+    "typescript": "5.7.3",
+    "vitest": "latest"
+  }
+}
