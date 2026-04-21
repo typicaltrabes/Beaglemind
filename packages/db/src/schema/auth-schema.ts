@@ -1,5 +1,5 @@
 import { text, timestamp, boolean } from 'drizzle-orm/pg-core';
-import { shared } from './shared.js';
+import { shared } from './shared';
 
 export const users = shared.table('users', {
   id: text('id').primaryKey(),

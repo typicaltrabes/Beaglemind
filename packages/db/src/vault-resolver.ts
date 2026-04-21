@@ -1,5 +1,5 @@
 import { eq } from 'drizzle-orm';
-import { tenants } from './schema/shared.js';
+import { tenants } from './schema/shared';
 
 // For v1: vaults on BeagleHQ filesystem, synced via Dropbox
 // Typical path: /home/lucas/Dropbox/Vaults/{tenant-slug}

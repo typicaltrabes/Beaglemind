@@ -1,7 +1,7 @@
 import { sql } from 'drizzle-orm';
-import { db } from './client.js';
-import { tenants } from './schema/shared.js';
-import { ensureBucket } from './minio-client.js';
+import { db } from './client';
+import { tenants } from './schema/shared';
+import { ensureBucket } from './minio-client';
 
 interface ProvisionTenantInput {
   name: string;
