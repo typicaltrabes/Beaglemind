@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Completed 04-01-PLAN.md
-last_updated: "2026-04-21T18:06:21.241Z"
+stopped_at: Completed 04-04-PLAN.md
+last_updated: "2026-04-21T18:10:24.625Z"
 last_activity: 2026-04-21
 progress:
   total_phases: 10
   completed_phases: 2
   total_plans: 15
-  completed_plans: 10
-  percent: 67
+  completed_plans: 11
+  percent: 73
 ---
 
 # Project State
@@ -59,6 +59,7 @@ Progress: [███░░░░░░░] 33%
 | Phase 03 P03 | 4min | 2 tasks | 11 files |
 | Phase 04 P02 | 2min | 2 tasks | 3 files |
 | Phase 04 P01 | 4min | 2 tasks | 26 files |
+| Phase 04 P04 | 2min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -86,6 +87,7 @@ Recent decisions affecting current work:
 - [Phase 04]: Removed title from runs table, replaced with projectId/kind/parentRunId/createdBy per D-02
 - [Phase 04]: State machine uses lookup table pattern (not xstate) for simplicity and testability
 - [Phase 04]: Hub client defaults to localhost:4100, overridable via AGENT_HUB_URL env var
+- [Phase 04]: Used Record instead of Map for Zustand events store to avoid immer compatibility issues
 
 ### Pending Todos
 
@@ -105,8 +107,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-04-21T18:06:21.239Z
-Stopped at: Completed 04-01-PLAN.md
+Last session: 2026-04-21T18:10:24.623Z
+Stopped at: Completed 04-04-PLAN.md
 Resume file: None
 
 **Planned Phase:** 4 (Research Sprint Workflow) — 6 plans — 2026-04-21T17:59:27.301Z

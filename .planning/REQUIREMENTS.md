@@ -31,9 +31,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [x] **WORK-01**: User can create a new project
 - [x] **WORK-02**: User can start a research sprint by sending a prompt to Mo
-- [ ] **WORK-03**: Mo generates a plan with cost estimate; user sees plan-approval card
+- [x] **WORK-03**: Mo generates a plan with cost estimate; user sees plan-approval card
 - [x] **WORK-04**: Run does not proceed (no API spend) until user approves the plan
-- [ ] **WORK-05**: Agents queue clarifying questions instead of self-authorizing; user sees question queue
+- [x] **WORK-05**: Agents queue clarifying questions instead of self-authorizing; user sees question queue
 - [x] **WORK-06**: User can answer queued questions inline in the transcript
 - [ ] **WORK-07**: User can stop a running sprint via single Stop button in Clean mode
 - [x] **WORK-08**: Run state machine tracks transitions: pending → planned → approved → executing → completed/cancelled
@@ -169,9 +169,9 @@ Deferred to future release. Tracked but not in current roadmap.
 | CONN-06 | Phase 3 | Complete |
 | WORK-01 | Phase 4 | Complete |
 | WORK-02 | Phase 4 | Complete |
-| WORK-03 | Phase 4 | Pending |
+| WORK-03 | Phase 4 | Complete |
 | WORK-04 | Phase 4 | Complete |
-| WORK-05 | Phase 4 | Pending |
+| WORK-05 | Phase 4 | Complete |
 | WORK-06 | Phase 4 | Complete |
 | WORK-07 | Phase 4 | Pending |
 | WORK-08 | Phase 4 | Complete |
