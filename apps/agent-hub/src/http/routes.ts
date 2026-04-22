@@ -145,7 +145,7 @@ async function runRoundTable(
   router: MessageRouter,
 ) {
   const agents = ['mo', 'jarvis', 'herman']; // Sam excluded — sentinel only
-  const transcript: string[] = [`[User]: ${userPrompt}`];
+  const transcript: string[] = [];
 
   for (const agentId of agents) {
     const agentBridge = AGENT_BRIDGE_CONFIG[agentId];
@@ -158,8 +158,27 @@ async function runRoundTable(
       sudoUser: agentBridge.sudoUser,
     };
 
-    // Build the full transcript as the prompt — agent sees everything said so far
-    const fullPrompt = transcript.join('\n\n');
+    // Build the prompt with explicit group discussion context
+    const displayName = agentId.charAt(0).toUpperCase() + agentId.slice(1);
+    let fullPrompt: string;
+
+    if (transcript.length === 0) {
+      // First agent — just gets the user prompt
+      fullPrompt = userPrompt;
+    } else {
+      // Subsequent agents — see the full discussion so far
+      fullPrompt = `You are in a group discussion with other AI agents on the Beagle Agent Console. The user asked a question and other agents have already responded. Read their responses carefully and add YOUR perspective — agree, disagree, build on their points, or challenge their assumptions. Do NOT repeat what others said. Be direct and substantive.
+
+--- GROUP DISCUSSION TRANSCRIPT ---
+
+User: ${userPrompt}
+
+${transcript.join('\n\n')}
+
+--- END TRANSCRIPT ---
+
+${displayName}, it's your turn. Respond to the discussion above. Reference other agents by name when you agree or disagree with them.`;
+    }
 
     log.info({ runId, agentId, transcriptLength: fullPrompt.length }, 'Sending to agent with full transcript');
 
@@ -177,8 +196,7 @@ async function runRoundTable(
         });
 
         // Add to transcript so next agent sees it
-        const displayName = agentId.charAt(0).toUpperCase() + agentId.slice(1);
-        transcript.push(`[${displayName}]: ${result.text}`);
+        transcript.push(`${displayName}: ${result.text}`);
 
         log.info({ runId, agentId, responseLength: result.text.length }, 'Agent responded in round-table');
       }
