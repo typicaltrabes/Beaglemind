@@ -110,8 +110,9 @@ export async function handleSend(
 }
 
 /**
- * POST /runs/start -- initiate a run and send the prompt to the target agent.
- * Defaults targetAgent to 'mo'.
+ * POST /runs/start -- initiate a multi-agent round-table discussion.
+ * Agents respond sequentially, each seeing the full transcript so far.
+ * Mo → Jarvis → Herman (Sam excluded from visible, sentinel only).
  */
 export async function handleRunStart(
   body: unknown,
@@ -124,56 +125,69 @@ export async function handleRunStart(
   // Set active run context on the Hub
   setActiveRun(parsed.runId, parsed.tenantId);
 
-  // Construct OpenClaw outbound message with the prompt
-  const outbound: OpenClawOutbound = {
-    type: 'chat.send',
-    content: parsed.prompt,
-    messageId: `msg_${randomUUID()}`,
-    senderId: `console_${parsed.tenantId}`,
-    senderName: 'Console Hub',
-    chatType: 'direct',
-    customData: {
-      runId: parsed.runId,
-      tenantId: parsed.tenantId,
-    },
-  };
+  // Run the round-table discussion in the background (don't block the HTTP response)
+  runRoundTable(parsed.runId, parsed.tenantId, parsed.prompt, router).catch((err) => {
+    log.error({ error: err.message, runId: parsed.runId }, 'Round-table discussion failed');
+  });
 
-  // Try CLI bridge first (reliable), fall back to WebSocket
-  const agentBridge = AGENT_BRIDGE_CONFIG[parsed.targetAgent];
-  if (agentBridge) {
+  log.info({ runId: parsed.runId }, 'Round-table discussion started');
+  return { ok: true, runId: parsed.runId };
+}
+
+/**
+ * Sequential round-table: each agent sees the full conversation so far.
+ * Mo responds first, then Jarvis (seeing Mo's response), then Herman (seeing both).
+ */
+async function runRoundTable(
+  runId: string,
+  tenantId: string,
+  userPrompt: string,
+  router: MessageRouter,
+) {
+  const agents = ['mo', 'jarvis', 'herman']; // Sam excluded — sentinel only
+  const transcript: string[] = [`[User]: ${userPrompt}`];
+
+  for (const agentId of agents) {
+    const agentBridge = AGENT_BRIDGE_CONFIG[agentId];
+    if (!agentBridge) continue;
+
     const bridgeCfg: OpenClawBridgeConfig = {
-      agentId: parsed.targetAgent,
+      agentId,
       sshHost: agentBridge.sshHost,
-      runId: parsed.runId,
+      runId,
       sudoUser: agentBridge.sudoUser,
     };
 
-    // Send prompt via CLI bridge (async — don't await, let it run in background)
-    // Note: user prompt event is persisted by the web app, not here (avoids duplicates when called per-agent)
-    sendToAgent(bridgeCfg, parsed.prompt).then(async (result) => {
-      if (result) {
-        // Publish agent response as an event
-        await router.persistAndPublish(parsed.tenantId, {
+    // Build the full transcript as the prompt — agent sees everything said so far
+    const fullPrompt = transcript.join('\n\n');
+
+    log.info({ runId, agentId, transcriptLength: fullPrompt.length }, 'Sending to agent with full transcript');
+
+    try {
+      const result = await sendToAgent(bridgeCfg, fullPrompt);
+      if (result && result.text) {
+        // Publish agent response as an event (appears in UI immediately)
+        await router.persistAndPublish(tenantId, {
           type: 'agent_message',
-          agentId: parsed.targetAgent,
-          runId: parsed.runId,
-          tenantId: parsed.tenantId,
+          agentId,
+          runId,
+          tenantId,
           content: { text: result.text },
-          metadata: { durationMs: result.durationMs, costUsd: result.costUsd, model: result.model, openclawRunId: result.runId },
+          metadata: { durationMs: result.durationMs, costUsd: result.costUsd, model: result.model },
         });
 
-        log.info({ runId: parsed.runId, agentId: parsed.targetAgent }, 'Agent response received via CLI bridge');
+        // Add to transcript so next agent sees it
+        const displayName = agentId.charAt(0).toUpperCase() + agentId.slice(1);
+        transcript.push(`[${displayName}]: ${result.text}`);
+
+        log.info({ runId, agentId, responseLength: result.text.length }, 'Agent responded in round-table');
       }
-    }).catch((err) => {
-      log.error({ error: err.message, runId: parsed.runId }, 'CLI bridge failed');
-    });
-  } else {
-    // Fall back to WebSocket
-    registry.send(parsed.targetAgent, outbound);
+    } catch (err: any) {
+      log.error({ error: err.message, runId, agentId }, 'Agent failed in round-table, continuing');
+    }
   }
 
-  log.info({ runId: parsed.runId, targetAgent: parsed.targetAgent }, 'Run started');
-  return { ok: true, runId: parsed.runId };
+  log.info({ runId, agentCount: agents.length }, 'Round-table discussion complete');
 }
 
 /**

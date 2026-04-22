@@ -74,20 +74,16 @@ export async function POST(
       metadata: {},
     });
 
-    // Send to visible agents in parallel — Sam excluded (sentinel, background only)
-    const agents = ['mo', 'jarvis', 'herman'];
-    await Promise.allSettled(
-      agents.map(agent =>
-        hubClient.send({
-          agentId: agent,
-          content,
-          runId,
-          tenantId,
-        }).catch(err => {
-          console.error(`Hub send error for ${agent}:`, err?.message);
-        })
-      )
-    );
+    // Start round-table discussion with the follow-up message
+    try {
+      await hubClient.startRun({
+        runId,
+        tenantId,
+        prompt: content,
+      });
+    } catch (err: any) {
+      console.error('Hub send error (non-fatal):', err?.message);
+    }
 
     return NextResponse.json({ ok: true });
   } catch (error) {

@@ -65,20 +65,16 @@ export async function POST(request: Request) {
       metadata: {},
     });
 
-    // Send to visible agents in parallel — Sam excluded (sentinel, background only)
-    const agents = ['mo', 'jarvis', 'herman'];
-    await Promise.allSettled(
-      agents.map(agent =>
-        hubClient.startRun({
-          runId: run.id,
-          tenantId,
-          prompt,
-          targetAgent: agent,
-        }).catch(err => {
-          console.error(`Hub startRun error for ${agent} (non-fatal):`, err?.message ?? err);
-        })
-      )
-    );
+    // Start round-table discussion — Hub handles sequential agent calls
+    try {
+      await hubClient.startRun({
+        runId: run.id,
+        tenantId,
+        prompt,
+      });
+    } catch (err: any) {
+      console.error('Hub startRun error (non-fatal):', err?.message ?? err);
+    }
 
     return NextResponse.json(run, { status: 201 });
   } catch (error) {
