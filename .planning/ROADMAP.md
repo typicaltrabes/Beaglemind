@@ -224,7 +224,11 @@ Note: Phase 7 and Phase 9 depend on Phase 4 and Phase 3 respectively, not on Pha
 **Goal:** Ship a four-tab switcher on the run view page so users can look at the same run as transcript (Writers' Room), scrubbable horizontal timeline (Timeline), parallel agent columns (Boardroom), or artifact-first doc with margin comments (Canvas). Read-only over existing run-store — no backend, SSE, or schema changes.
 **Requirements**: VIEW-01, VIEW-02, VIEW-03
 **Depends on:** Phase 10
-**Plans:** 0 plans
+**Plans:** 5 plans
 
 Plans:
-- [ ] TBD (run /gsd-plan-phase 11 to break down)
+- [ ] 11-01-PLAN.md — Scaffold tabs primitive, shared helpers (agent-colors, renderEvent), URL-synced tab switcher, and Writers' Room tab wired into run page
+- [ ] 11-02-PLAN.md — Timeline view: horizontal dot lane with scene dividers, hover tooltip, click-to-detail panel, scrubber (VIEW-01)
+- [ ] 11-03-PLAN.md — Boardroom view: parallel agent columns on desktop, mobile accordion fallback (VIEW-02)
+- [ ] 11-04-PLAN.md — Canvas view: artifact-first preview with proximity-based margin comments, extract ArtifactPreviewInline (VIEW-03)
+- [ ] 11-05-PLAN.md — Deploy to console.beaglemind.ai and human UAT checkpoint
