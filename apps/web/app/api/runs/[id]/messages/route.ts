@@ -71,8 +71,8 @@ export async function POST(
       metadata: {},
     });
 
-    // Send to all agents in parallel
-    const agents = ['mo', 'jarvis', 'sam', 'herman'];
+    // Send to visible agents in parallel — Sam excluded (sentinel, background only)
+    const agents = ['mo', 'jarvis', 'herman'];
     await Promise.allSettled(
       agents.map(agent =>
         hubClient.send({
