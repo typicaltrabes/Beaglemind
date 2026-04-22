@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 11-01-PLAN.md
-last_updated: "2026-04-22T12:46:39.713Z"
+stopped_at: Completed 11-02-PLAN.md
+last_updated: "2026-04-22T12:53:06.578Z"
 last_activity: 2026-04-22
 progress:
   total_phases: 11
   completed_phases: 9
   total_plans: 36
-  completed_plans: 31
-  percent: 86
+  completed_plans: 32
+  percent: 89
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 11 (Run-view tabs: Writers' Room, Timeline, Boardroom, Canvas) — EXECUTING
-Plan: 2 of 5
+Plan: 3 of 5
 Status: Ready to execute
 Last activity: 2026-04-22
 
-Progress: [█████████░] 86%
+Progress: [█████████░] 89%
 
 ## Performance Metrics
 
@@ -80,6 +80,7 @@ Progress: [█████████░] 86%
 | Phase 10-mobile-pwa P02 | 6min | 2 tasks | 16 files |
 | Phase 10-mobile-pwa P03 | 3min | 2 tasks | 7 files |
 | Phase 11 P01 | 4min | 2 tasks | 8 files |
+| Phase 11 P02 | 3min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -143,6 +144,9 @@ Recent decisions affecting current work:
 - [Phase 11]: URL-synced tab switcher with canonical cleanup — default tab (writers-room) strips ?view= param; invalid values fall back silently without URL echo
 - [Phase 11]: renderEvent extracted as pure function (not React component) from MessageList — single source of truth for transcript event rendering reused by Timeline/Boardroom
 - [Phase 11]: Agent color palette (getAgentColor) kept separate from AGENT_CONFIG.bgColor — Timeline/Boardroom use tailwind palette classes (bg-amber-500), avatars keep branded hex (bg-[#f7b733])
+- [Phase 11]: Timeline scene label strip placed above the 64px lane, not inside — keeps dots uncluttered and lets 24-char truncated labels render on their own row
+- [Phase 11]: Timeline TooltipTrigger uses base-ui render-prop form so the dot <button> IS the trigger — single focusable absolutely-positioned element, no nested button
+- [Phase 11]: Timeline scrubber snaps to nearest visible sequence via nearestEventBySeq; ties go to the LOWER seq (deterministic)
 
 ### Pending Todos
 
@@ -162,8 +166,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-04-22T12:46:39.710Z
-Stopped at: Completed 11-01-PLAN.md
+Last session: 2026-04-22T12:53:06.575Z
+Stopped at: Completed 11-02-PLAN.md
 Resume file: None
 
 **Planned Phase:** 11 (Run-view tabs: Writers' Room, Timeline, Boardroom, Canvas) — 5 plans — 2026-04-22T12:38:11.467Z

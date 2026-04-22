@@ -217,6 +217,7 @@ Deferred to future release. Tracked but not in current roadmap.
 | INFR-04 | Phase 1 | Pending |
 | INFR-05 | Phase 1 | Complete |
 | INFR-06 | Phase 1 | Complete |
+| VIEW-01 | Phase 11 | Complete |
 
 **Coverage:**
 - v1 requirements: 64 total
