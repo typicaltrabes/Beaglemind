@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: verifying
-stopped_at: Completed 10-03-PLAN.md
-last_updated: "2026-04-21T20:11:20.188Z"
-last_activity: 2026-04-21
+status: executing
+stopped_at: Completed 11-01-PLAN.md
+last_updated: "2026-04-22T12:46:39.713Z"
+last_activity: 2026-04-22
 progress:
-  total_phases: 10
+  total_phases: 11
   completed_phases: 9
-  total_plans: 31
-  completed_plans: 30
-  percent: 97
+  total_plans: 36
+  completed_plans: 31
+  percent: 86
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-21)
 
 **Core value:** Users can observe multi-agent reasoning in real time, steer it at governance gates, and share the full replay externally.
-**Current focus:** Phase 01 — Foundation & Infrastructure
+**Current focus:** Phase 11 — Run-view tabs: Writers' Room, Timeline, Boardroom, Canvas
 
 ## Current Position
 
-Phase: 01 (Foundation & Infrastructure) — EXECUTING
-Plan: 3 of 3
-Status: Phase complete — ready for verification
-Last activity: 2026-04-21
+Phase: 11 (Run-view tabs: Writers' Room, Timeline, Boardroom, Canvas) — EXECUTING
+Plan: 2 of 5
+Status: Ready to execute
+Last activity: 2026-04-22
 
-Progress: [███░░░░░░░] 33%
+Progress: [█████████░] 86%
 
 ## Performance Metrics
 
@@ -79,8 +79,13 @@ Progress: [███░░░░░░░] 33%
 | Phase 10-mobile-pwa P01 | 2min | 2 tasks | 6 files |
 | Phase 10-mobile-pwa P02 | 6min | 2 tasks | 16 files |
 | Phase 10-mobile-pwa P03 | 3min | 2 tasks | 7 files |
+| Phase 11 P01 | 4min | 2 tasks | 8 files |
 
 ## Accumulated Context
+
+### Roadmap Evolution
+
+- Phase 11 added: Run-view tabs: Writers' Room, Timeline, Boardroom, Canvas
 
 ### Decisions
 
@@ -135,6 +140,9 @@ Recent decisions affecting current work:
 - [Phase 10-mobile-pwa]: Push trigger fire-and-forget from MessageRouter.persistAndPublish so push failures never break event pipeline
 - [Phase 10-mobile-pwa]: Yes/no question detection via regex patterns plus content.type check for inline quick-answer
 - [Phase 10-mobile-pwa]: lastActiveAt updated server-side after digest query (not on page load) for accurate activity window
+- [Phase 11]: URL-synced tab switcher with canonical cleanup — default tab (writers-room) strips ?view= param; invalid values fall back silently without URL echo
+- [Phase 11]: renderEvent extracted as pure function (not React component) from MessageList — single source of truth for transcript event rendering reused by Timeline/Boardroom
+- [Phase 11]: Agent color palette (getAgentColor) kept separate from AGENT_CONFIG.bgColor — Timeline/Boardroom use tailwind palette classes (bg-amber-500), avatars keep branded hex (bg-[#f7b733])
 
 ### Pending Todos
 
@@ -154,8 +162,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-04-21T20:11:20.186Z
-Stopped at: Completed 10-03-PLAN.md
+Last session: 2026-04-22T12:46:39.710Z
+Stopped at: Completed 11-01-PLAN.md
 Resume file: None
 
-**Planned Phase:** 5 (Transcript UI) — 3 plans — 2026-04-21T18:27:48.173Z
+**Planned Phase:** 11 (Run-view tabs: Writers' Room, Timeline, Boardroom, Canvas) — 5 plans — 2026-04-22T12:38:11.467Z
