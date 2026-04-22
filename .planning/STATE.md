@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 11-02-PLAN.md
-last_updated: "2026-04-22T12:53:06.578Z"
+stopped_at: Completed 11-03-PLAN.md
+last_updated: "2026-04-22T13:00:23.420Z"
 last_activity: 2026-04-22
 progress:
   total_phases: 11
   completed_phases: 9
   total_plans: 36
-  completed_plans: 32
-  percent: 89
+  completed_plans: 33
+  percent: 92
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 11 (Run-view tabs: Writers' Room, Timeline, Boardroom, Canvas) — EXECUTING
-Plan: 3 of 5
+Plan: 4 of 5
 Status: Ready to execute
 Last activity: 2026-04-22
 
-Progress: [█████████░] 89%
+Progress: [█████████░] 92%
 
 ## Performance Metrics
 
@@ -81,6 +81,7 @@ Progress: [█████████░] 89%
 | Phase 10-mobile-pwa P03 | 3min | 2 tasks | 7 files |
 | Phase 11 P01 | 4min | 2 tasks | 8 files |
 | Phase 11 P02 | 3min | 2 tasks | 4 files |
+| Phase 11 P03 | 3min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -147,6 +148,9 @@ Recent decisions affecting current work:
 - [Phase 11]: Timeline scene label strip placed above the 64px lane, not inside — keeps dots uncluttered and lets 24-char truncated labels render on their own row
 - [Phase 11]: Timeline TooltipTrigger uses base-ui render-prop form so the dot <button> IS the trigger — single focusable absolutely-positioned element, no nested button
 - [Phase 11]: Timeline scrubber snaps to nearest visible sequence via nearestEventBySeq; ties go to the LOWER seq (deterministic)
+- [Phase 11]: Boardroom unconditional column sort — every column sorted ascending by sequenceNumber regardless of mode, so callers can rely on chronological order without doing their own sort (fix applied during Task 1 GREEN)
+- [Phase 11]: Boardroom desktop/mobile split via tailwind hidden md:grid + md:hidden siblings, no matchMedia — SSR-safe, no hydration mismatch
+- [Phase 11]: Boardroom run-level state_transition replication — studio mode pushes each transition into every agent column and re-sorts; clean mode filters them out upstream
 
 ### Pending Todos
 
@@ -166,8 +170,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-04-22T12:53:06.575Z
-Stopped at: Completed 11-02-PLAN.md
+Last session: 2026-04-22T13:00:15.972Z
+Stopped at: Completed 11-03-PLAN.md
 Resume file: None
 
 **Planned Phase:** 11 (Run-view tabs: Writers' Room, Timeline, Boardroom, Canvas) — 5 plans — 2026-04-22T12:38:11.467Z
