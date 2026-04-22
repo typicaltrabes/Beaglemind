@@ -6,6 +6,7 @@ import { Tabs, TabsList, TabsTab, TabsPanel } from '@/components/ui/tabs';
 import { WritersRoomView } from './writers-room-view';
 import { TimelineView } from './timeline-view';
 import { BoardroomView } from './boardroom-view';
+import { CanvasView } from './canvas-view';
 
 // Whitelist of known tab values. Any other ?view= string is rejected and falls
 // back to the default. The whitelist also doubles as a tamper check for the
@@ -84,9 +85,7 @@ export function RunViewTabs({ runId }: RunViewTabsProps) {
         className="flex flex-1 min-h-0 flex-col"
         data-testid="run-view-canvas"
       >
-        <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-          Canvas view — coming in 11-04
-        </div>
+        <CanvasView runId={runId} />
       </TabsPanel>
     </Tabs>
   );
