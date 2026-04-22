@@ -218,3 +218,13 @@ Note: Phase 7 and Phase 9 depend on Phase 4 and Phase 3 respectively, not on Pha
 | 8. Replay & Sharing | 0/3 | Planned | - |
 | 9. Operator Console & Sentinel | 3/3 | Complete   | 2026-04-21 |
 | 10. Mobile PWA | 3/3 | Complete   | 2026-04-21 |
+
+### Phase 11: Run-view tabs: Writers' Room, Timeline, Boardroom, Canvas
+
+**Goal:** Ship a four-tab switcher on the run view page so users can look at the same run as transcript (Writers' Room), scrubbable horizontal timeline (Timeline), parallel agent columns (Boardroom), or artifact-first doc with margin comments (Canvas). Read-only over existing run-store — no backend, SSE, or schema changes.
+**Requirements**: VIEW-01, VIEW-02, VIEW-03
+**Depends on:** Phase 10
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 11 to break down)
