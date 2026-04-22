@@ -9,9 +9,8 @@ import { useMode } from '@/lib/mode-context';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { SquareIcon, Share2, SlidersHorizontal } from 'lucide-react';
-import { MessageList } from '@/components/transcript/message-list';
-import { TldrBanner } from '@/components/transcript/tldr-banner';
 import { Composer } from '@/components/transcript/composer';
+import { RunViewTabs } from '@/components/run-views/run-view-tabs';
 import { ProcessDrawer } from '@/components/studio/process-drawer';
 import { MobileDrawerWrapper } from '@/components/studio/process-drawer-mobile';
 import { InterruptButton } from '@/components/studio/interrupt-button';
@@ -102,8 +101,7 @@ export default function RunPage({
       {/* Transcript area + optional drawer */}
       <div className="relative flex flex-1 overflow-hidden">
         <div className="flex flex-1 flex-col overflow-hidden">
-          <TldrBanner />
-          <MessageList runId={runId} />
+          <RunViewTabs runId={runId} />
         </div>
         {/* Desktop: inline drawer. Mobile: overlay via wrapper */}
         {isStudio && (
