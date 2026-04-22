@@ -11,7 +11,7 @@ interface ArtifactCardProps {
   event: HubEventEnvelope;
 }
 
-const PREVIEWABLE_MIMES = new Set([
+export const PREVIEWABLE_MIMES = new Set<string>([
   'application/pdf',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 ]);
