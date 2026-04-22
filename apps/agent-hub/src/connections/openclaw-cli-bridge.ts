@@ -58,9 +58,19 @@ export async function sendToAgent(
     const text = result.result?.payloads?.[0]?.text ?? '';
     const runId = result.runId ?? '';
     const durationMs = result.result?.meta?.durationMs ?? 0;
+    const usage = result.result?.meta?.agentMeta?.usage;
+    const model = result.result?.meta?.agentMeta?.model ?? 'unknown';
 
-    log.info({ agentId: cfg.agentId, responseLength: text.length, durationMs }, 'Agent responded');
-    return { text, runId, durationMs };
+    // Estimate cost from token usage (rough: $15/M input, $75/M output for Opus)
+    let costUsd = 0;
+    if (usage) {
+      const inputTokens = (usage.input ?? 0) + (usage.cacheRead ?? 0) + (usage.cacheWrite ?? 0);
+      const outputTokens = usage.output ?? 0;
+      costUsd = (inputTokens * 15 + outputTokens * 75) / 1_000_000;
+    }
+
+    log.info({ agentId: cfg.agentId, responseLength: text.length, durationMs, costUsd: costUsd.toFixed(4) }, 'Agent responded');
+    return { text, runId, durationMs, costUsd, model };
   } catch (err: any) {
     log.error({ agentId: cfg.agentId, error: err.message }, 'CLI bridge error');
     return null;

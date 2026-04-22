@@ -159,7 +159,7 @@ export async function handleRunStart(
           runId: parsed.runId,
           tenantId: parsed.tenantId,
           content: { text: result.text },
-          metadata: { durationMs: result.durationMs, openclawRunId: result.runId },
+          metadata: { durationMs: result.durationMs, costUsd: result.costUsd, model: result.model, openclawRunId: result.runId },
         });
 
         log.info({ runId: parsed.runId, agentId: parsed.targetAgent }, 'Agent response received via CLI bridge');
