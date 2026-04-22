@@ -62,6 +62,15 @@ export async function POST(
       .set({ status: 'executing', updatedAt: new Date() })
       .where(eq(schema.runs.id, runId));
 
+    // Persist user message once
+    await tdb.insert(schema.events).values({
+      runId,
+      type: 'agent_message',
+      agentId: 'user',
+      content: { text: content },
+      metadata: {},
+    });
+
     // Send to all agents in parallel
     const agents = ['mo', 'jarvis', 'sam', 'herman'];
     await Promise.allSettled(

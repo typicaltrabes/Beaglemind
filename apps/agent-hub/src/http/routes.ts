@@ -76,15 +76,7 @@ export async function handleSend(
     },
   };
 
-  // Persist user message as an event
-  await router.persistAndPublish(parsed.tenantId, {
-    type: 'agent_message',
-    agentId: 'user',
-    runId: parsed.runId,
-    tenantId: parsed.tenantId,
-    content: { text: parsed.content },
-    metadata: { targetAgent: parsed.agentId },
-  });
+  // Note: user message event is persisted by the web app (once), not here (avoids duplicates when called per-agent)
 
   // Send to agent via CLI bridge (reliable), fall back to WebSocket
   const agentBridge = AGENT_BRIDGE_CONFIG[parsed.agentId];
