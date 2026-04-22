@@ -92,7 +92,7 @@ export async function handleSend(
     const bridgeCfg: OpenClawBridgeConfig = {
       agentId: parsed.agentId,
       sshHost: agentBridge.sshHost,
-      sessionId: `beagle-console-${parsed.runId}`,
+      runId: parsed.runId,
       sudoUser: agentBridge.sudoUser,
     };
     sendToAgent(bridgeCfg, parsed.content).then(async (result) => {
@@ -152,7 +152,7 @@ export async function handleRunStart(
     const bridgeCfg: OpenClawBridgeConfig = {
       agentId: parsed.targetAgent,
       sshHost: agentBridge.sshHost,
-      sessionId: `beagle-console-${parsed.runId}`,
+      runId: parsed.runId,
       sudoUser: agentBridge.sudoUser,
     };
 

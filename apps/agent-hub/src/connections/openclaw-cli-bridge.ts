@@ -8,7 +8,7 @@ const log = createChildLogger({ component: 'openclaw-cli-bridge' });
 export interface OpenClawBridgeConfig {
   agentId: string;
   sshHost: string;
-  sessionId: string;
+  runId: string;
   sudoUser?: string; // Run openclaw as this user (e.g. 'mo', 'sam') via sudo -u
 }
 
@@ -17,9 +17,11 @@ export async function sendToAgent(
   message: string,
 ): Promise<{ text: string; runId: string; durationMs: number } | null> {
   const escapedMessage = message.replace(/'/g, "'\\''");
+  // Unique isolated session per agent per run — never overlaps with WhatsApp sessions
+  const sessionId = `console:${cfg.agentId}:${cfg.runId}`;
   const openclawCmd = cfg.sudoUser
-    ? `sudo -u ${cfg.sudoUser} openclaw agent --message '${escapedMessage}' --session-id '${cfg.sessionId}' --agent main --json 2>/dev/null`
-    : `openclaw agent --message '${escapedMessage}' --session-id '${cfg.sessionId}' --agent main --json 2>/dev/null`;
+    ? `sudo -u ${cfg.sudoUser} openclaw agent --message '${escapedMessage}' --session-id '${sessionId}' --agent main --json 2>/dev/null`
+    : `openclaw agent --message '${escapedMessage}' --session-id '${sessionId}' --agent main --json 2>/dev/null`;
   const cmd = `ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 ${cfg.sshHost} "timeout 120 ${openclawCmd}"`;
   
   log.info({ agentId: cfg.agentId, messageLength: message.length }, 'Sending message to agent via CLI bridge');
