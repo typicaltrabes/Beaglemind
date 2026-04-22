@@ -119,19 +119,31 @@ export async function handleRunStart(
   registry: AgentRegistry,
   router: MessageRouter,
   setActiveRun: (runId: string, tenantId: string) => void,
-): Promise<{ ok: true; runId: string }> {
+): Promise<{ ok: true; runId: string; userSequence: number }> {
   const parsed = RunStartBody.parse(body);
 
   // Set active run context on the Hub
   setActiveRun(parsed.runId, parsed.tenantId);
+
+  // Persist the user prompt through the Hub's EventStore so the SequenceCounter
+  // allocates a seq that won't collide with subsequent agent events. Awaited so
+  // the event is visible in SSE replay before we return to the caller.
+  const userEvent = await router.persistAndPublish(parsed.tenantId, {
+    type: 'agent_message',
+    agentId: 'user',
+    runId: parsed.runId,
+    tenantId: parsed.tenantId,
+    content: { text: parsed.prompt },
+    metadata: {},
+  });
 
   // Run the round-table discussion in the background (don't block the HTTP response)
   runRoundTable(parsed.runId, parsed.tenantId, parsed.prompt, router).catch((err) => {
     log.error({ error: err.message, runId: parsed.runId }, 'Round-table discussion failed');
   });
 
-  log.info({ runId: parsed.runId }, 'Round-table discussion started');
-  return { ok: true, runId: parsed.runId };
+  log.info({ runId: parsed.runId, userSequence: userEvent.sequenceNumber }, 'Round-table discussion started');
+  return { ok: true, runId: parsed.runId, userSequence: userEvent.sequenceNumber };
 }
 
 /**

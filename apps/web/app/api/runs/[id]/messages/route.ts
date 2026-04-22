@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { eq, asc, desc } from 'drizzle-orm';
+import { eq, asc } from 'drizzle-orm';
 import { z } from 'zod/v4';
 import { requireTenantContext, getTenantDb } from '@/lib/get-tenant';
 import { hubClient } from '@/lib/api/hub-client';
@@ -62,28 +62,14 @@ export async function POST(
       .set({ status: 'executing', updatedAt: new Date() })
       .where(eq(schema.runs.id, runId));
 
-    // Persist user message once — get next sequence number
-    const lastSeq = await tdb.select({ max: schema.events.sequenceNumber }).from(schema.events).where(eq(schema.events.runId, runId)).orderBy(desc(schema.events.sequenceNumber)).limit(1);
-    const nextSeq = (lastSeq[0]?.max ?? 0) + 1;
-    await tdb.insert(schema.events).values({
+    // Hub is the sole writer of events — it persists the user message through
+    // its SequenceCounter and then kicks off the round-table. Propagate failure
+    // to the client so it can retry rather than silently losing the message.
+    await hubClient.startRun({
       runId,
-      sequenceNumber: nextSeq,
-      type: 'agent_message',
-      agentId: 'user',
-      content: { text: content },
-      metadata: {},
+      tenantId,
+      prompt: content,
     });
-
-    // Start round-table discussion with the follow-up message
-    try {
-      await hubClient.startRun({
-        runId,
-        tenantId,
-        prompt: content,
-      });
-    } catch (err: any) {
-      console.error('Hub send error (non-fatal):', err?.message);
-    }
 
     return NextResponse.json({ ok: true });
   } catch (error) {

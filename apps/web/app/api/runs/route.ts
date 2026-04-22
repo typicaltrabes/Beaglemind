@@ -55,26 +55,15 @@ export async function POST(request: Request) {
 
     const run = rows[0]!;
 
-    // Persist user prompt as first event (once, before agents)
-    await tdb.insert(schema.events).values({
+    // Hub is the sole writer of events — it persists the user prompt through
+    // its SequenceCounter, then kicks off the round-table in the background.
+    // If the Hub is unreachable, fail the request so the UI can retry rather
+    // than creating an orphan run with no events.
+    await hubClient.startRun({
       runId: run.id,
-      sequenceNumber: 0,
-      type: 'agent_message',
-      agentId: 'user',
-      content: { text: prompt },
-      metadata: {},
+      tenantId,
+      prompt,
     });
-
-    // Start round-table discussion — Hub handles sequential agent calls
-    try {
-      await hubClient.startRun({
-        runId: run.id,
-        tenantId,
-        prompt,
-      });
-    } catch (err: any) {
-      console.error('Hub startRun error (non-fatal):', err?.message ?? err);
-    }
 
     return NextResponse.json(run, { status: 201 });
   } catch (error) {
