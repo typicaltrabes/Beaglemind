@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { eq, asc } from 'drizzle-orm';
+import { eq, asc, desc } from 'drizzle-orm';
 import { z } from 'zod/v4';
 import { requireTenantContext, getTenantDb } from '@/lib/get-tenant';
 import { hubClient } from '@/lib/api/hub-client';
@@ -62,9 +62,12 @@ export async function POST(
       .set({ status: 'executing', updatedAt: new Date() })
       .where(eq(schema.runs.id, runId));
 
-    // Persist user message once
+    // Persist user message once — get next sequence number
+    const lastSeq = await tdb.select({ max: schema.events.sequenceNumber }).from(schema.events).where(eq(schema.events.runId, runId)).orderBy(desc(schema.events.sequenceNumber)).limit(1);
+    const nextSeq = (lastSeq[0]?.max ?? 0) + 1;
     await tdb.insert(schema.events).values({
       runId,
+      sequenceNumber: nextSeq,
       type: 'agent_message',
       agentId: 'user',
       content: { text: content },
