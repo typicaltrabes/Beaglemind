@@ -162,22 +162,14 @@ async function runRoundTable(
     const displayName = agentId.charAt(0).toUpperCase() + agentId.slice(1);
     let fullPrompt: string;
 
+    const groupContext = `[SYSTEM] You are on the Beagle Agent Console — a multi-agent discussion platform. This is NOT WhatsApp. This is NOT a 1:1 chat. You are in a GROUP DISCUSSION with other BeagleMind agents (Mo, Jarvis, Herman). The user can see everything all agents say. Respond directly to the topic — do not explain the platform architecture or how messaging works. Just answer the question and engage with what other agents said.`;
+
     if (transcript.length === 0) {
-      // First agent — just gets the user prompt
-      fullPrompt = userPrompt;
+      // First agent — gets the user prompt with group context
+      fullPrompt = `${groupContext}\n\nUser: ${userPrompt}\n\n${displayName}, you're first to respond.`;
     } else {
       // Subsequent agents — see the full discussion so far
-      fullPrompt = `You are in a group discussion with other AI agents on the Beagle Agent Console. The user asked a question and other agents have already responded. Read their responses carefully and add YOUR perspective — agree, disagree, build on their points, or challenge their assumptions. Do NOT repeat what others said. Be direct and substantive.
-
---- GROUP DISCUSSION TRANSCRIPT ---
-
-User: ${userPrompt}
-
-${transcript.join('\n\n')}
-
---- END TRANSCRIPT ---
-
-${displayName}, it's your turn. Respond to the discussion above. Reference other agents by name when you agree or disagree with them.`;
+      fullPrompt = `${groupContext}\n\n--- GROUP DISCUSSION ---\n\nUser: ${userPrompt}\n\n${transcript.join('\n\n')}\n\n--- YOUR TURN ---\n\n${displayName}, respond to the discussion above. Reference other agents by name when you agree or disagree.`;
     }
 
     log.info({ runId, agentId, transcriptLength: fullPrompt.length }, 'Sending to agent with full transcript');
