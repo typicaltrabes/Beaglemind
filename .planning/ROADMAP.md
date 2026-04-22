@@ -230,5 +230,5 @@ Plans:
 - [x] 11-01-PLAN.md — Scaffold tabs primitive, shared helpers (agent-colors, renderEvent), URL-synced tab switcher, and Writers' Room tab wired into run page
 - [x] 11-02-PLAN.md — Timeline view: horizontal dot lane with scene dividers, hover tooltip, click-to-detail panel, scrubber (VIEW-01)
 - [x] 11-03-PLAN.md — Boardroom view: parallel agent columns on desktop, mobile accordion fallback (VIEW-02)
-- [ ] 11-04-PLAN.md — Canvas view: artifact-first preview with proximity-based margin comments, extract ArtifactPreviewInline (VIEW-03)
+- [x] 11-04-PLAN.md — Canvas view: artifact-first preview with proximity-based margin comments, extract ArtifactPreviewInline (VIEW-03)
 - [ ] 11-05-PLAN.md — Deploy to console.beaglemind.ai and human UAT checkpoint
