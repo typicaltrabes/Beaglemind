@@ -25,6 +25,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 11: Run-view tabs (Writers' Room, Timeline, Boardroom, Canvas)** - Four-tab switcher on the run view page, read-only over existing run-store
 - [ ] **Phase 12: UI Polish from Phase 11 UAT** - Track A look-and-feel fixes: dark Run History, Writers' Room loading skeleton, speaker chips with full agent config, prompt-as-run-title
 - [ ] **Phase 13: UI Polish R2 + Tabs Redesign + Settings + Title Summarization** - Seven items from post-Phase-12 UAT: kill horizontal scroll, avatar-edge padding, prettier run-id chip, run-title summarization (Haiku via LiteLLM), settings page (theme/defaultTab/verbosity/notifications), Improve-prompt button scaffold, Timeline scrubber + Boardroom scene-grid + Canvas empty state
+- [ ] **Phase 14: Track B Bugs — Run Lifecycle + Timestamps** - Fix NaN:NaN timestamps on historical events (SSE replay missing `createdAt → timestamp` map), runs stuck on `executing` because hub never marks them `completed`, and 18 orphan `pending` runs. Folds in the migrate-13 tenant-discovery fix.
 
 ## Phase Details
 
@@ -260,3 +261,12 @@ Plans:
 - [ ] 13-05-PLAN.md — Settings page + theme switching: PreferencesSchema + /api/me/preferences + /settings form + ThemeProvider + globals.css :root revert + RunViewTabs/Composer/PushPermission consumers (item 6)
 - [ ] 13-06-PLAN.md — Tab differentiation: Timeline scrub/play bar + Boardroom scene-aligned grid + Canvas first-class empty state + shared EmptyState component (item 7)
 - [ ] 13-07-PLAN.md — Deploy to console.beaglemind.ai + apply Phase 13 schema migration + human UAT checkpoint covering all seven UAT-13-* requirements
+
+### Phase 14: Track B Bugs — Run Lifecycle + Timestamps
+
+**Goal:** Close three production bugs deferred from Phase 12 UAT: (1) every transcript message renders `NaN:NaN` for its timestamp because the SSE replay endpoint serializes the raw DB row (which has `createdAt`, not `timestamp`); (2) every run is stuck on `executing` for days because the hub round-table never updates `runs.status` to `completed`; (3) 18 orphan `pending` runs sit at the top of Run History from earlier dev. Side fix: `migrate-13.ts`'s tenant lookup reads the wrong table (`shared.tenants` instead of `shared.organizations`) — fixed at the same time so future tenants inherit Phase 13 schema and Phase 14 backfill.
+**Requirements:** UAT-14-01, UAT-14-02, UAT-14-03
+**Depends on:** Phase 13
+**Plans:** TBD (set during plan-phase)
+
+Plans: *(to be created via `/gsd-plan-phase 14`)*
