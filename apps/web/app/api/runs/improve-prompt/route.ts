@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod/v4';
 import { requireTenantContext } from '@/lib/get-tenant';
 import { liteLLMComplete, LiteLLMError } from '@/lib/litellm-client';
+import { rateLimitOk } from '@/lib/improve-prompt-rate-limit';
 
 export const runtime = 'nodejs';
 
@@ -15,41 +16,6 @@ const IMPROVE_SYSTEM_PROMPT =
 const Body = z.object({
   prompt: z.string().min(1).max(8000),
 });
-
-/**
- * Per-user rate limiter (30 requests / 60 seconds).
- *
- * In-memory only — single-process correctness, single-VPS deployment.
- * Per CONTEXT.md `<decisions>` Item 3: "trivially low-cost per call (Haiku,
- * 800 tokens) but add a per-user 30-req/min in-memory limiter to prevent
- * button-spam abuse. Use a simple Map<userId, timestamps[]> in the route file
- * (no Redis — overkill for this)."
- *
- * Exported `__resetRateLimiterForTest` so unit tests can isolate counts.
- */
-const RATE_LIMIT_MAX = 30;
-const RATE_LIMIT_WINDOW_MS = 60_000;
-const userTimestamps = new Map<string, number[]>();
-
-export function __resetRateLimiterForTest() {
-  userTimestamps.clear();
-}
-
-function rateLimitOk(userId: string): boolean {
-  const now = Date.now();
-  const cutoff = now - RATE_LIMIT_WINDOW_MS;
-  const arr = userTimestamps.get(userId) ?? [];
-  // Drop timestamps outside the window.
-  const recent = arr.filter((t) => t > cutoff);
-  if (recent.length >= RATE_LIMIT_MAX) {
-    // Persist the trimmed list so memory doesn't grow unboundedly.
-    userTimestamps.set(userId, recent);
-    return false;
-  }
-  recent.push(now);
-  userTimestamps.set(userId, recent);
-  return true;
-}
 
 export async function POST(request: Request) {
   try {

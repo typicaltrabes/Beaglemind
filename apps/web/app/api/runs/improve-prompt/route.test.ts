@@ -13,7 +13,8 @@ vi.mock('@/lib/litellm-client', () => ({
   LiteLLMError: class LiteLLMError extends Error {},
 }));
 
-import { POST, __resetRateLimiterForTest } from './route';
+import { POST } from './route';
+import { resetRateLimiterForTest } from '@/lib/improve-prompt-rate-limit';
 import { LiteLLMError } from '@/lib/litellm-client';
 
 function makeRequest(body: unknown): Request {
@@ -26,7 +27,7 @@ function makeRequest(body: unknown): Request {
 
 describe('POST /api/runs/improve-prompt', () => {
   beforeEach(() => {
-    __resetRateLimiterForTest();
+    resetRateLimiterForTest();
     vi.clearAllMocks();
     mockRequireTenantContext.mockResolvedValue({
       session: { user: { id: 'user-1' } },
