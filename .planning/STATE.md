@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 11-04-PLAN.md
-last_updated: "2026-04-22T13:08:09.077Z"
-last_activity: 2026-04-22
+status: verifying
+stopped_at: Completed 12-02-PLAN.md
+last_updated: "2026-04-27T13:48:14.005Z"
+last_activity: 2026-04-27
 progress:
-  total_phases: 11
+  total_phases: 12
   completed_phases: 9
-  total_plans: 36
-  completed_plans: 34
-  percent: 94
+  total_plans: 40
+  completed_plans: 36
+  percent: 90
 ---
 
 # Project State
@@ -27,8 +27,8 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 
 Phase: 11 (Run-view tabs: Writers' Room, Timeline, Boardroom, Canvas) — EXECUTING
 Plan: 5 of 5
-Status: Ready to execute
-Last activity: 2026-04-22
+Status: Phase complete — ready for verification
+Last activity: 2026-04-27
 
 Progress: [█████████░] 94%
 
@@ -83,6 +83,7 @@ Progress: [█████████░] 94%
 | Phase 11 P02 | 3min | 2 tasks | 4 files |
 | Phase 11 P03 | 3min | 2 tasks | 4 files |
 | Phase 11 P04 | 4min | 2 tasks | 6 files |
+| Phase 12 P02 | 6min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -156,6 +157,8 @@ Recent decisions affecting current work:
 - [Phase 11]: Canvas ArtifactPreviewInline extracted from ArtifactPreviewPanel — Dialog variant now composes the Inline child behind {open && ...} to preserve fetch-on-open; Canvas mounts the Inline child directly without Dialog chrome
 - [Phase 11]: Canvas proximity comments use selectProximityComments — pure positional, filters to agent_message only, ties break to lower seq, default windowSize=5. No message-text parsing per CONTEXT.md
 - [Phase 11]: PREVIEWABLE_MIMES exported from artifact-card.tsx as single source of truth — Canvas and ArtifactCard share one Set rather than duplicating the pdf+docx literal
+- [Phase 12]: Add Herman + Sam to AGENT_CONFIG together (12-02) — single source-of-truth update lights up Avatar/Message/Cost surfaces with no consumer edits.
+- [Phase 12]: Speaker chip uses regex transform `bg-[#hex]` → `bg-[#hex]/15` (chipBgClass helper, 12-02) — keeps to two files, no Tailwind plugin.
 
 ### Pending Todos
 
@@ -175,8 +178,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-04-22T13:08:09.075Z
-Stopped at: Completed 11-04-PLAN.md
+Last session: 2026-04-27T13:48:13.999Z
+Stopped at: Completed 12-02-PLAN.md
 Resume file: None
 
 **Planned Phase:** 11 (Run-view tabs: Writers' Room, Timeline, Boardroom, Canvas) — 5 plans — 2026-04-22T12:38:11.467Z

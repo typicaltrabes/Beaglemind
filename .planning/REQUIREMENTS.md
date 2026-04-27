@@ -105,7 +105,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [ ] **UAT-12-01**: Run History page renders in dark theme on first paint and after hydration, matching every other dashboard view (no light/white background ever visible at `/runs`)
 - [ ] **UAT-12-02**: Writers' Room shows an agent-aware loading skeleton (Mo, Jarvis, Herman placeholders with avatars and "thinking…" state) when a run has 0 streamed events, replacing the bare "Waiting for events..." text
-- [ ] **UAT-12-03**: Every transcript-visible agent (Mo, Jarvis, Herman, Sam) is configured in `AGENT_CONFIG` with capitalized display name, role label, avatar color, and name color; speaker block in `AgentMessage` is visually distinct from body prose (chip/pill with agent color)
+- [x] **UAT-12-03**: Every transcript-visible agent (Mo, Jarvis, Herman, Sam) is configured in `AGENT_CONFIG` with capitalized display name, role label, avatar color, and name color; speaker block in `AgentMessage` is visually distinct from body prose (chip/pill with agent color)
 - [ ] **UAT-12-04**: Run page header displays the run's prompt as a single-line truncated title above the status chip + UUID row, identifiable at a glance after switching tabs
 
 ## v2 Requirements
@@ -229,7 +229,7 @@ Deferred to future release. Tracked but not in current roadmap.
 | VIEW-03 | Phase 11 | Complete |
 | UAT-12-01 | Phase 12 | Pending |
 | UAT-12-02 | Phase 12 | Pending |
-| UAT-12-03 | Phase 12 | Pending |
+| UAT-12-03 | Phase 12 | Complete |
 | UAT-12-04 | Phase 12 | Pending |
 
 **Coverage:**
