@@ -13,7 +13,7 @@ import { PREVIEWABLE_MIMES } from '@/components/transcript/artifact-card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useRun } from '@/lib/hooks/use-run';
-import { truncatePrompt } from '@/lib/run-title';
+import { truncatePrompt } from '@/lib/truncate-prompt';
 import { EmptyState } from './empty-state';
 
 interface CanvasViewProps {

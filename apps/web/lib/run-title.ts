@@ -1,6 +1,16 @@
+// NOTE: This module is server-only — it imports `getTenantDb` (which pulls
+// `next/headers`). Client components MUST import `truncatePrompt` from
+// `@/lib/truncate-prompt` directly, not from this file. The `server-only`
+// runtime marker would catch accidental client imports but isn't installed;
+// rely on the import-path discipline instead.
 import { eq } from 'drizzle-orm';
 import { getTenantDb } from '@/lib/get-tenant';
 import { liteLLMComplete } from '@/lib/litellm-client';
+
+// Re-export the pure helper for any server-side caller that previously
+// imported it from this module. Client code MUST import from
+// '@/lib/truncate-prompt' directly to avoid pulling in server-only deps.
+export { truncatePrompt } from '@/lib/truncate-prompt';
 
 /**
  * System prompt for the run-title summarizer. Tight, deterministic,
@@ -10,18 +20,6 @@ import { liteLLMComplete } from '@/lib/litellm-client';
  */
 export const RUN_TITLE_SYSTEM_PROMPT =
   "Summarize this user prompt in 6-8 words for a UI title. Output only the title, no quotes, no period.";
-
-/**
- * Truncates a string to at most `max` chars; appends an ellipsis when
- * truncated. Used by both the run-history table and the run page header
- * fallback when no AI title is available yet.
- *
- * Pure function — no side effects. Unit-tested directly.
- */
-export function truncatePrompt(text: string, max: number): string {
-  if (text.length <= max) return text;
-  return text.slice(0, max) + '…';
-}
 
 /**
  * Strips quotes / trailing punctuation that LLMs sometimes emit despite

@@ -17,7 +17,7 @@ import { MobileDrawerWrapper } from '@/components/studio/process-drawer-mobile';
 import { InterruptButton } from '@/components/studio/interrupt-button';
 import { ShareDialog } from '@/components/share/share-dialog';
 import { RunIdChip } from '@/components/runs/run-id-chip';
-import { truncatePrompt } from '@/lib/run-title';
+import { truncatePrompt } from '@/lib/truncate-prompt';
 
 const STATUS_STYLES: Record<string, string> = {
   pending: 'bg-gray-600/20 text-gray-400',
