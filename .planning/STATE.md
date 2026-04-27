@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Completed 12-02-PLAN.md
-last_updated: "2026-04-27T13:48:14.005Z"
+stopped_at: Completed 12-03-PLAN.md
+last_updated: "2026-04-27T13:53:54.998Z"
 last_activity: 2026-04-27
 progress:
   total_phases: 12
   completed_phases: 9
   total_plans: 40
-  completed_plans: 36
-  percent: 90
+  completed_plans: 37
+  percent: 93
 ---
 
 # Project State
@@ -84,6 +84,7 @@ Progress: [█████████░] 94%
 | Phase 11 P03 | 3min | 2 tasks | 4 files |
 | Phase 11 P04 | 4min | 2 tasks | 6 files |
 | Phase 12 P02 | 6min | 2 tasks | 2 files |
+| Phase 12-ui-polish-from-phase-11-uat P03 | 2min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -159,6 +160,8 @@ Recent decisions affecting current work:
 - [Phase 11]: PREVIEWABLE_MIMES exported from artifact-card.tsx as single source of truth — Canvas and ArtifactCard share one Set rather than duplicating the pdf+docx literal
 - [Phase 12]: Add Herman + Sam to AGENT_CONFIG together (12-02) — single source-of-truth update lights up Avatar/Message/Cost surfaces with no consumer edits.
 - [Phase 12]: Speaker chip uses regex transform `bg-[#hex]` → `bg-[#hex]/15` (chipBgClass helper, 12-02) — keeps to two files, no Tailwind plugin.
+- [Phase 12-ui-polish-from-phase-11-uat]: [Phase 12]: WritersRoomSkeleton hardcodes mo/jarvis/herman id list with no run-store reads (12-03) — empty-state surface stays pure-derived from a single source-of-truth list paired with formatAgentList helper for the subtitle.
+- [Phase 12-ui-polish-from-phase-11-uat]: [Phase 12]: Skeleton inlines a local SkeletonRow rather than rendering a fake AgentMessage (12-03) — avoids fabricating wire-format envelopes and keeps the empty-state surface decoupled from event rendering.
 
 ### Pending Todos
 
@@ -178,8 +181,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-04-27T13:48:13.999Z
-Stopped at: Completed 12-02-PLAN.md
+Last session: 2026-04-27T13:53:54.992Z
+Stopped at: Completed 12-03-PLAN.md
 Resume file: None
 
 **Planned Phase:** 11 (Run-view tabs: Writers' Room, Timeline, Boardroom, Canvas) — 5 plans — 2026-04-22T12:38:11.467Z
