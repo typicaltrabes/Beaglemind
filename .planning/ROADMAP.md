@@ -275,3 +275,20 @@ Plans:
 - [x] 14-02-PLAN.md — Bug 2 (UAT-14-02): Hub round-table completion — add db imports + terminal completion block (DB update + state_transition emission) to apps/agent-hub/src/http/routes.ts:runRoundTable
 - [ ] 14-03-PLAN.md — Bug 3 (UAT-14-03): migrate-13.ts tenant-discovery fix (shared.tenants → shared.organizations) + per-tenant cancelled-backfill block (pending older than 1 day → cancelled)
 - [ ] 14-04-PLAN.md — Deploy + UAT: pre-flight typecheck/vitest, push, ssh beaglehq, run migrate-13.ts, rebuild console-web AND console-agent-hub, smoke checks, human-verify checkpoint covering UAT-14-01..03
+
+
+### Phase 16: Visual Overhaul
+
+**Goal:** Five visual overhaul tracks shipped in one phase, all from Lucas's late-afternoon UAT against sister-site references (Sonic Care 'Agenten Zentrale', Mo OpenClaw chat UI). Track 1 — italic-accent header with system pulse + operator LiteLLM/Grafana links + breadcrumb on dashboard pages. Track 2 — sidebar redesign with agent roster (mo/jarvis/herman/sam) + presence dots + click-to-filter Run History. Track 3 — Run History 4-card KPI strip backed by a new GET /api/runs/history/summary endpoint. Track 4 — agent role rebrand (Mo:Governance / Jarvis:Commercial Risk / Herman:Stress-Test / Sam:Sentinel). Track 5 — run page tabular metadata row + ghost icon-only Stop/Share + rounded-pill tab strip.
+**Requirements:** UAT-16-01, UAT-16-02, UAT-16-03, UAT-16-04, UAT-16-05
+**Depends on:** Phase 14
+**Plans:** 6 plans
+
+Plans:
+- [ ] 16-01-PLAN.md — Track 1 (UAT-16-01): system-pulse helper + operator API + Breadcrumb component + dashboard-shell wordmark/logo/pulse/operator-links wiring + breadcrumb on /, /runs, /shared-links
+- [ ] 16-02-PLAN.md — Track 2 (UAT-16-02): presence helper + AgentRow component + sidebar rewrite (AGENTS / collapsible PROJECTS / nav-icon footer) + extended /api/runs/history with ?agent=<id> filter
+- [ ] 16-03-PLAN.md — Track 3 (UAT-16-03): /api/runs/history/summary endpoint + useRunHistorySummary hook + KpiCard + RunHistorySummary 4-tile strip + table chip rounded-full + hover chevron + ?agent= URL wiring on /runs page
+- [ ] 16-04-PLAN.md — Track 4 (UAT-16-04): four agent role string changes in apps/web/lib/agent-config.ts (Governance / Commercial Risk / Stress-Test / Sentinel)
+- [ ] 16-05-PLAN.md — Track 5 (UAT-16-05): run-metadata pure helpers + RunMetadataRow component + run page wiring + RunViewTabs pill styling
+- [ ] 16-06-PLAN.md — Deploy to console.beaglemind.ai + smoke checks + human-verify UAT checkpoint covering UAT-16-01..05
+
