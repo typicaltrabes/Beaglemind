@@ -1,8 +1,9 @@
 'use client';
 
 import { useRef, useState, useEffect } from 'react';
-import { GitFork, X } from 'lucide-react';
+import { GitFork, Sparkles, X } from 'lucide-react';
 import { useSendMessage, useStopRun } from '@/lib/hooks/use-run-actions';
+import { ImprovePromptPopover } from './improve-prompt-popover';
 import { useRunStore } from '@/lib/stores/run-store';
 import { useMode } from '@/lib/mode-context';
 import { AGENT_CONFIG, type AgentConfig } from '@/lib/agent-config';
@@ -29,7 +30,9 @@ export function Composer({ runId }: ComposerProps) {
   const [mentionOpen, setMentionOpen] = useState(false);
   const [targetAgent, setTargetAgent] = useState<string | null>(null);
   const [verbosity, setVerbosity] = useState(2);
+  const [improveOpen, setImproveOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const improveButtonRef = useRef<HTMLButtonElement>(null);
   const status = useRunStore((s) => s.status);
   const sendMessage = useSendMessage();
   const stopRun = useStopRun();
@@ -232,6 +235,20 @@ export function Composer({ runId }: ComposerProps) {
         />
 
         <div className="flex shrink-0 gap-1.5">
+          {/* Improve prompt — secondary, ghost style. Disabled when input is empty. */}
+          <Button
+            ref={improveButtonRef}
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setImproveOpen(true)}
+            disabled={!input.trim() || isCancelled || isPlanned}
+            aria-label="Improve prompt"
+            title="Improve prompt"
+          >
+            <Sparkles className="size-4" />
+          </Button>
+
           {isExecuting && (
             <Button
               variant="destructive"
@@ -263,6 +280,23 @@ export function Composer({ runId }: ComposerProps) {
           </Button>
         </div>
       </div>
+
+      <ImprovePromptPopover
+        open={improveOpen}
+        draft={input}
+        anchor={improveButtonRef.current}
+        onUseRewrite={(text) => {
+          setInput(text);
+          setImproveOpen(false);
+          textareaRef.current?.focus();
+        }}
+        onEditAndKeep={(text) => {
+          setInput(text);
+          setImproveOpen(false);
+          textareaRef.current?.focus();
+        }}
+        onClose={() => setImproveOpen(false)}
+      />
     </div>
   );
 }
