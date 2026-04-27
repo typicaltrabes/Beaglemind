@@ -120,7 +120,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Track B Bugs — Run Lifecycle + Timestamps (Phase 14)
 
-- [ ] **UAT-14-01**: Historical events in the Writers' Room transcript render their timestamps as relative time (e.g., "5d ago", "13:42") — never `NaN:NaN`. Fix is in the SSE replay path at `apps/web/app/api/runs/[id]/stream/route.ts`: shape the DB row into a `HubEventEnvelope` (mapping `createdAt → timestamp`) before serializing.
+- [x] **UAT-14-01**: Historical events in the Writers' Room transcript render their timestamps as relative time (e.g., "5d ago", "13:42") — never `NaN:NaN`. Fix is in the SSE replay path at `apps/web/app/api/runs/[id]/stream/route.ts`: shape the DB row into a `HubEventEnvelope` (mapping `createdAt → timestamp`) before serializing.
 - [ ] **UAT-14-02**: Runs transition to `completed` when the round-table discussion ends. Hub appends the terminal status update to `runs.status` and emits a `state_transition` event after the agent for-loop finishes.
 - [ ] **UAT-14-03**: No legacy orphan `pending` runs remain in Run History after deploy. One-shot SQL backfill marks any `pending` run older than 1 day as `cancelled`. The `migrate-13.ts` tenant-discovery bug (reading `shared.tenants` instead of `shared.organizations`) is fixed at the same time so the backfill can iterate every tenant.
 

@@ -267,10 +267,10 @@ Plans:
 **Goal:** Close three production bugs deferred from Phase 12 UAT: (1) every transcript message renders `NaN:NaN` for its timestamp because the SSE replay endpoint serializes the raw DB row (which has `createdAt`, not `timestamp`); (2) every run is stuck on `executing` for days because the hub round-table never updates `runs.status` to `completed`; (3) 18 orphan `pending` runs sit at the top of Run History from earlier dev. Side fix: `migrate-13.ts`'s tenant lookup reads the wrong table (`shared.tenants` instead of `shared.organizations`) — fixed at the same time so future tenants inherit Phase 13 schema and Phase 14 backfill.
 **Requirements:** UAT-14-01, UAT-14-02, UAT-14-03
 **Depends on:** Phase 13
-**Plans:** 4 plans
+**Plans:** 2/4 plans executed
 
 Plans:
-- [ ] 14-01-PLAN.md — Bug 1 (UAT-14-01): SSE replay envelope shaping — extract dbRowToEnvelope helper with unit tests, wire into apps/web/app/api/runs/[id]/stream/route.ts so historical events carry an ISO timestamp
-- [ ] 14-02-PLAN.md — Bug 2 (UAT-14-02): Hub round-table completion — add db imports + terminal completion block (DB update + state_transition emission) to apps/agent-hub/src/http/routes.ts:runRoundTable
+- [x] 14-01-PLAN.md — Bug 1 (UAT-14-01): SSE replay envelope shaping — extract dbRowToEnvelope helper with unit tests, wire into apps/web/app/api/runs/[id]/stream/route.ts so historical events carry an ISO timestamp
+- [x] 14-02-PLAN.md — Bug 2 (UAT-14-02): Hub round-table completion — add db imports + terminal completion block (DB update + state_transition emission) to apps/agent-hub/src/http/routes.ts:runRoundTable
 - [ ] 14-03-PLAN.md — Bug 3 (UAT-14-03): migrate-13.ts tenant-discovery fix (shared.tenants → shared.organizations) + per-tenant cancelled-backfill block (pending older than 1 day → cancelled)
 - [ ] 14-04-PLAN.md — Deploy + UAT: pre-flight typecheck/vitest, push, ssh beaglehq, run migrate-13.ts, rebuild console-web AND console-agent-hub, smoke checks, human-verify checkpoint covering UAT-14-01..03
