@@ -49,7 +49,7 @@ export function AgentMessage({ event }: AgentMessageProps) {
   const content = event.content as { text?: string };
 
   return (
-    <div className="flex gap-3 py-2">
+    <div className="flex gap-3 px-4 py-2">
       <AgentAvatar agentId={event.agentId} />
       <div className="min-w-0 flex-1">
         {/* Speaker chip — distinct from body prose. Background uses the agent's bgColor at low opacity so a long thread is scannable. */}

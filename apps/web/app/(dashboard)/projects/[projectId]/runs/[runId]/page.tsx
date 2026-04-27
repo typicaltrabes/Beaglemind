@@ -16,6 +16,7 @@ import { ProcessDrawer } from '@/components/studio/process-drawer';
 import { MobileDrawerWrapper } from '@/components/studio/process-drawer-mobile';
 import { InterruptButton } from '@/components/studio/interrupt-button';
 import { ShareDialog } from '@/components/share/share-dialog';
+import { RunIdChip } from '@/components/runs/run-id-chip';
 
 const STATUS_STYLES: Record<string, string> = {
   pending: 'bg-gray-600/20 text-gray-400',
@@ -71,7 +72,7 @@ export default function RunPage({
   return (
     <div className="flex h-[calc(100vh-65px)] flex-col">
       {/* Header */}
-      <div className="border-b border-white/10">
+      <div className="border-b border-white/10 overflow-hidden">
         {/* Title row — single-line truncated, reserves height before fetch resolves */}
         <h1
           className="truncate px-4 pt-3 text-base font-semibold text-foreground leading-6"
@@ -80,12 +81,12 @@ export default function RunPage({
           {titleDisplay}
         </h1>
         {/* Status / id / actions row — divider moved to outer wrapper */}
-        <div className="flex items-center gap-3 px-4 py-2">
+        <div className="flex min-w-0 items-center gap-3 px-4 py-2">
           <Badge className={STATUS_STYLES[status] ?? STATUS_STYLES.pending}>
             {status}
           </Badge>
           <span className="text-sm text-gray-400">Run</span>
-          <span className="truncate text-xs text-gray-600">{runId}</span>
+          <RunIdChip runId={runId} />
           {isStudio && <InterruptButton runId={runId} />}
           {isCompleted && (
             <Button
@@ -115,7 +116,7 @@ export default function RunPage({
 
       {/* Transcript area + optional drawer */}
       <div className="relative flex flex-1 overflow-hidden">
-        <div className="flex flex-1 flex-col overflow-hidden">
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
           <RunViewTabs runId={runId} />
         </div>
         {/* Desktop: inline drawer. Mobile: overlay via wrapper */}
