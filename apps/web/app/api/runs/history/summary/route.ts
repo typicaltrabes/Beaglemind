@@ -63,6 +63,10 @@ export async function GET(request: Request) {
     const [row] = await tdb
       .select({
         totalRuns: sql<number>`count(*)::int`,
+        // When agent filter is active, sum ONLY that agent's costs across the
+        // in-scope runs (not the full per-run total which would include the
+        // other agents' costs from those same runs). When unfiltered, sum
+        // every event's cost across all in-scope runs.
         totalSpendUsd: sql<number>`coalesce((
           SELECT sum((${schema.events.metadata}->>'costUsd')::numeric)
           FROM ${schema.events}
@@ -70,6 +74,7 @@ export async function GET(request: Request) {
             SELECT ${schema.runs.id} FROM ${schema.runs} ${where ? sql`WHERE ${where}` : sql``}
           )
             AND ${schema.events.metadata}->>'costUsd' IS NOT NULL
+            ${agentFilter ? sql`AND lower(${schema.events.agentId}) = ${agentFilter}` : sql``}
         ), 0)::float8`,
         completedRuns: sql<number>`sum(case when ${schema.runs.status} = 'completed' then 1 else 0 end)::int`,
         completedToday: sql<number>`sum(case when ${schema.runs.status} = 'completed' and ${schema.runs.updatedAt} >= ${last24hCutoff.toISOString()} then 1 else 0 end)::int`,
