@@ -48,11 +48,11 @@ export async function GET(request: Request) {
     }
     const where = conditions.length > 0 ? and(...conditions) : undefined;
 
-    // Start-of-today in UTC. Phase 16 is single-region (BeagleHQ Hetzner) and
-    // CONTEXT.md doesn't ask for per-tenant timezone awareness, so UTC alignment
-    // for the "Completed Today" tile is intentional.
-    const startOfTodayUtc = new Date();
-    startOfTodayUtc.setUTCHours(0, 0, 0, 0);
+    // Rolling 24-hour window for "Completed Today" — UTC midnight cutoff
+    // produced misleading numbers for ET-zone users (an event completing at
+    // 23:00 ET disappeared from "today" 1 hour later when UTC rolled over).
+    // Now: any run completed in the last 24 hours, regardless of UTC date.
+    const last24hCutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
     // Single SELECT with subqueries:
     //   1) totalRuns      = count(*) of runs in scope.
@@ -72,7 +72,7 @@ export async function GET(request: Request) {
             AND ${schema.events.metadata}->>'costUsd' IS NOT NULL
         ), 0)::float8`,
         completedRuns: sql<number>`sum(case when ${schema.runs.status} = 'completed' then 1 else 0 end)::int`,
-        completedToday: sql<number>`sum(case when ${schema.runs.status} = 'completed' and ${schema.runs.updatedAt} >= ${startOfTodayUtc.toISOString()} then 1 else 0 end)::int`,
+        completedToday: sql<number>`sum(case when ${schema.runs.status} = 'completed' and ${schema.runs.updatedAt} >= ${last24hCutoff.toISOString()} then 1 else 0 end)::int`,
       })
       .from(schema.runs)
       .where(where);

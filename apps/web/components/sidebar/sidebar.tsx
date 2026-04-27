@@ -9,7 +9,6 @@ import {
   Shield,
   X,
   HelpCircle,
-  Settings as SettingsIcon,
 } from 'lucide-react';
 import { ProjectList } from './project-list';
 import { QuestionQueue } from './question-queue';
@@ -106,7 +105,9 @@ function SidebarFooter() {
           label="Questions"
           Icon={HelpCircle}
         />
-        <NavIcon href="/settings" label="Settings" Icon={SettingsIcon} />
+        {/* Settings deliberately omitted here — gear icon in dashboard
+            header (top-right) is the canonical entry point. Two entries
+            confused users in Phase 16 UAT. */}
       </div>
     </TooltipProvider>
   );

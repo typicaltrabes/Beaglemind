@@ -165,6 +165,11 @@ Verbatim values, capitalized. Updates everywhere `getAgentConfig(...).role` is r
 </specifics>
 
 <deferred>
+## Deferred (Phase 16 UAT additions, 2026-04-27)
+
+- **1:1 agent chat tab.** Clicking an agent in the sidebar today filters Run History to that agent's runs. Lucas wants click → opens a direct chat thread with just that agent (a new `kind: 'agent_chat'` run scoped to one agentId, no round-table). Substantial — requires new run-creation path, agent-targeted message routing in the hub, and a new sidebar UX that distinguishes "filter to agent" from "talk to agent." Real Phase 17+ feature.
+- **Custom BeagleLabs logo.** Phase 16 used the BeagleLove silhouette as a placeholder. Lucas is preparing a BeagleLabs-specific logo file. Drop-in replacement at `/brand/logo-removebg-preview.png` once received.
+
 ## Deferred Ideas (Phase 17+ candidates from external feedback)
 
 - Conflict / disagreement markers in transcript (needs an agent-side disagreement_with event in SOUL.md first)

@@ -40,21 +40,21 @@ export function RunHistorySummary({ agent }: RunHistorySummaryProps) {
       <KpiCard
         label="Total Spend"
         value={formatUsd(totalSpendUsd)}
-        subLabel="All-time agent cost"
+        subLabel={agent ? `${agent} only` : 'All-time agent cost'}
         Icon={DollarSign}
         isLoading={isLoading}
       />
       <KpiCard
         label="Avg Cost / Run"
         value={formatUsd(avgCostUsd)}
-        subLabel="Per completed run"
+        subLabel={agent ? `${agent} per completed run` : 'Per completed run'}
         Icon={TrendingUp}
         isLoading={isLoading}
       />
       <KpiCard
         label="Completed Today"
         value={String(completedToday)}
-        subLabel="Since 00:00 UTC"
+        subLabel="Last 24 hours"
         Icon={CheckCircle2}
         isLoading={isLoading}
       />
