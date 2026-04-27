@@ -7,6 +7,7 @@ import { detectCollapsibleRanges, type CollapsibleRange } from '@/lib/scene-util
 import { SceneDivider } from './scene-divider';
 import { CollapseFold } from './collapse-fold';
 import { renderEvent } from './render-event';
+import { WritersRoomSkeleton } from './loading-skeleton';
 
 // ---------- Render-item discriminated union ----------
 
@@ -90,11 +91,7 @@ export function MessageList({ runId }: MessageListProps) {
   // ---------- Empty state ----------
 
   if (eventOrder.length === 0) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <p className="text-sm text-muted-foreground">Waiting for events...</p>
-      </div>
-    );
+    return <WritersRoomSkeleton />;
   }
 
   // ---------- Virtualized list ----------
