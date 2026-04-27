@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Completed 14-01-PLAN.md
-last_updated: "2026-04-27T19:05:01.059Z"
+stopped_at: Completed 16-03-PLAN.md
+last_updated: "2026-04-27T19:13:07.106Z"
 last_activity: 2026-04-27
 progress:
   total_phases: 15
   completed_phases: 9
   total_plans: 57
-  completed_plans: 40
-  percent: 70
+  completed_plans: 42
+  percent: 74
 ---
 
 # Project State
@@ -87,6 +87,7 @@ Progress: [█████████░] 94%
 | Phase 12-ui-polish-from-phase-11-uat P03 | 2min | 2 tasks | 2 files |
 | Phase 14 P01 | 6min | 2 tasks | 3 files |
 | Phase 16-visual-overhaul P01 | 272 | 2 tasks | 9 files |
+| Phase 16-visual-overhaul P03 | 3min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -165,6 +166,9 @@ Recent decisions affecting current work:
 - [Phase 12-ui-polish-from-phase-11-uat]: [Phase 12]: WritersRoomSkeleton hardcodes mo/jarvis/herman id list with no run-store reads (12-03) — empty-state surface stays pure-derived from a single source-of-truth list paired with formatAgentList helper for the subtitle.
 - [Phase 12-ui-polish-from-phase-11-uat]: [Phase 12]: Skeleton inlines a local SkeletonRow rather than rendering a fake AgentMessage (12-03) — avoids fabricating wire-format envelopes and keeps the empty-state surface decoupled from event rendering.
 - [Phase 14]: 14-01: Extracted dbRowToEnvelope as a pure helper (apps/web/lib/sse-envelope.ts) — single source of truth for DB row → HubEventEnvelope mapping; fixes UAT-14-01 NaN:NaN timestamps by sending createdAt.toISOString() as timestamp
+- [Phase 16-visual-overhaul]: [Phase 16-03]: KPI summary endpoint computes avgCostUsd = totalSpendUsd / completedRuns (sum-then-divide, one round-trip) rather than per-event AVG; matches user-facing tenant-level intuition.
+- [Phase 16-visual-overhaul]: [Phase 16-03]: completedToday uses runs.updatedAt >= start-of-today UTC because runs has no completedAt column; phase 14-02 hub flips status+updatedAt at completion.
+- [Phase 16-visual-overhaul]: [Phase 16-03]: KPI strip stays mounted with per-tile skeletons during fetch (not strip-level placeholder) so the table below renders independently.
 
 ### Pending Todos
 
@@ -187,8 +191,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-04-27T17:46:33.899Z
-Stopped at: Completed 14-01-PLAN.md
+Last session: 2026-04-27T19:12:57.667Z
+Stopped at: Completed 16-03-PLAN.md
 Resume file: None
 
 **Planned Phase:** 11 (Run-view tabs: Writers' Room, Timeline, Boardroom, Canvas) — 5 plans — 2026-04-22T12:38:11.467Z
