@@ -30,6 +30,12 @@ export function MessageList({ runId }: MessageListProps) {
   // Track whether user is at the bottom (for auto-scroll)
   const [isAtBottom, setIsAtBottom] = useState(true);
 
+  // Skeleton shows whenever no agent has spoken yet — the user's own prompt
+  // persists immediately as an event, so checking eventOrder.length is wrong.
+  const hasAgentEvent = eventOrder.some(
+    (seq) => events[seq] && events[seq].agentId !== 'user',
+  );
+
   // Build flat render list from scenes, inserting dividers and collapse folds
   const renderItems = useMemo(() => {
     const items: RenderItem[] = [];
@@ -88,13 +94,13 @@ export function MessageList({ runId }: MessageListProps) {
     }
   }
 
-  // ---------- Empty state ----------
+  // ---------- Empty state (truly empty run, no user message yet) ----------
 
   if (eventOrder.length === 0) {
     return <WritersRoomSkeleton />;
   }
 
-  // ---------- Virtualized list ----------
+  // ---------- Virtualized list (with skeleton footer until an agent replies) ----------
 
   return (
     <Virtuoso
@@ -105,6 +111,7 @@ export function MessageList({ runId }: MessageListProps) {
       overscan={200}
       className="h-full"
       style={{ height: '100%' }}
+      components={hasAgentEvent ? undefined : { Footer: WritersRoomSkeleton }}
     />
   );
 }
