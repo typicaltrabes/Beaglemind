@@ -89,6 +89,7 @@ Progress: [█████████░] 94%
 ### Roadmap Evolution
 
 - Phase 11 added: Run-view tabs: Writers' Room, Timeline, Boardroom, Canvas
+- Phase 12 added 2026-04-27: UI Polish from Phase 11 UAT (Track A — dark Run History, Writers' Room loading skeleton, speaker chips with full agent config, prompt-as-run-title). Track B (run lifecycle, artifact counts, status/cost mismatch) deferred to a separate phase.
 
 ### Decisions
 

@@ -22,6 +22,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 8: Replay & Sharing** - Tokenized share links scoped to Clean-mode content, revocable, time-boxed, audit-logged
 - [x] **Phase 9: Operator Console & Sentinel** - Tenant provisioning, operator dashboard, sentinel passive logging, break-glass with audit (completed 2026-04-21)
 - [x] **Phase 10: Mobile PWA** - Installable PWA, push notifications, mobile question queue, overnight digest (completed 2026-04-21)
+- [ ] **Phase 11: Run-view tabs (Writers' Room, Timeline, Boardroom, Canvas)** - Four-tab switcher on the run view page, read-only over existing run-store
+- [ ] **Phase 12: UI Polish from Phase 11 UAT** - Track A look-and-feel fixes: dark Run History, Writers' Room loading skeleton, speaker chips with full agent config, prompt-as-run-title
 
 ## Phase Details
 
@@ -232,3 +234,12 @@ Plans:
 - [x] 11-03-PLAN.md — Boardroom view: parallel agent columns on desktop, mobile accordion fallback (VIEW-02)
 - [x] 11-04-PLAN.md — Canvas view: artifact-first preview with proximity-based margin comments, extract ArtifactPreviewInline (VIEW-03)
 - [ ] 11-05-PLAN.md — Deploy to console.beaglemind.ai and human UAT checkpoint
+
+### Phase 12: UI Polish from Phase 11 UAT
+
+**Goal:** Close the four look-and-feel defects surfaced by Lucas's 2026-04-27 UAT pass against console.beaglemind.ai: (1) Run History rendering in light theme while everything else is dark, (2) Writers' Room "waiting" state showing as a dead screen, (3) speaker attribution being weak in single-column Writers' Room (incl. unconfigured `herman` rendering lowercase + gray), (4) run page header showing only the UUID with no human-readable title. Track A scope only — Track B (run lifecycle, artifact counts, status/cost mismatch) is deferred.
+**Requirements:** UAT-12-01, UAT-12-02, UAT-12-03, UAT-12-04
+**Depends on:** Phase 11
+**Plans:** TBD (set during plan-phase)
+
+Plans: *(to be created via `/gsd-plan-phase 12`)*
