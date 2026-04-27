@@ -5,6 +5,7 @@ import { useRunStream } from '@/lib/hooks/use-sse';
 import { useRunStore } from '@/lib/stores/run-store';
 import { useUIStore } from '@/lib/stores/ui-store';
 import { useStopRun } from '@/lib/hooks/use-run-actions';
+import { useRun } from '@/lib/hooks/use-run';
 import { useMode } from '@/lib/mode-context';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -38,6 +39,10 @@ export default function RunPage({
   // Read store state
   const status = useRunStore((s) => s.status);
 
+  const { data: run } = useRun(runId);
+  const titleText = (run?.prompt ?? '').trim();
+  const titleDisplay = titleText.length > 0 ? titleText : 'Untitled run';
+
   const { mode } = useMode();
   const isStudio = mode === 'studio';
 
@@ -66,36 +71,46 @@ export default function RunPage({
   return (
     <div className="flex h-[calc(100vh-65px)] flex-col">
       {/* Header */}
-      <div className="flex items-center gap-3 border-b border-white/10 px-4 py-3">
-        <Badge className={STATUS_STYLES[status] ?? STATUS_STYLES.pending}>
-          {status}
-        </Badge>
-        <span className="text-sm text-gray-400">Run</span>
-        <span className="truncate text-xs text-gray-600">{runId}</span>
-        {isStudio && <InterruptButton runId={runId} />}
-        {isCompleted && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShareOpen(true)}
-            className="ml-auto"
-          >
-            <Share2 className="size-3.5" />
-            Share Replay
-          </Button>
-        )}
-        {isExecuting && (
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={handleStop}
-            disabled={stopRun.isPending}
-            className="ml-auto"
-          >
-            <SquareIcon className="size-3" />
-            Stop
-          </Button>
-        )}
+      <div className="border-b border-white/10">
+        {/* Title row — single-line truncated, reserves height before fetch resolves */}
+        <h1
+          className="truncate px-4 pt-3 text-base font-semibold text-foreground leading-6"
+          title={titleDisplay}
+        >
+          {titleDisplay}
+        </h1>
+        {/* Status / id / actions row — divider moved to outer wrapper */}
+        <div className="flex items-center gap-3 px-4 py-2">
+          <Badge className={STATUS_STYLES[status] ?? STATUS_STYLES.pending}>
+            {status}
+          </Badge>
+          <span className="text-sm text-gray-400">Run</span>
+          <span className="truncate text-xs text-gray-600">{runId}</span>
+          {isStudio && <InterruptButton runId={runId} />}
+          {isCompleted && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShareOpen(true)}
+              className="ml-auto"
+            >
+              <Share2 className="size-3.5" />
+              Share Replay
+            </Button>
+          )}
+          {isExecuting && (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleStop}
+              disabled={stopRun.isPending}
+              className="ml-auto"
+            >
+              <SquareIcon className="size-3" />
+              Stop
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Transcript area + optional drawer */}
