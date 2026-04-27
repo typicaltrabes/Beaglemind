@@ -12,6 +12,9 @@ import { ArtifactPreviewInline } from '@/components/transcript/artifact-preview-
 import { PREVIEWABLE_MIMES } from '@/components/transcript/artifact-card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useRun } from '@/lib/hooks/use-run';
+import { truncatePrompt } from '@/lib/run-title';
+import { EmptyState } from './empty-state';
 
 interface CanvasViewProps {
   runId: string;
@@ -53,9 +56,10 @@ function formatSize(bytes: number): string {
  *   - PURELY proximity-based — no parsing of message text for artifact refs
  *     (per 11-CONTEXT.md §Canvas view)
  */
-export function CanvasView({ runId: _runId }: CanvasViewProps) {
+export function CanvasView({ runId }: CanvasViewProps) {
   const artifacts = useRunStore((s) => s.artifacts);
   const messages = useRunStore((s) => s.messages);
+  const { data: run } = useRun(runId);
 
   const firstArtifactId = artifacts[0]
     ? (artifacts[0].content as ArtifactContent).artifactId
@@ -77,11 +81,30 @@ export function CanvasView({ runId: _runId }: CanvasViewProps) {
   }, [artifacts, firstArtifactId, selectedArtifactId]);
 
   if (artifacts.length === 0) {
+    const promptOrTitle =
+      (run?.title ?? '').trim() ||
+      truncatePrompt((run?.prompt ?? '').trim(), 120);
     return (
-      <div className="flex h-full items-center justify-center px-4 text-center text-sm text-muted-foreground">
-        No artifacts delivered yet — Canvas will populate as agents produce
-        outputs
-      </div>
+      <EmptyState
+        title="Canvas: deliverables view"
+        body={
+          <>
+            <p>This run has no artifacts yet.</p>
+            <p className="mt-2">
+              Canvas surfaces documents, code, and data the agents produce, with related
+              discussion shown in the margins.
+            </p>
+          </>
+        }
+        footer={
+          promptOrTitle ? (
+            <>
+              <span className="text-muted-foreground">Run prompt:</span>{' '}
+              <span className="text-foreground">&ldquo;{promptOrTitle}&rdquo;</span>
+            </>
+          ) : null
+        }
+      />
     );
   }
 
