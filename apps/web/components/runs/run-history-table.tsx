@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { ChevronRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { RunCostBadge } from './run-cost-badge';
 import type { RunHistoryItem } from '@/lib/hooks/use-run-history';
@@ -10,14 +11,17 @@ interface RunHistoryTableProps {
   isLoading: boolean;
 }
 
+// Phase 16-03: every status entry gets `rounded-full` so chips render as
+// pills (was rounded-md from Plan 14-04). The Badge base class renders
+// these tokens directly via className override.
 const STATUS_VARIANT: Record<string, string> = {
-  completed: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20',
-  executing: 'bg-amber-500/15 text-amber-400 border-amber-500/20',
-  running: 'bg-amber-500/15 text-amber-400 border-amber-500/20',
-  cancelled: 'bg-red-500/15 text-red-400 border-red-500/20',
-  pending: 'bg-white/5 text-muted-foreground border-white/10',
-  planned: 'bg-white/5 text-muted-foreground border-white/10',
-  approved: 'bg-white/5 text-muted-foreground border-white/10',
+  completed: 'rounded-full bg-emerald-500/15 text-emerald-400 border-emerald-500/20',
+  executing: 'rounded-full bg-amber-500/15 text-amber-400 border-amber-500/20',
+  running: 'rounded-full bg-amber-500/15 text-amber-400 border-amber-500/20',
+  cancelled: 'rounded-full bg-red-500/15 text-red-400 border-red-500/20',
+  pending: 'rounded-full bg-white/5 text-muted-foreground border-white/10',
+  planned: 'rounded-full bg-white/5 text-muted-foreground border-white/10',
+  approved: 'rounded-full bg-white/5 text-muted-foreground border-white/10',
 };
 
 function formatDuration(seconds: number | null): string {
@@ -52,7 +56,7 @@ function truncate(text: string | null, maxLen: number): string {
 function SkeletonRow() {
   return (
     <tr className="border-b border-white/5">
-      {Array.from({ length: 7 }).map((_, i) => (
+      {Array.from({ length: 8 }).map((_, i) => (
         <td key={i} className="px-3 py-3">
           <div className="h-4 w-20 animate-pulse rounded bg-white/5" />
         </td>
@@ -90,6 +94,7 @@ export function RunHistoryTable({ runs, isLoading }: RunHistoryTableProps) {
             <th className="px-3 py-2 text-right font-medium text-muted-foreground">
               Date
             </th>
+            <th className="w-8 px-2 py-2"></th>
           </tr>
         </thead>
         <tbody>
@@ -98,7 +103,7 @@ export function RunHistoryTable({ runs, isLoading }: RunHistoryTableProps) {
           ) : runs.length === 0 ? (
             <tr>
               <td
-                colSpan={7}
+                colSpan={8}
                 className="px-3 py-12 text-center text-muted-foreground"
               >
                 No runs found
@@ -111,7 +116,7 @@ export function RunHistoryTable({ runs, isLoading }: RunHistoryTableProps) {
                 onClick={() =>
                   router.push(`/projects/${run.projectId}/runs/${run.id}`)
                 }
-                className="cursor-pointer border-b border-white/5 transition-colors hover:bg-white/5"
+                className="group/row cursor-pointer border-b border-white/5 transition-colors hover:bg-white/5"
               >
                 <td className="px-3 py-3 text-foreground">
                   {run.projectName ?? '--'}
@@ -139,6 +144,12 @@ export function RunHistoryTable({ runs, isLoading }: RunHistoryTableProps) {
                 </td>
                 <td className="px-3 py-3 text-right text-xs text-muted-foreground">
                   {formatRelativeDate(run.createdAt)}
+                </td>
+                <td className="w-8 px-2 py-3 text-right">
+                  <ChevronRight
+                    className="size-4 text-muted-foreground opacity-0 transition-opacity group-hover/row:opacity-100"
+                    aria-hidden="true"
+                  />
                 </td>
               </tr>
             ))
