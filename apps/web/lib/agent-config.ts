@@ -10,7 +10,7 @@ export interface AgentConfig {
 export const AGENT_CONFIG: Record<string, AgentConfig> = {
   mo: {
     displayName: 'Mo',
-    role: 'Governance',
+    role: 'Senior Partner',
     bgColor: 'bg-[#f7b733]',
     textOnBg: 'text-[#1a1200]',
     nameColor: 'text-amber-500',
@@ -18,7 +18,7 @@ export const AGENT_CONFIG: Record<string, AgentConfig> = {
   },
   jarvis: {
     displayName: 'Jarvis',
-    role: 'Commercial Risk',
+    role: 'Analyst Extraordinaire',
     bgColor: 'bg-[#4db6ac]',
     textOnBg: 'text-[#062822]',
     nameColor: 'text-teal-500',
@@ -42,7 +42,7 @@ export const AGENT_CONFIG: Record<string, AgentConfig> = {
   },
   herman: {
     displayName: 'Herman',
-    role: 'Stress-Test',
+    role: 'Resident Contrarian',
     bgColor: 'bg-[#a855f7]',
     textOnBg: 'text-[#1a0833]',
     nameColor: 'text-purple-400',

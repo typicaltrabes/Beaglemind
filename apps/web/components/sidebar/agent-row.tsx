@@ -63,6 +63,13 @@ export function AgentRow({ agentId }: AgentRowProps) {
       </div>
       <span
         aria-label={`presence: ${presence}`}
+        title={
+          presence === 'live'
+            ? 'Live — produced an event in the last 60s'
+            : presence === 'ready'
+            ? 'Ready — active in the last 30 minutes'
+            : 'Offline — no recent activity'
+        }
         className={cn('size-1.5 shrink-0 rounded-full', PRESENCE_DOT[presence])}
       />
     </button>
