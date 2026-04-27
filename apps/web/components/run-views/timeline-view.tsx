@@ -51,7 +51,7 @@ export function TimelineView({ runId }: TimelineViewProps) {
   const { mode } = useMode();
   const [selectedSeq, setSelectedSeq] = useState<number | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [speed, setSpeed] = useState<1 | 2 | 4>(2); // CONTEXT.md: default 2×
+  const [speed, setSpeed] = useState<1 | 2 | 4>(1); // 1× default — readable pace
 
   // Ordered, filtered event list (used for dots, tooltips, scrubber, snapping).
   const visible = useMemo<HubEventEnvelope[]>(() => {
@@ -163,7 +163,7 @@ export function TimelineView({ runId }: TimelineViewProps) {
             </div>
 
             {/* The lane: dots + scene divider lines. */}
-            <div className="relative h-16 w-full border-y border-white/10 bg-muted/20">
+            <div className="relative h-8 w-full border-y border-white/10 bg-muted/20">
               {/* Scene dividers (dotted vertical lines). */}
               {boundaries.map((b) => (
                 <div

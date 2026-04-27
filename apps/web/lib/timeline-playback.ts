@@ -1,8 +1,12 @@
 /**
- * Per CONTEXT.md Item 7 Timeline: "advance the playhead one event every
- * `400ms / speedMultiplier`."
+ * Base playback tick: 1500ms per event at 1× speed (slowed from 400ms after
+ * UAT — original pace was unreadable; user could not see what each agent
+ * was saying as the playhead advanced).
+ *   1× = 1500ms (readable default)
+ *   2× = 750ms  (skim)
+ *   4× = 375ms  (fast scan)
  */
-export const TIMELINE_BASE_INTERVAL_MS = 400;
+export const TIMELINE_BASE_INTERVAL_MS = 1500;
 
 /**
  * Advances the playhead by exactly one position (clamped). The playhead is
@@ -29,7 +33,7 @@ export function advancePlayhead(currentIndex: number, visibleSeqs: number[]): nu
 
 /**
  * Returns the milliseconds-per-tick for the given speed multiplier.
- * 1× = 400ms (default), 2× = 200ms, 4× = 100ms. Anything ≤0 falls back to 1×.
+ * 1× = 1500ms (default), 2× = 750ms, 4× = 375ms. Anything ≤0 falls back to 1×.
  */
 export function computeIntervalMs(speed: number): number {
   const safe = speed > 0 ? speed : 1;

@@ -22,14 +22,14 @@ describe('advancePlayhead', () => {
 });
 
 describe('computeIntervalMs', () => {
-  it('returns 400 for 1×', () => {
+  it('returns base interval for 1×', () => {
     expect(computeIntervalMs(1)).toBe(TIMELINE_BASE_INTERVAL_MS);
   });
-  it('returns 200 for 2×', () => {
-    expect(computeIntervalMs(2)).toBe(200);
+  it('halves the base interval for 2×', () => {
+    expect(computeIntervalMs(2)).toBe(Math.round(TIMELINE_BASE_INTERVAL_MS / 2));
   });
-  it('returns 100 for 4×', () => {
-    expect(computeIntervalMs(4)).toBe(100);
+  it('quarters the base interval for 4×', () => {
+    expect(computeIntervalMs(4)).toBe(Math.round(TIMELINE_BASE_INTERVAL_MS / 4));
   });
   it('falls back to 1× for zero or negative', () => {
     expect(computeIntervalMs(0)).toBe(TIMELINE_BASE_INTERVAL_MS);

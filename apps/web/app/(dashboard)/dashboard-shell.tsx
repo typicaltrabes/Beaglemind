@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { ModeProvider } from '@/lib/mode-context';
 import { ModeToggle } from '@/components/mode-toggle';
@@ -29,9 +30,19 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 >
                   <Menu className="size-5" />
                 </button>
-                <span className="text-lg font-semibold text-white">
-                  Beagle Agent Console
-                </span>
+                <Link href="/" className="flex items-center gap-2.5">
+                  <Image
+                    src="/brand/logo-removebg-preview.png"
+                    alt="Beagle"
+                    width={32}
+                    height={32}
+                    priority
+                    className="rounded-md"
+                  />
+                  <span className="text-lg font-semibold tracking-tight text-white">
+                    Beagle <span className="font-light text-amber-400">Agent Console</span>
+                  </span>
+                </Link>
               </div>
               <div className="flex items-center gap-3">
                 <ModeToggle />
