@@ -24,6 +24,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 10: Mobile PWA** - Installable PWA, push notifications, mobile question queue, overnight digest (completed 2026-04-21)
 - [ ] **Phase 11: Run-view tabs (Writers' Room, Timeline, Boardroom, Canvas)** - Four-tab switcher on the run view page, read-only over existing run-store
 - [ ] **Phase 12: UI Polish from Phase 11 UAT** - Track A look-and-feel fixes: dark Run History, Writers' Room loading skeleton, speaker chips with full agent config, prompt-as-run-title
+- [ ] **Phase 13: UI Polish R2 + Tabs Redesign + Settings + Title Summarization** - Seven items from post-Phase-12 UAT: kill horizontal scroll, avatar-edge padding, prettier run-id chip, run-title summarization (Haiku via LiteLLM), settings page (theme/defaultTab/verbosity/notifications), Improve-prompt button scaffold, Timeline scrubber + Boardroom scene-grid + Canvas empty state
 
 ## Phase Details
 
@@ -243,3 +244,12 @@ Plans:
 **Plans:** 2/5 plans executed
 
 Plans: *(to be created via `/gsd-plan-phase 12`)*
+
+### Phase 13: UI Polish R2 + Tabs Redesign + Settings + Title Summarization
+
+**Goal:** Address all 7 items from Lucas's post-Phase-12 UAT in one autonomous phase: (1) kill the horizontal scrollbar on the run page; (2) generate a 6–8 word title for each run via Haiku and replace the raw prompt as the run header; (3) scaffold an "Improve my prompt" composer button + 501 stub endpoint (real LLM wiring deferred to Phase 14); (4) indent avatars away from the panel edge; (5) replace raw run UUID with `#xxxxxxxx` short slug + click-to-copy; (6) build a `/settings` page with theme / default-tab / default-verbosity / notifications, backed by a `users.preferences` JSONB column; (7) make the four run-view tabs visibly different — Timeline gets a real scrub/play bar, Boardroom becomes a scene-aligned agents-vs-scenes grid, Canvas gets a first-class empty state.
+**Requirements:** UAT-13-01, UAT-13-02, UAT-13-03, UAT-13-04, UAT-13-05, UAT-13-06, UAT-13-07
+**Depends on:** Phase 12
+**Plans:** TBD (set during plan-phase)
+
+Plans: *(to be created via `/gsd-plan-phase 13`)*

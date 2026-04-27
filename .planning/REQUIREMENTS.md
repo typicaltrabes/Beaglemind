@@ -108,6 +108,16 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **UAT-12-03**: Every transcript-visible agent (Mo, Jarvis, Herman, Sam) is configured in `AGENT_CONFIG` with capitalized display name, role label, avatar color, and name color; speaker block in `AgentMessage` is visually distinct from body prose (chip/pill with agent color)
 - [ ] **UAT-12-04**: Run page header displays the run's prompt as a single-line truncated title above the status chip + UUID row, identifiable at a glance after switching tabs
 
+### UI Polish R2 + Tabs Redesign + Settings (from post-Phase-12 UAT)
+
+- [ ] **UAT-13-01**: Run page never produces a horizontal scrollbar at viewport widths ≥1024px
+- [ ] **UAT-13-02**: Each new run gets a 6–8 word AI-generated title via Haiku-on-LiteLLM, stored on `runs.title`; UI shows it in run page header and Run History "Title" column, with truncated-prompt fallback
+- [ ] **UAT-13-03**: Composer "Improve" button (Sparkles icon, left of Send) opens a popover; `POST /api/runs/improve-prompt` calls Haiku via LiteLLM and returns `{rewritten}`; popover lets user accept / edit / cancel
+- [ ] **UAT-13-04**: Speaker chip / avatar in `AgentMessage` is offset ≥16px from message-list panel's left edge
+- [ ] **UAT-13-05**: Run header shows `#xxxxxxxx` short slug (first 8 chars of UUID) in monospace; click copies full UUID with 1.5s confirmation; full UUID accessible via `title=`
+- [ ] **UAT-13-06**: `/settings` route renders auth-gated form with `theme` / `defaultTab` / `defaultVerbosity` / `browserNotifications`; persists to `users.preferences` JSONB via `PATCH /api/me/preferences`; theme `light/dark/auto` toggles `<html>` class and `:root` CSS uses light tokens by default with `.dark` overrides (Plan 12-01's :root-as-dark hack reverted in favor of theme switching)
+- [ ] **UAT-13-07**: Each tab visibly differentiated — Timeline play/pause/scrub bar with 1× / 2× / 4× speed and per-event playhead; Boardroom is a scene-aligned grid (rows = scenes, cols = agents); Canvas first-class empty-state card when `artifacts.length === 0`
+
 ## v2 Requirements
 
 Deferred to future release. Tracked but not in current roadmap.
