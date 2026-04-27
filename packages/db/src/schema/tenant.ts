@@ -1,4 +1,4 @@
-import { pgSchema, uuid, text, timestamp, integer, jsonb, uniqueIndex } from 'drizzle-orm/pg-core';
+import { pgSchema, uuid, text, varchar, timestamp, integer, jsonb, uniqueIndex } from 'drizzle-orm/pg-core';
 
 export function createTenantSchema(tenantId: string) {
   // Sanitize tenant ID: replace hyphens with underscores for valid Postgres schema names
@@ -15,7 +15,7 @@ export function createTenantSchema(tenantId: string) {
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   });
 
-  // --- Runs (D-02, updated from Phase 1) ---
+  // --- Runs (D-02, updated from Phase 1; title re-added in Phase 13) ---
   const runs = schema.table('runs', {
     id: uuid('id').primaryKey().defaultRandom(),
     projectId: uuid('project_id').notNull(),
@@ -23,6 +23,7 @@ export function createTenantSchema(tenantId: string) {
     parentRunId: uuid('parent_run_id'),
     status: text('status').notNull().default('pending'),
     prompt: text('prompt'),
+    title: varchar('title', { length: 80 }),
     createdBy: text('created_by').notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),

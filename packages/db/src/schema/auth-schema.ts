@@ -1,4 +1,5 @@
-import { text, timestamp, boolean } from 'drizzle-orm/pg-core';
+import { text, timestamp, boolean, jsonb } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
 import { shared } from './shared';
 
 export const users = shared.table('users', {
@@ -10,6 +11,7 @@ export const users = shared.table('users', {
   twoFactorEnabled: boolean('two_factor_enabled'),
   isOperator: boolean('is_operator').notNull().default(false),
   lastActiveAt: timestamp('last_active_at', { withTimezone: true }),
+  preferences: jsonb('preferences').notNull().default(sql`'{}'::jsonb`),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
