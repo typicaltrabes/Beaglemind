@@ -40,6 +40,22 @@ export const AGENT_CONFIG: Record<string, AgentConfig> = {
     nameColor: 'text-blue-400',
     initial: 'U',
   },
+  herman: {
+    displayName: 'Herman',
+    role: 'open-weight researcher',
+    bgColor: 'bg-[#a855f7]',
+    textOnBg: 'text-[#1a0833]',
+    nameColor: 'text-purple-400',
+    initial: 'H',
+  },
+  sam: {
+    displayName: 'Sam',
+    role: 'sentinel',
+    bgColor: 'bg-[#ef4444]',
+    textOnBg: 'text-[#3a0808]',
+    nameColor: 'text-red-400',
+    initial: 'S',
+  },
 };
 
 const DEFAULT_CONFIG: AgentConfig = {
