@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
+import { Breadcrumb } from '@/components/breadcrumb';
 import { RunHistoryTable } from '@/components/runs/run-history-table';
 import { useRunHistory } from '@/lib/hooks/use-run-history';
 
@@ -67,67 +68,70 @@ export default function RunHistoryPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-xl font-semibold text-foreground">Run History</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Browse all runs across projects
-        </p>
-      </div>
+    <>
+      <Breadcrumb trail={["BEAGLELABS", "RUN HISTORY"]} />
+      <div className="flex flex-col gap-6 p-6">
+        {/* Header */}
+        <div>
+          <h1 className="text-xl font-semibold text-foreground">Run History</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Browse all runs across projects
+          </p>
+        </div>
 
-      {/* Search */}
-      <Input
-        placeholder="Search by project name or prompt..."
-        value={searchInput}
-        onChange={(e) => setSearchInput(e.target.value)}
-        className="max-w-md"
-      />
+        {/* Search */}
+        <Input
+          placeholder="Search by project name or prompt..."
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          className="max-w-md"
+        />
 
-      {/* Status filters */}
-      <div className="flex flex-wrap items-center gap-2">
-        <button
-          onClick={clearFilters}
-          className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-            selectedStatuses.size === 0
-              ? 'bg-white/10 text-foreground'
-              : 'text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          All
-        </button>
-        {STATUSES.map((status) => (
+        {/* Status filters */}
+        <div className="flex flex-wrap items-center gap-2">
           <button
-            key={status}
-            onClick={() => toggleStatus(status)}
-            className={`rounded-md px-3 py-1.5 text-xs font-medium capitalize transition-colors ${
-              selectedStatuses.has(status)
+            onClick={clearFilters}
+            className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+              selectedStatuses.size === 0
                 ? 'bg-white/10 text-foreground'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            {status}
+            All
           </button>
-        ))}
-      </div>
+          {STATUSES.map((status) => (
+            <button
+              key={status}
+              onClick={() => toggleStatus(status)}
+              className={`rounded-md px-3 py-1.5 text-xs font-medium capitalize transition-colors ${
+                selectedStatuses.has(status)
+                  ? 'bg-white/10 text-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {status}
+            </button>
+          ))}
+        </div>
 
-      {/* Table */}
-      <RunHistoryTable runs={runs} isLoading={isLoading} />
+        {/* Table */}
+        <RunHistoryTable runs={runs} isLoading={isLoading} />
 
-      {/* Pagination */}
-      <div className="flex items-center justify-between text-sm text-muted-foreground">
-        <span>
-          Showing {Math.min(offset + runs.length, total)} of {total} runs
-        </span>
-        {offset + runs.length < total && (
-          <button
-            onClick={() => setOffset((prev) => prev + PAGE_SIZE)}
-            className="rounded-md border border-white/10 px-4 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-white/5"
-          >
-            Load more
-          </button>
-        )}
+        {/* Pagination */}
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <span>
+            Showing {Math.min(offset + runs.length, total)} of {total} runs
+          </span>
+          {offset + runs.length < total && (
+            <button
+              onClick={() => setOffset((prev) => prev + PAGE_SIZE)}
+              className="rounded-md border border-white/10 px-4 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-white/5"
+            >
+              Load more
+            </button>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
