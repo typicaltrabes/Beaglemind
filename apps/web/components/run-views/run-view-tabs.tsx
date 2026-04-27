@@ -56,11 +56,31 @@ export function RunViewTabs({ runId }: RunViewTabsProps) {
       onValueChange={handleChange}
       className="flex flex-1 min-h-0 flex-col"
     >
-      <TabsList className="mx-4 mt-3 w-fit">
-        <TabsTab value="writers-room">Writers&apos; Room</TabsTab>
-        <TabsTab value="timeline">Timeline</TabsTab>
-        <TabsTab value="boardroom">Boardroom</TabsTab>
-        <TabsTab value="canvas">Canvas</TabsTab>
+      <TabsList className="mx-4 mt-3 w-fit rounded-full border-0 bg-white/5 p-1">
+        <TabsTab
+          value="writers-room"
+          className="rounded-full px-3 py-1.5 text-xs data-[selected]:bg-amber-500/15 data-[selected]:text-amber-400 data-[selected]:shadow-none"
+        >
+          Writers&apos; Room
+        </TabsTab>
+        <TabsTab
+          value="timeline"
+          className="rounded-full px-3 py-1.5 text-xs data-[selected]:bg-amber-500/15 data-[selected]:text-amber-400 data-[selected]:shadow-none"
+        >
+          Timeline
+        </TabsTab>
+        <TabsTab
+          value="boardroom"
+          className="rounded-full px-3 py-1.5 text-xs data-[selected]:bg-amber-500/15 data-[selected]:text-amber-400 data-[selected]:shadow-none"
+        >
+          Boardroom
+        </TabsTab>
+        <TabsTab
+          value="canvas"
+          className="rounded-full px-3 py-1.5 text-xs data-[selected]:bg-amber-500/15 data-[selected]:text-amber-400 data-[selected]:shadow-none"
+        >
+          Canvas
+        </TabsTab>
       </TabsList>
 
       <TabsPanel
