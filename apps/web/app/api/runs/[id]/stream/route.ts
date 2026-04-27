@@ -1,4 +1,5 @@
 import { requireTenantContext, getTenantDb } from '@/lib/get-tenant';
+import { dbRowToEnvelope } from '@/lib/sse-envelope';
 import { eq, asc, gt, and } from 'drizzle-orm';
 
 export const runtime = 'nodejs';
@@ -44,7 +45,8 @@ export async function GET(
           .orderBy(asc(schema.events.sequenceNumber));
 
         for (const event of events) {
-          send(String(event.sequenceNumber), JSON.stringify(event));
+          const envelope = dbRowToEnvelope(event, tenantId);
+          send(String(event.sequenceNumber), JSON.stringify(envelope));
         }
 
         // Subscribe to Redis for real-time events (T-04-06: channel from authenticated tenantId)

@@ -13,14 +13,22 @@ import type { HubEventEnvelope } from '@beagle-console/shared';
  * NOTE: the events table has no `tenantId` column (it's implied by the schema),
  * so the caller passes it in from the outer SSE handler scope.
  */
+/**
+ * Shape of a row returned by Drizzle's `select().from(schema.events)`.
+ * `content` and `metadata` come back as `unknown` because the column type is
+ * JSONB — Drizzle does not narrow the JSON shape. Our writers
+ * (`EventStore.persist` in apps/agent-hub) always store objects, so we cast
+ * to `Record<string, unknown>` at this boundary to match the Zod envelope's
+ * `z.record(z.string(), z.unknown())` contract.
+ */
 export interface EventDbRow {
-  id: number;                              // serial primary key, NOT included in envelope
+  id: number;                  // serial primary key, NOT included in envelope
   runId: string;
   sequenceNumber: number;
-  type: string;                            // broader than MessageType at runtime; trust the DB
+  type: string;                // broader than MessageType at runtime; trust the DB
   agentId: string;
-  content: Record<string, unknown>;
-  metadata: Record<string, unknown> | null;
+  content: unknown;            // JSONB → unknown via Drizzle inference
+  metadata: unknown;           // JSONB nullable → unknown via Drizzle inference
   createdAt: Date;
 }
 
@@ -34,11 +42,13 @@ export function dbRowToEnvelope(
     runId: row.runId,
     tenantId,
     sequenceNumber: row.sequenceNumber,
-    content: row.content,
+    content: row.content as Record<string, unknown>,
     // Coerce null → undefined: the DB column is NULLABLE jsonb but the Zod
     // contract uses `.optional()` which rejects null. Drop the key entirely
     // when null so spread/serialize behavior is identical.
-    ...(row.metadata != null ? { metadata: row.metadata } : {}),
+    ...(row.metadata != null
+      ? { metadata: row.metadata as Record<string, unknown> }
+      : {}),
     // THE FIX: createdAt is a JS Date when Drizzle reads `timestamp with time zone`.
     // toISOString() matches the format produced by EventStore.persist (event-store.ts:29).
     timestamp: row.createdAt.toISOString(),
