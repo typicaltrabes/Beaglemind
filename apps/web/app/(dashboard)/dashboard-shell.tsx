@@ -62,17 +62,13 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                     }
                   />
                   <Image
-                    src="/brand/logo-removebg-preview.png"
-                    alt="Beagle"
-                    width={36}
-                    height={36}
+                    src="/brand/logo.jpg"
+                    alt="Beagle Agent Console"
+                    width={84}
+                    height={45}
                     priority
-                    className="rounded-md ring-1 ring-amber-500/20"
+                    className="rounded-md ring-1 ring-amber-500/20 object-contain"
                   />
-                  <span className="text-[18px] font-semibold tracking-tight text-white">
-                    Beagle Agent{' '}
-                    <em className="not-italic font-bold text-amber-400">Console</em>
-                  </span>
                 </Link>
               </div>
               <div className="flex items-center gap-3">
