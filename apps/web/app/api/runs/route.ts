@@ -3,6 +3,7 @@ import { z } from 'zod/v4';
 import { eq, desc } from 'drizzle-orm';
 import { requireTenantContext, getTenantDb } from '@/lib/get-tenant';
 import { hubClient } from '@/lib/api/hub-client';
+import { generateRunTitle } from '@/lib/run-title';
 
 export const runtime = 'nodejs';
 
@@ -64,6 +65,11 @@ export async function POST(request: Request) {
       tenantId,
       prompt,
     });
+
+    // Best-effort title generation — runs in the background, never blocks the
+    // response. On failure the column stays NULL and the UI falls back to
+    // truncate(prompt, 80). See apps/web/lib/run-title.ts.
+    void generateRunTitle({ runId: run.id, prompt, tenantId });
 
     return NextResponse.json(run, { status: 201 });
   } catch (error) {

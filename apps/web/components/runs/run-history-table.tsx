@@ -73,7 +73,7 @@ export function RunHistoryTable({ runs, isLoading }: RunHistoryTableProps) {
               Project
             </th>
             <th className="px-3 py-2 text-left font-medium text-muted-foreground">
-              Prompt
+              Title
             </th>
             <th className="px-3 py-2 text-left font-medium text-muted-foreground">
               Status
@@ -117,7 +117,7 @@ export function RunHistoryTable({ runs, isLoading }: RunHistoryTableProps) {
                   {run.projectName ?? '--'}
                 </td>
                 <td className="max-w-xs px-3 py-3 text-muted-foreground">
-                  {truncate(run.prompt, 80)}
+                  {truncate(run.title ?? run.prompt, 80)}
                 </td>
                 <td className="px-3 py-3">
                   <Badge

@@ -17,6 +17,7 @@ import { MobileDrawerWrapper } from '@/components/studio/process-drawer-mobile';
 import { InterruptButton } from '@/components/studio/interrupt-button';
 import { ShareDialog } from '@/components/share/share-dialog';
 import { RunIdChip } from '@/components/runs/run-id-chip';
+import { truncatePrompt } from '@/lib/run-title';
 
 const STATUS_STYLES: Record<string, string> = {
   pending: 'bg-gray-600/20 text-gray-400',
@@ -41,8 +42,12 @@ export default function RunPage({
   const status = useRunStore((s) => s.status);
 
   const { data: run } = useRun(runId);
-  const titleText = (run?.prompt ?? '').trim();
-  const titleDisplay = titleText.length > 0 ? titleText : 'Untitled run';
+  // Title precedence: AI-generated runs.title > truncated prompt > 'Untitled run'.
+  // The h1 always has SOMETHING to render so the layout never shifts on load
+  // (preserves Plan 12-04's no-layout-shift behavior).
+  const generatedTitle = (run?.title ?? '').trim();
+  const promptFallback = truncatePrompt((run?.prompt ?? '').trim(), 80);
+  const titleDisplay = generatedTitle || promptFallback || 'Untitled run';
 
   const { mode } = useMode();
   const isStudio = mode === 'studio';
