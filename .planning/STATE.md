@@ -165,11 +165,14 @@ Recent decisions affecting current work:
 
 ### Pending Todos
 
-None yet.
+- **Re-verify UAT-13-02 + UAT-13-03 once LiteLLM is back.** Both items are code-complete; they reopen the moment LiteLLM (`sonic-hq-litellm-1`) starts responding. No code change needed — just retest a fresh run (title should auto-populate) and click the Improve button (popover should return a rewrite instead of "Internal server error").
+- **Fix `migrate-13.ts` tenant lookup.** Script iterates `shared.tenants` (empty by convention in this project) instead of `shared.organizations` (the real source-of-truth). Worked around manually for the Hanseatic tenant during Phase 13 deploy, but the script will silently miss tenants on the next milestone. Single-line fix in `packages/db/src/scripts/migrate-13.ts`.
+- **Track B from Phase 12 still open**: stuck `executing` runs in Run History (worker auto-complete not firing), `pending` chip on runs with non-zero cost (state-machine bug), `0` Artifacts column on every row (query or schema bug). Logged 2026-04-27, deferred to a future phase.
+- **NaN:NaN timestamps in transcript** — pre-existing data-pipeline bug on `event.timestamp`, surfaced during Phase 12 UAT but flagged by Lucas as long-standing. Not Phase 12/13 regression.
 
 ### Blockers/Concerns
 
-None yet.
+- **LiteLLM down on BeagleHQ (`sonic-hq-litellm-1`)** as of 2026-04-27. Container is in a Prisma-migrate restart loop, failing to authenticate against `postgres` with the credentials in `/opt/beaglehq/.env`. Likely drifted during the recent `beaglehq-* → sonic-hq-*` stack rename. Owned by Henrik. Blocks UAT-13-02 (run-title gen) and UAT-13-03 (Improve-prompt) at runtime; everything else continues to work because Jarvis was switched to direct-Anthropic auth this morning. Letter drafted, Lucas to send.
 
 ## Deferred Items
 
