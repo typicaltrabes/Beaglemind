@@ -59,7 +59,7 @@ function SkeletonRow({ agentId }: SkeletonRowProps) {
 export function WritersRoomSkeleton() {
   const subtitle = `${formatAgentList(SKELETON_AGENT_IDS)} are getting ready…`;
   return (
-    <div className="flex h-full flex-col items-center justify-center px-4">
+    <div className="flex flex-col items-center px-4 py-8">
       <p className="mb-6 text-center text-sm text-muted-foreground">
         {subtitle}
       </p>

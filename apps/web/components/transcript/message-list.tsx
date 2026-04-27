@@ -14,7 +14,8 @@ import { WritersRoomSkeleton } from './loading-skeleton';
 type RenderItem =
   | { kind: 'scene-divider'; sceneId: string; sceneName: string }
   | { kind: 'event'; seq: number }
-  | { kind: 'collapse-fold'; range: CollapsibleRange };
+  | { kind: 'collapse-fold'; range: CollapsibleRange }
+  | { kind: 'skeleton' };
 
 // ---------- MessageList ----------
 
@@ -23,18 +24,11 @@ interface MessageListProps {
 }
 
 export function MessageList({ runId }: MessageListProps) {
-  const eventOrder = useRunStore((s) => s.eventOrder);
   const events = useRunStore((s) => s.events);
   const scenes = useRunStore((s) => s.scenes);
 
   // Track whether user is at the bottom (for auto-scroll)
   const [isAtBottom, setIsAtBottom] = useState(true);
-
-  // Skeleton shows whenever no agent has spoken yet — the user's own prompt
-  // persists immediately as an event, so checking eventOrder.length is wrong.
-  const hasAgentEvent = eventOrder.some(
-    (seq) => events[seq] && events[seq].agentId !== 'user',
-  );
 
   // Build flat render list from scenes, inserting dividers and collapse folds
   const renderItems = useMemo(() => {
@@ -72,6 +66,15 @@ export function MessageList({ runId }: MessageListProps) {
       }
     }
 
+    // Append skeleton placeholder while no agent (non-'user') event has arrived.
+    // This handles the "user just sent prompt, agents haven't replied" window.
+    const hasAgentEvent = items.some(
+      (it) => it.kind === 'event' && events[it.seq] && events[it.seq]!.agentId !== 'user',
+    );
+    if (!hasAgentEvent) {
+      items.push({ kind: 'skeleton' });
+    }
+
     return items;
   }, [scenes, events]);
 
@@ -91,16 +94,12 @@ export function MessageList({ runId }: MessageListProps) {
         );
       case 'event':
         return renderEvent(events[item.seq], runId);
+      case 'skeleton':
+        return <WritersRoomSkeleton />;
     }
   }
 
-  // ---------- Empty state (truly empty run, no user message yet) ----------
-
-  if (eventOrder.length === 0) {
-    return <WritersRoomSkeleton />;
-  }
-
-  // ---------- Virtualized list (with skeleton footer until an agent replies) ----------
+  // ---------- Virtualized list ----------
 
   return (
     <Virtuoso
@@ -111,7 +110,6 @@ export function MessageList({ runId }: MessageListProps) {
       overscan={200}
       className="h-full"
       style={{ height: '100%' }}
-      components={hasAgentEvent ? undefined : { Footer: WritersRoomSkeleton }}
     />
   );
 }
