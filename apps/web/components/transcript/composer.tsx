@@ -5,6 +5,7 @@ import { GitFork, Sparkles, X } from 'lucide-react';
 import { useSendMessage, useStopRun } from '@/lib/hooks/use-run-actions';
 import { ImprovePromptPopover } from './improve-prompt-popover';
 import { useRunStore } from '@/lib/stores/run-store';
+import { usePreferencesStore } from '@/lib/stores/preferences-store';
 import { useMode } from '@/lib/mode-context';
 import { AGENT_CONFIG, type AgentConfig } from '@/lib/agent-config';
 import { Button } from '@/components/ui/button';
@@ -29,7 +30,17 @@ export function Composer({ runId }: ComposerProps) {
   const [input, setInput] = useState('');
   const [mentionOpen, setMentionOpen] = useState(false);
   const [targetAgent, setTargetAgent] = useState<string | null>(null);
-  const [verbosity, setVerbosity] = useState(2);
+  const defaultVerbosityKey = usePreferencesStore(
+    (s) => s.preferences.defaultVerbosity,
+  );
+  const VERBOSITY_KEY_TO_INDEX: Record<'quiet' | 'normal' | 'full', number> = {
+    quiet: 0,
+    normal: 2,
+    full: 4,
+  };
+  const [verbosity, setVerbosity] = useState(
+    VERBOSITY_KEY_TO_INDEX[defaultVerbosityKey] ?? 2,
+  );
   const [improveOpen, setImproveOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const improveButtonRef = useRef<HTMLButtonElement>(null);

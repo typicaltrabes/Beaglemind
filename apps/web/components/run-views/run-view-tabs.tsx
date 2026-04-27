@@ -7,18 +7,18 @@ import { WritersRoomView } from './writers-room-view';
 import { TimelineView } from './timeline-view';
 import { BoardroomView } from './boardroom-view';
 import { CanvasView } from './canvas-view';
+import { usePreferencesStore } from '@/lib/stores/preferences-store';
 
 // Whitelist of known tab values. Any other ?view= string is rejected and falls
 // back to the default. The whitelist also doubles as a tamper check for the
 // query param (threat T-11-01 in the plan threat model).
 const TAB_VALUES = ['writers-room', 'timeline', 'boardroom', 'canvas'] as const;
 type TabValue = (typeof TAB_VALUES)[number];
-const DEFAULT_TAB: TabValue = 'writers-room';
 
-function parseView(v: string | null): TabValue {
+function parseView(v: string | null, fallback: TabValue): TabValue {
   return (TAB_VALUES as readonly string[]).includes(v ?? '')
     ? (v as TabValue)
-    : DEFAULT_TAB;
+    : fallback;
 }
 
 interface RunViewTabsProps {
@@ -29,13 +29,19 @@ export function RunViewTabs({ runId }: RunViewTabsProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
-  const active = parseView(searchParams.get('view'));
+  const preferredDefault = usePreferencesStore((s) => s.preferences.defaultTab);
+  const effectiveDefault: TabValue = (TAB_VALUES as readonly string[]).includes(
+    preferredDefault,
+  )
+    ? (preferredDefault as TabValue)
+    : 'writers-room';
+  const active = parseView(searchParams.get('view'), effectiveDefault);
 
   function handleChange(next: string | number | null) {
-    const value = typeof next === 'string' ? next : DEFAULT_TAB;
+    const value = typeof next === 'string' ? next : effectiveDefault;
     const params = new URLSearchParams(searchParams.toString());
-    // Canonical URL: default tab has no ?view= param.
-    if (value === DEFAULT_TAB) {
+    // Canonical URL: a tab matching the user's effective default has no ?view= param.
+    if (value === effectiveDefault) {
       params.delete('view');
     } else {
       params.set('view', value);

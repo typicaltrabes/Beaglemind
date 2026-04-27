@@ -3,24 +3,32 @@
 import { useState, useEffect } from 'react';
 import { Bell } from 'lucide-react';
 import { isPushSupported, isSubscribed, subscribeToPush } from '@/lib/push-client';
+import { usePreferencesStore } from '@/lib/stores/preferences-store';
 
 /**
  * Small banner prompting the user to enable push notifications.
  * Only renders on mobile (md:hidden) and only if push is supported + not already subscribed.
+ *
+ * Per Plan 13-05: gated on preferences.browserNotifications === 'on'. The default
+ * preference is 'off', so by default the auto-prompt does NOT appear — users opt
+ * in via the Settings page.
  */
 export function PushPermission() {
   const [visible, setVisible] = useState(false);
   const [loading, setLoading] = useState(false);
+  const browserNotificationsPref = usePreferencesStore(
+    (s) => s.preferences.browserNotifications,
+  );
 
   useEffect(() => {
     if (!isPushSupported()) return;
-
+    if (browserNotificationsPref !== 'on') return;
     isSubscribed().then((subscribed) => {
       if (!subscribed && Notification.permission !== 'denied') {
         setVisible(true);
       }
     });
-  }, []);
+  }, [browserNotificationsPref]);
 
   if (!visible) return null;
 
