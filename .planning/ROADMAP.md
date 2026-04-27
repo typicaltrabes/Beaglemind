@@ -250,6 +250,13 @@ Plans: *(to be created via `/gsd-plan-phase 12`)*
 **Goal:** Address all 7 items from Lucas's post-Phase-12 UAT in one autonomous phase: (1) kill the horizontal scrollbar on the run page; (2) generate a 6–8 word title for each run via Haiku and replace the raw prompt as the run header; (3) scaffold an "Improve my prompt" composer button + 501 stub endpoint (real LLM wiring deferred to Phase 14); (4) indent avatars away from the panel edge; (5) replace raw run UUID with `#xxxxxxxx` short slug + click-to-copy; (6) build a `/settings` page with theme / default-tab / default-verbosity / notifications, backed by a `users.preferences` JSONB column; (7) make the four run-view tabs visibly different — Timeline gets a real scrub/play bar, Boardroom becomes a scene-aligned agents-vs-scenes grid, Canvas gets a first-class empty state.
 **Requirements:** UAT-13-01, UAT-13-02, UAT-13-03, UAT-13-04, UAT-13-05, UAT-13-06, UAT-13-07
 **Depends on:** Phase 12
-**Plans:** TBD (set during plan-phase)
+**Plans:** 7 plans
 
-Plans: *(to be created via `/gsd-plan-phase 13`)*
+Plans:
+- [ ] 13-01-PLAN.md — Schema additions (runs.title + users.preferences) + idempotent migration script + API/hook field exposure
+- [ ] 13-02-PLAN.md — Run page UI bugs: horizontal scroll fix (item 1) + avatar edge padding (item 4) + RunIdChip with click-to-copy (item 5)
+- [ ] 13-03-PLAN.md — Run title summarization: liteLLMComplete helper + generateRunTitle fire-and-forget + run page h1 fallback + Run History column rename (item 2)
+- [ ] 13-04-PLAN.md — Improve-prompt button: POST /api/runs/improve-prompt (auth + Zod + rate-limit) + ImprovePromptPopover + Composer Sparkles button (item 3)
+- [ ] 13-05-PLAN.md — Settings page + theme switching: PreferencesSchema + /api/me/preferences + /settings form + ThemeProvider + globals.css :root revert + RunViewTabs/Composer/PushPermission consumers (item 6)
+- [ ] 13-06-PLAN.md — Tab differentiation: Timeline scrub/play bar + Boardroom scene-aligned grid + Canvas first-class empty state + shared EmptyState component (item 7)
+- [ ] 13-07-PLAN.md — Deploy to console.beaglemind.ai + apply Phase 13 schema migration + human UAT checkpoint covering all seven UAT-13-* requirements
