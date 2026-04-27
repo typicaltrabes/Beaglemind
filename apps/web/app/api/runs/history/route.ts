@@ -97,19 +97,23 @@ export async function GET(request: Request) {
 
     const total = countResult[0]?.count ?? 0;
 
-    // Compute duration for completed/cancelled runs
+    // Compute duration only for runs that genuinely completed via the
+    // round-table -- skip cancelled rows because their `updated_at` reflects
+    // when the row was administratively cleaned up, not real run length
+    // (a cancel applied 5 days after creation produces an 8000-minute
+    // "duration" that means nothing). Real runs that took >24h are also
+    // suspect and shown as `--` rather than misleading.
     const runs = rows.map((row) => {
       let durationSeconds: number | null = null;
-      if (
-        (row.status === 'completed' || row.status === 'cancelled') &&
-        row.updatedAt &&
-        row.createdAt
-      ) {
-        durationSeconds = Math.round(
+      if (row.status === 'completed' && row.updatedAt && row.createdAt) {
+        const seconds = Math.round(
           (new Date(row.updatedAt).getTime() -
             new Date(row.createdAt).getTime()) /
-            1000
+            1000,
         );
+        if (seconds >= 0 && seconds <= 86_400) {
+          durationSeconds = seconds;
+        }
       }
       return {
         ...row,
