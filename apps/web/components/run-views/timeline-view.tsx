@@ -1,6 +1,7 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { Play, Pause } from 'lucide-react';
 import type { HubEventEnvelope } from '@beagle-console/shared';
 
 import { useRunStore } from '@/lib/stores/run-store';
@@ -21,6 +22,12 @@ import {
   nearestEventBySeq,
   sceneBoundaries,
 } from '@/lib/timeline-utils';
+import {
+  advancePlayhead,
+  computeIntervalMs,
+  isPlayed,
+} from '@/lib/timeline-playback';
+import { EmptyState } from './empty-state';
 
 interface TimelineViewProps {
   runId: string;
@@ -43,6 +50,8 @@ export function TimelineView({ runId }: TimelineViewProps) {
   const scenes = useRunStore((s) => s.scenes);
   const { mode } = useMode();
   const [selectedSeq, setSelectedSeq] = useState<number | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [speed, setSpeed] = useState<1 | 2 | 4>(2); // CONTEXT.md: default 2×
 
   // Ordered, filtered event list (used for dots, tooltips, scrubber, snapping).
   const visible = useMemo<HubEventEnvelope[]>(() => {
@@ -78,12 +87,36 @@ export function TimelineView({ runId }: TimelineViewProps) {
     });
   }, [scenes, events, timeRange]);
 
-  // Empty-state short-circuit (matches CONTEXT.md).
+  // Playback driver: when `isPlaying`, advance the playhead one step every
+  // `computeIntervalMs(speed)` ms. Auto-stops on the last event.
+  useEffect(() => {
+    if (!isPlaying) return;
+    if (visibleSeqs.length === 0) return;
+    const id = setInterval(() => {
+      setSelectedSeq((prev) => {
+        const idx =
+          prev === null
+            ? Math.max(0, visibleSeqs.length - 1)
+            : visibleSeqs.indexOf(prev);
+        const next = advancePlayhead(idx === -1 ? 0 : idx, visibleSeqs);
+        // Auto-stop on reaching the last event.
+        if (next === idx) {
+          setIsPlaying(false);
+          return prev;
+        }
+        return visibleSeqs[next] ?? null;
+      });
+    }, computeIntervalMs(speed));
+    return () => clearInterval(id);
+  }, [isPlaying, speed, visibleSeqs]);
+
+  // Empty-state short-circuit (matches CONTEXT.md `<decisions>` Item 7 Timeline).
   if (eventOrder.length === 0) {
     return (
-      <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-        Run has not started yet
-      </div>
+      <EmptyState
+        title="Timeline waiting"
+        body={<p>Run has not started yet — Timeline activates once events arrive.</p>}
+      />
     );
   }
 
@@ -92,6 +125,17 @@ export function TimelineView({ runId }: TimelineViewProps) {
   const sliderValue = selectedSeq ?? lastSeq;
   const hasVisibleEvents = visible.length > 0;
   const minContentWidth = Math.max(visible.length * 24, 100); // px
+
+  // Playhead is an INDEX into visibleSeqs. 0 = first visible event.
+  // selectedSeq, if set, drives the playhead. Otherwise it stays at the last
+  // event so paused-state + dot saturation reads as "fully played."
+  const playheadIndex = (() => {
+    if (selectedSeq === null) return Math.max(0, visibleSeqs.length - 1);
+    const idx = visibleSeqs.indexOf(selectedSeq);
+    return idx === -1 ? Math.max(0, visibleSeqs.length - 1) : idx;
+  })();
+  const playheadSeq = visibleSeqs[playheadIndex] ?? lastSeq;
+  const atEnd = playheadIndex >= visibleSeqs.length - 1;
 
   return (
     <TooltipProvider delay={150}>
@@ -141,6 +185,10 @@ export function TimelineView({ runId }: TimelineViewProps) {
                       : '';
                 const preview = contentText.slice(0, 80);
                 const isSelected = selectedSeq === event.sequenceNumber;
+                // Dot saturation: dim events AFTER the playhead. Tailwind JIT
+                // requires `opacity-30` to appear as a literal so the class
+                // is emitted; we precompute both branches statically.
+                const dimmed = !isPlayed(event.sequenceNumber, playheadSeq);
 
                 return (
                   <Tooltip key={event.sequenceNumber}>
@@ -158,7 +206,7 @@ export function TimelineView({ runId }: TimelineViewProps) {
                                 : event.sequenceNumber,
                             )
                           }
-                          className={`absolute top-1/2 size-3 -translate-y-1/2 rounded-full ${getAgentColor(event.agentId)} ring-offset-background transition-all hover:scale-125 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 ${
+                          className={`absolute top-1/2 size-3 -translate-y-1/2 rounded-full ${getAgentColor(event.agentId)} ${dimmed ? 'opacity-30' : ''} ring-offset-background transition-all hover:scale-125 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 ${
                             isSelected
                               ? 'ring-2 ring-foreground/80 ring-offset-2 scale-125'
                               : ''
@@ -185,22 +233,63 @@ export function TimelineView({ runId }: TimelineViewProps) {
           </div>
         </div>
 
-        {/* Scrubber slider — snaps to nearest visible sequence. */}
-        <input
-          type="range"
-          min={firstSeq}
-          max={lastSeq}
-          step={1}
-          value={sliderValue}
-          disabled={!hasVisibleEvents || firstSeq === lastSeq}
-          onChange={(e) => {
-            const raw = Number(e.target.value);
-            const snapped = nearestEventBySeq(raw, visibleSeqs);
-            setSelectedSeq(snapped);
-          }}
-          className="w-full accent-amber-500 disabled:opacity-50"
-          aria-label="Timeline scrubber"
-        />
+        {/* Playback controls: Play/Pause | Scrubber | Speed (1×/2×/4×).
+            Scrubbing pauses playback; pressing Play at the end restarts. */}
+        <div className="flex items-center gap-3 px-1">
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={() => {
+              if (atEnd && !isPlaying) {
+                // Restart from the beginning.
+                setSelectedSeq(visibleSeqs[0] ?? null);
+                setIsPlaying(true);
+              } else {
+                setIsPlaying((p) => !p);
+              }
+            }}
+            aria-label={isPlaying ? 'Pause timeline' : 'Play timeline'}
+          >
+            {isPlaying ? <Pause className="size-4" /> : <Play className="size-4" />}
+            <span className="ml-1 text-xs">{isPlaying ? 'Pause' : 'Play'}</span>
+          </Button>
+
+          <input
+            type="range"
+            min={firstSeq}
+            max={lastSeq}
+            step={1}
+            value={sliderValue}
+            disabled={!hasVisibleEvents || firstSeq === lastSeq}
+            onChange={(e) => {
+              const raw = Number(e.target.value);
+              const snapped = nearestEventBySeq(raw, visibleSeqs);
+              setSelectedSeq(snapped);
+              setIsPlaying(false); // scrubbing pauses
+            }}
+            className="flex-1 accent-amber-500 disabled:opacity-50"
+            aria-label="Timeline scrubber"
+          />
+
+          <div className="flex items-center gap-1 text-xs">
+            {[1, 2, 4].map((mult) => (
+              <button
+                key={mult}
+                type="button"
+                onClick={() => setSpeed(mult as 1 | 2 | 4)}
+                className={`rounded px-2 py-0.5 ${
+                  speed === mult
+                    ? 'bg-amber-500/20 text-amber-400'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+                aria-label={`${mult}× speed`}
+              >
+                {mult}×
+              </button>
+            ))}
+          </div>
+        </div>
 
         {/* Detail panel — shown when a dot is selected. */}
         {selectedSeq !== null && events[selectedSeq] && (
