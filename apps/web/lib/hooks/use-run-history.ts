@@ -7,6 +7,7 @@ export interface RunHistoryItem {
   projectId: string;
   projectName: string | null;
   prompt: string | null;
+  title: string | null;
   status: string;
   kind: string;
   totalCostUsd: number;

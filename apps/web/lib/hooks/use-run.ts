@@ -6,6 +6,7 @@ export interface Run {
   id: string;
   projectId: string;
   prompt: string | null;
+  title: string | null;
   status: string;
   kind: string;
   createdAt: string;

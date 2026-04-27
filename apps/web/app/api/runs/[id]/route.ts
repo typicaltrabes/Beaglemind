@@ -18,6 +18,7 @@ export async function GET(
         id: schema.runs.id,
         projectId: schema.runs.projectId,
         prompt: schema.runs.prompt,
+        title: schema.runs.title,
         status: schema.runs.status,
         kind: schema.runs.kind,
         createdAt: schema.runs.createdAt,
