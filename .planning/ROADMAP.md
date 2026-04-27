@@ -26,6 +26,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 12: UI Polish from Phase 11 UAT** - Track A look-and-feel fixes: dark Run History, Writers' Room loading skeleton, speaker chips with full agent config, prompt-as-run-title
 - [ ] **Phase 13: UI Polish R2 + Tabs Redesign + Settings + Title Summarization** - Seven items from post-Phase-12 UAT: kill horizontal scroll, avatar-edge padding, prettier run-id chip, run-title summarization (Haiku via LiteLLM), settings page (theme/defaultTab/verbosity/notifications), Improve-prompt button scaffold, Timeline scrubber + Boardroom scene-grid + Canvas empty state
 - [ ] **Phase 14: Track B Bugs — Run Lifecycle + Timestamps** - Fix NaN:NaN timestamps on historical events (SSE replay missing `createdAt → timestamp` map), runs stuck on `executing` because hub never marks them `completed`, and 18 orphan `pending` runs. Folds in the migrate-13 tenant-discovery fix.
+- [ ] **Phase 16: Visual Overhaul** - 5 tracks of brand/density polish from afternoon UAT + sister-site references: italic-accent header + system pulse + operator LiteLLM/Grafana links, agent-roster sidebar with presence + filter-by-agent, Run History KPI strip, agent role rebrand (Governance / Commercial Risk / Stress-Test), run page metadata row + pill tabs.
 
 ## Phase Details
 
