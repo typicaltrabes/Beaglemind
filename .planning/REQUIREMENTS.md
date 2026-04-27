@@ -126,7 +126,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Visual Overhaul (Phase 16)
 
-- [ ] **UAT-16-01**: Dashboard header shows italic-accent wordmark "Beagle Agent *Console*" with logo + system pulse dot indicating live activity in the last 60s; operator users see LiteLLM ↗ + Grafana ↗ links; non-run dashboard pages show a `BEAGLELABS › <PAGE>` breadcrumb
+- [x] **UAT-16-01**: Dashboard header shows italic-accent wordmark "Beagle Agent *Console*" with logo + system pulse dot indicating live activity in the last 60s; operator users see LiteLLM ↗ + Grafana ↗ links; non-run dashboard pages show a `BEAGLELABS › <PAGE>` breadcrumb
 - [ ] **UAT-16-02**: Sidebar shows AGENTS section with mo/jarvis/herman/sam rows (avatar + name + role + presence dot — live ≤60s, ready ≤30min, offline otherwise); clicking a row filters Run History to that agent via `?agent=<id>`; PROJECTS section is collapsible with last 5 runs inline; bottom nav-icon row preserves Run History / Shared Links / Questions / Settings
 - [ ] **UAT-16-03**: Run History `/runs` shows a 4-card KPI strip at top — Total Runs / Total Spend / Avg Cost per Run / Completed Today — backed by a new `GET /api/runs/history/summary` endpoint; status chips render rounded-full; row hover reveals a chevron affordance
 - [ ] **UAT-16-04**: Agent roles in `AGENT_CONFIG` are rebranded — Mo: "Governance" · Jarvis: "Commercial Risk" · Herman: "Stress-Test" · Sam: "Sentinel"; surfaces everywhere `getAgentConfig().role` is read (speaker chips, sidebar, cost section, interrupt button)
