@@ -5,6 +5,8 @@ import type { MessageRouter } from '../handlers/message-router';
 import type { OpenClawOutbound } from '@beagle-console/shared';
 import { createChildLogger } from '../logger';
 import { sendToAgent, type OpenClawBridgeConfig } from '../connections/openclaw-cli-bridge';
+import { db, createTenantSchema } from '@beagle-console/db';
+import { eq } from 'drizzle-orm';
 
 // Agent SSH bridge config — which host to SSH into and optional sudo user
 const AGENT_BRIDGE_CONFIG: Record<string, { sshHost: string; sudoUser?: string }> = {
@@ -207,6 +209,41 @@ async function runRoundTable(
     } catch (err: any) {
       log.error({ error: err.message, runId, agentId }, 'Agent failed in round-table, continuing');
     }
+  }
+
+  // UAT-14-02: mark the run completed in the DB so Run History stops showing
+  // the amber `executing` chip indefinitely. Best-effort — if the write fails
+  // the agent responses are already persisted, so the run is logically done.
+  try {
+    const { runs: runsTable } = createTenantSchema(tenantId);
+    await db
+      .update(runsTable)
+      .set({ status: 'completed', updatedAt: new Date() })
+      .where(eq(runsTable.id, runId));
+  } catch (err: any) {
+    log.error(
+      { error: err.message, runId, tenantId },
+      'Failed to mark run completed (continuing)',
+    );
+  }
+
+  // UAT-14-02: emit state_transition so live UIs flip the chip without a reload.
+  // Independent try/catch from the DB write — the DB row is the source of truth;
+  // a failed publish must not roll back the status update.
+  try {
+    await router.persistAndPublish(tenantId, {
+      type: 'state_transition',
+      agentId: 'system',
+      runId,
+      tenantId,
+      content: { from: 'executing', to: 'completed' },
+      metadata: {},
+    });
+  } catch (err: any) {
+    log.error(
+      { error: err.message, runId, tenantId },
+      'Failed to publish completed state_transition (continuing)',
+    );
   }
 
   log.info({ runId, agentCount: agents.length }, 'Round-table discussion complete');
