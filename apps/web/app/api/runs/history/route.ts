@@ -1,6 +1,15 @@
 import { NextResponse } from 'next/server';
 import { requireTenantContext, getTenantDb } from '@/lib/get-tenant';
-import { sql, eq, desc, ilike, inArray, and, or } from 'drizzle-orm';
+import {
+  sql,
+  eq,
+  desc,
+  ilike,
+  inArray,
+  and,
+  or,
+  type SQL,
+} from 'drizzle-orm';
 
 export const runtime = 'nodejs';
 
@@ -30,8 +39,19 @@ export async function GET(request: Request) {
       0
     );
 
-    // Build WHERE conditions
-    const conditions: ReturnType<typeof eq>[] = [];
+    // Agent filter (Phase 16-02): only allow simple alphanumeric ids
+    // (matches AGENT_CONFIG keys), length ≤32. Anything else is dropped
+    // silently. Lower-cased before binding so the SQL `lower(...)` match
+    // is case-insensitive without a separate index.
+    const agentParam = url.searchParams.get('agent');
+    const agentFilter =
+      agentParam && /^[a-z0-9_-]{1,32}$/i.test(agentParam)
+        ? agentParam.toLowerCase()
+        : null;
+
+    // Build WHERE conditions. Conditions can be eq(...), inArray(...),
+    // or(...), or sql`...` fragments; all return Drizzle's SQL type.
+    const conditions: SQL[] = [];
 
     // Status filter (validated against whitelist per T-07-05)
     if (statusParam) {
@@ -52,6 +72,20 @@ export async function GET(request: Request) {
           ilike(schema.projects.name, term),
           ilike(schema.runs.prompt, term)
         )!
+      );
+    }
+
+    // Agent filter — EXISTS subquery on tenant events table. The agent id
+    // was regex-validated above and is bound via Drizzle's parameterized
+    // sql template (placeholder, not string interpolation). Same access
+    // pattern as the existing artifactCount / totalCostUsd subqueries.
+    if (agentFilter) {
+      conditions.push(
+        sql`EXISTS (
+          SELECT 1 FROM ${schema.events}
+          WHERE ${schema.events.runId} = ${schema.runs.id}
+            AND lower(${schema.events.agentId}) = ${agentFilter}
+        )`,
       );
     }
 
