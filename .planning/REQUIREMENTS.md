@@ -101,6 +101,13 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **INFR-05**: Monorepo structure: apps/web, apps/agent-hub, apps/worker, packages/db, packages/shared
 - [x] **INFR-06**: Per-tenant Obsidian vault wiring (agents read/write through tenant-aware path resolver)
 
+### UI Polish (from Phase 11 UAT)
+
+- [ ] **UAT-12-01**: Run History page renders in dark theme on first paint and after hydration, matching every other dashboard view (no light/white background ever visible at `/runs`)
+- [ ] **UAT-12-02**: Writers' Room shows an agent-aware loading skeleton (Mo, Jarvis, Herman placeholders with avatars and "thinking…" state) when a run has 0 streamed events, replacing the bare "Waiting for events..." text
+- [ ] **UAT-12-03**: Every transcript-visible agent (Mo, Jarvis, Herman, Sam) is configured in `AGENT_CONFIG` with capitalized display name, role label, avatar color, and name color; speaker block in `AgentMessage` is visually distinct from body prose (chip/pill with agent color)
+- [ ] **UAT-12-04**: Run page header displays the run's prompt as a single-line truncated title above the status chip + UUID row, identifiable at a glance after switching tabs
+
 ## v2 Requirements
 
 Deferred to future release. Tracked but not in current roadmap.
@@ -220,10 +227,14 @@ Deferred to future release. Tracked but not in current roadmap.
 | VIEW-01 | Phase 11 | Complete |
 | VIEW-02 | Phase 11 | Complete |
 | VIEW-03 | Phase 11 | Complete |
+| UAT-12-01 | Phase 12 | Pending |
+| UAT-12-02 | Phase 12 | Pending |
+| UAT-12-03 | Phase 12 | Pending |
+| UAT-12-04 | Phase 12 | Pending |
 
 **Coverage:**
-- v1 requirements: 64 total
-- Mapped to phases: 64
+- v1 requirements: 68 total
+- Mapped to phases: 68
 - Unmapped: 0
 
 ---
