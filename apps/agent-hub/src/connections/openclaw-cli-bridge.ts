@@ -15,7 +15,13 @@ export interface OpenClawBridgeConfig {
 export async function sendToAgent(
   cfg: OpenClawBridgeConfig,
   message: string,
-): Promise<{ text: string; runId: string; durationMs: number } | null> {
+): Promise<{
+  text: string;
+  runId: string;
+  durationMs: number;
+  costUsd: number;
+  model: string;
+} | null> {
   const escapedMessage = message.replace(/'/g, "'\\''");
   // Unique isolated session per agent per run — never overlaps with WhatsApp sessions
   const sessionId = `console:${cfg.agentId}:${cfg.runId}`;
