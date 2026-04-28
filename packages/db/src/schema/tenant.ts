@@ -86,6 +86,7 @@ export function createTenantSchema(tenantId: string) {
     sizeBytes: integer('size_bytes').notNull(),
     minioKey: text('minio_key').notNull(),
     agentId: text('agent_id').notNull(),
+    extractedText: text('extracted_text'), // Phase 17: nullable — NULL for images and extraction failures
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   });
 
