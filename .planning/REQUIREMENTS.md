@@ -135,7 +135,7 @@ Requirements for initial release. Each maps to roadmap phases.
 ### User Attachments (Phase 17)
 
 - [ ] **UAT-17-01**: User can attach up to 4 files per message (≤20 MB each) of type PDF / DOCX / PNG / JPG / WEBP / TXT / MD via a paperclip button (between Improve and Send) or drag-drop on the composer; pending attachments appear as chips above the textarea with per-file status (`uploading…` → `ready`); Send is disabled while any attachment is uploading; client-side validation rejects unsupported mime/oversized files with an inline error.
-- [ ] **UAT-17-02**: `POST /api/runs/[id]/attachments` (multipart) is auth-scoped to the current tenant + run, validates type/size, uploads to MinIO bucket `tenant-${tenantId}` under `runs/${runId}/uploads/${key}.${ext}`, inserts an `artifacts` row with `agent_id='user'` and synchronously-extracted text in a new `artifacts.extracted_text TEXT` column (PDF via pdf-parse, DOCX via mammoth, TXT/MD via utf-8 read, NULL for images), capping extracted text at 50,000 chars with a truncation marker.
+- [x] **UAT-17-02**: `POST /api/runs/[id]/attachments` (multipart) is auth-scoped to the current tenant + run, validates type/size, uploads to MinIO bucket `tenant-${tenantId}` under `runs/${runId}/uploads/${key}.${ext}`, inserts an `artifacts` row with `agent_id='user'` and synchronously-extracted text in a new `artifacts.extracted_text TEXT` column (PDF via pdf-parse, DOCX via mammoth, TXT/MD via utf-8 read, NULL for images), capping extracted text at 50,000 chars with a truncation marker.
 - [ ] **UAT-17-03**: When the round-table fires for a message with attachments, agents see a structured `--- USER ATTACHMENTS ---` block (filename, mime, size, extracted text or image placeholder) prepended to the user prompt and reference attachment content in their replies; manual UAT (one PDF + one image attached to a fresh run) confirms agents quote/discuss the attached content end-to-end.
 
 ## v2 Requirements
@@ -262,7 +262,7 @@ Deferred to future release. Tracked but not in current roadmap.
 | UAT-12-03 | Phase 12 | Complete |
 | UAT-12-04 | Phase 12 | Pending |
 | UAT-17-01 | Phase 17 | Pending |
-| UAT-17-02 | Phase 17 | Pending |
+| UAT-17-02 | Phase 17 | Complete |
 | UAT-17-03 | Phase 17 | Pending |
 
 **Coverage:**
