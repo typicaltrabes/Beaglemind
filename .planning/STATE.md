@@ -4,8 +4,8 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Completed 16-03-PLAN.md
-last_updated: "2026-04-28T12:51:14.008Z"
-last_activity: 2026-04-28 -- Phase 17 planning complete
+last_updated: "2026-04-28T12:55:33.742Z"
+last_activity: 2026-04-28 -- Phase 17 execution started
 progress:
   total_phases: 16
   completed_phases: 9
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-21)
 
 **Core value:** Users can observe multi-agent reasoning in real time, steer it at governance gates, and share the full replay externally.
-**Current focus:** Phase 11 — Run-view tabs: Writers' Room, Timeline, Boardroom, Canvas
+**Current focus:** Phase 17 — User Attachments
 
 ## Current Position
 
-Phase: 11 (Run-view tabs: Writers' Room, Timeline, Boardroom, Canvas) — EXECUTING
-Plan: 5 of 5
-Status: Ready to execute
-Last activity: 2026-04-28 -- Phase 17 planning complete
+Phase: 17 (User Attachments) — EXECUTING
+Plan: 1 of 4
+Status: Executing Phase 17
+Last activity: 2026-04-28 -- Phase 17 execution started
 
 Progress: [█████████░] 94%
 
