@@ -92,22 +92,69 @@ export function useStartRun() {
 }
 
 /**
+ * Inputs accepted by useSendMessage. `content` is always required;
+ * everything else is optional and conditionally serialized by
+ * `buildSendMessageBody` so the wire shape stays minimal.
+ *
+ * - `attachmentIds` (Phase 17-01): artifact IDs returned by
+ *   /api/runs/[id]/attachments — only ready chips contribute, empty
+ *   arrays are dropped from the JSON body.
+ * - `targetAgent` (Phase 04-06+): @-mention routing in Studio mode.
+ * - `metadata.verbosity` (Phase 06+): Studio verbosity slider.
+ */
+export interface SendMessageVars {
+  runId: string;
+  content: string;
+  attachmentIds?: string[];
+  targetAgent?: string;
+  metadata?: { verbosity?: number };
+}
+
+/**
+ * Pure body-builder for the /api/runs/[id]/messages POST. Conditionally
+ * includes optional fields so the route's existing Zod schema (which
+ * doesn't yet know about attachmentIds — see Plan 17-03) keeps parsing
+ * cleanly: missing keys are simpler than null/empty values.
+ *
+ * Exported for unit-testing without standing up React Query.
+ */
+export function buildSendMessageBody(vars: Omit<SendMessageVars, 'runId'>): {
+  content: string;
+  attachmentIds?: string[];
+  targetAgent?: string;
+  metadata?: { verbosity?: number };
+} {
+  const body: {
+    content: string;
+    attachmentIds?: string[];
+    targetAgent?: string;
+    metadata?: { verbosity?: number };
+  } = { content: vars.content };
+  if (vars.attachmentIds && vars.attachmentIds.length > 0) {
+    body.attachmentIds = vars.attachmentIds;
+  }
+  if (vars.targetAgent) body.targetAgent = vars.targetAgent;
+  if (vars.metadata) body.metadata = vars.metadata;
+  return body;
+}
+
+/**
  * Send a user message to Mo during an active run.
  * Posts to /api/runs/[id]/messages which proxies to Hub /send.
+ *
+ * Phase 17-01: accepts optional attachmentIds[] for files staged via
+ * /api/runs/[id]/attachments. The route's Zod schema is widened in
+ * Plan 17-03; until then the field is ignored server-side, so passing
+ * it is forward-compatible (the JSON parser doesn't reject unknown
+ * keys with the current Zod schema since we use plain object parsing).
  */
 export function useSendMessage() {
   return useMutation({
-    mutationFn: async ({
-      runId,
-      content,
-    }: {
-      runId: string;
-      content: string;
-    }) => {
+    mutationFn: async ({ runId, ...vars }: SendMessageVars) => {
       const res = await fetch(`/api/runs/${runId}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content }),
+        body: JSON.stringify(buildSendMessageBody(vars)),
       });
       if (!res.ok) throw new Error('Failed to send message');
       return res.json();

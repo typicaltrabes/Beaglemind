@@ -1,9 +1,17 @@
 'use client';
 
 import { useRef, useState, useEffect } from 'react';
-import { GitFork, Sparkles, X } from 'lucide-react';
+import { GitFork, Paperclip, Sparkles, X } from 'lucide-react';
 import { useSendMessage, useStopRun } from '@/lib/hooks/use-run-actions';
 import { ImprovePromptPopover } from './improve-prompt-popover';
+import {
+  AttachmentChip,
+  type AttachmentStatus,
+} from './attachment-chip';
+import {
+  uploadAttachment,
+  AttachmentUploadError,
+} from '@/lib/attachment-upload';
 import { useRunStore } from '@/lib/stores/run-store';
 import { usePreferencesStore } from '@/lib/stores/preferences-store';
 import { useMode } from '@/lib/mode-context';
@@ -21,6 +29,29 @@ import {
 const MENTIONABLE_AGENTS = Object.entries(AGENT_CONFIG).filter(
   ([id]) => id !== 'user',
 ) as [string, AgentConfig][];
+
+type PendingAttachment = {
+  localId: string;
+  file: File;
+  status: AttachmentStatus;
+  artifactId?: string;
+  error?: string;
+};
+
+const ALLOWED_MIME = new Set([
+  'application/pdf',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'image/png',
+  'image/jpeg',
+  'image/webp',
+  'text/plain',
+  'text/markdown',
+]);
+const MAX_SIZE_BYTES = 20 * 1024 * 1024;
+const MAX_FILES_PER_MESSAGE = 4;
+const ACCEPT_ATTR =
+  '.pdf,.docx,.png,.jpg,.jpeg,.webp,.txt,.md,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/png,image/jpeg,image/webp,text/plain,text/markdown';
+const VALIDATION_ERROR_TIMEOUT_MS = 4000;
 
 interface ComposerProps {
   runId: string;
@@ -42,8 +73,19 @@ export function Composer({ runId }: ComposerProps) {
     VERBOSITY_KEY_TO_INDEX[defaultVerbosityKey] ?? 2,
   );
   const [improveOpen, setImproveOpen] = useState(false);
+
+  // Phase 17-01: pending-attachment chip stack + drag-drop highlight + transient validation banner.
+  const [attachments, setAttachments] = useState<PendingAttachment[]>([]);
+  const [dragActive, setDragActive] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
+
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const improveButtonRef = useRef<HTMLButtonElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const validationErrorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+
   const status = useRunStore((s) => s.status);
   const sendMessage = useSendMessage();
   const stopRun = useStopRun();
@@ -53,8 +95,14 @@ export function Composer({ runId }: ComposerProps) {
   const isCancelled = status === 'cancelled';
   const isPlanned = status === 'planned';
   const isExecuting = status === 'executing';
-  // Allow sending on completed runs to continue the conversation
-  const canSend = !isCancelled && !isPlanned && input.trim().length > 0;
+
+  // Send is blocked while ANY chip is mid-upload — prevents the user from
+  // sending a message that references an artifactId we don't yet have.
+  const anyUploading = attachments.some((a) => a.status === 'uploading');
+
+  // Allow sending on completed runs to continue the conversation.
+  const canSend =
+    !isCancelled && !isPlanned && input.trim().length > 0 && !anyUploading;
 
   // Close mention dropdown on escape or click outside
   useEffect(() => {
@@ -76,6 +124,15 @@ export function Composer({ runId }: ComposerProps) {
       clearTimeout(timer);
     };
   }, [mentionOpen]);
+
+  // Cleanup the validation-error timer on unmount so we don't fire setState after teardown.
+  useEffect(() => {
+    return () => {
+      if (validationErrorTimerRef.current) {
+        clearTimeout(validationErrorTimerRef.current);
+      }
+    };
+  }, []);
 
   function handleChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
     const val = e.target.value;
@@ -103,19 +160,126 @@ export function Composer({ runId }: ComposerProps) {
     textareaRef.current?.focus();
   }
 
+  function flashValidationError(msg: string) {
+    setValidationError(msg);
+    if (validationErrorTimerRef.current) {
+      clearTimeout(validationErrorTimerRef.current);
+    }
+    validationErrorTimerRef.current = setTimeout(() => {
+      setValidationError(null);
+      validationErrorTimerRef.current = null;
+    }, VALIDATION_ERROR_TIMEOUT_MS);
+  }
+
+  function handleFiles(filesList: FileList | File[]) {
+    const incoming = Array.from(filesList);
+
+    setAttachments((prev) => {
+      const remaining = MAX_FILES_PER_MESSAGE - prev.length;
+      if (remaining <= 0) return prev;
+
+      const accepted: PendingAttachment[] = [];
+      for (const file of incoming.slice(0, remaining)) {
+        if (!ALLOWED_MIME.has(file.type)) {
+          flashValidationError(`Unsupported file type: ${file.name}`);
+          continue;
+        }
+        if (file.size > MAX_SIZE_BYTES) {
+          flashValidationError(`File exceeds 20 MB limit: ${file.name}`);
+          continue;
+        }
+        const localId = crypto.randomUUID();
+        accepted.push({ localId, file, status: 'uploading' });
+
+        // Fire-and-forget upload; resolve into state via setAttachments below.
+        // Each file uploads in parallel — a slow PDF doesn't gate a fast PNG.
+        uploadAttachment(runId, file)
+          .then((res) => {
+            setAttachments((cur) =>
+              cur.map((a) =>
+                a.localId === localId
+                  ? { ...a, status: 'ready', artifactId: res.artifactId }
+                  : a,
+              ),
+            );
+          })
+          .catch((err: unknown) => {
+            const message =
+              err instanceof AttachmentUploadError
+                ? err.message
+                : err instanceof Error
+                  ? err.message
+                  : 'Upload failed';
+            setAttachments((cur) =>
+              cur.map((a) =>
+                a.localId === localId
+                  ? { ...a, status: 'error', error: message }
+                  : a,
+              ),
+            );
+          });
+      }
+      return [...prev, ...accepted];
+    });
+  }
+
+  function removeAttachment(localId: string) {
+    // V1 simplicity per CONTEXT: orphan uploads are acceptable. We drop the
+    // chip from local state but do NOT issue a DELETE — per-tenant storage
+    // quotas (Phase 18 backlog) will reclaim.
+    setAttachments((cur) => cur.filter((a) => a.localId !== localId));
+  }
+
+  function handlePaperclipClick() {
+    fileInputRef.current?.click();
+  }
+
+  function handleFileInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+    if (e.target.files && e.target.files.length > 0) {
+      handleFiles(e.target.files);
+    }
+    // Reset input so picking the same file twice still fires onChange.
+    e.target.value = '';
+  }
+
+  function handleDragOver(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    if (!dragActive) setDragActive(true);
+  }
+
+  function handleDragLeave(e: React.DragEvent<HTMLDivElement>) {
+    // Only deactivate if leaving the outer container, not entering a child.
+    if (e.currentTarget.contains(e.relatedTarget as Node | null)) return;
+    setDragActive(false);
+  }
+
+  function handleDrop(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleFiles(e.dataTransfer.files);
+    }
+  }
+
   function handleSend() {
     if (!canSend) return;
+    const attachmentIds = attachments
+      .filter((a) => a.status === 'ready' && a.artifactId)
+      .map((a) => a.artifactId as string);
+
     sendMessage.mutate(
       {
         runId,
         content: input.trim(),
+        ...(attachmentIds.length > 0 ? { attachmentIds } : {}),
         ...(isStudio && targetAgent ? { targetAgent } : {}),
         ...(isStudio ? { metadata: { verbosity } } : {}),
-      } as Parameters<typeof sendMessage.mutate>[0],
+      },
       {
         onSuccess: () => {
           setInput('');
           setTargetAgent(null);
+          setAttachments([]);
           textareaRef.current?.focus();
         },
       },
@@ -145,8 +309,52 @@ export function Composer({ runId }: ComposerProps) {
 
   const VERBOSITY_LABELS = ['Quiet', 'Brief', 'Normal', 'Detailed', 'Full'];
 
+  const attachmentsAtMax = attachments.length >= MAX_FILES_PER_MESSAGE;
+
   return (
-    <div className="sticky bottom-0 z-20 border-t border-border bg-card p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+    <div
+      className={`sticky bottom-0 z-20 border-t border-border bg-card p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] ${
+        dragActive ? 'ring-2 ring-amber-500/50' : ''
+      }`}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      {/* Hidden file input — driven by the Paperclip button below. */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        accept={ACCEPT_ATTR}
+        onChange={handleFileInputChange}
+        className="hidden"
+        aria-hidden
+      />
+
+      {/* Transient validation error banner (auto-clears after 4s). */}
+      {validationError && (
+        <div className="mb-2 rounded-md border border-red-500/30 bg-red-500/10 px-2 py-1 text-xs text-red-400">
+          {validationError}
+        </div>
+      )}
+
+      {/* Pending-attachment chip stack — only renders when we have attachments. */}
+      {attachments.length > 0 && (
+        <div className="mb-2 flex flex-wrap gap-1.5">
+          {attachments.map((a) => (
+            <AttachmentChip
+              key={a.localId}
+              localId={a.localId}
+              filename={a.file.name}
+              sizeBytes={a.file.size}
+              status={a.status}
+              error={a.error}
+              onRemove={removeAttachment}
+            />
+          ))}
+        </div>
+      )}
+
       {/* Studio toolbar */}
       {isStudio && (
         <div className="mb-2 flex flex-wrap items-center gap-3 border-b border-white/5 px-2 py-1.5">
@@ -258,6 +466,23 @@ export function Composer({ runId }: ComposerProps) {
             title="Improve prompt"
           >
             <Sparkles className="size-4" />
+          </Button>
+
+          {/* Phase 17-01: paperclip — between Improve and Stop/Send per CONTEXT. */}
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={handlePaperclipClick}
+            disabled={isCancelled || isPlanned || attachmentsAtMax}
+            aria-label="Attach files"
+            title={
+              attachmentsAtMax
+                ? `Max ${MAX_FILES_PER_MESSAGE} files per message`
+                : 'Attach files (PDF, DOCX, images, text — up to 20 MB each)'
+            }
+          >
+            <Paperclip className="size-4" />
           </Button>
 
           {isExecuting && (
