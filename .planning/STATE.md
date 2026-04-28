@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 16-03-PLAN.md
-last_updated: "2026-04-28T12:55:33.742Z"
-last_activity: 2026-04-28 -- Phase 17 execution started
+stopped_at: Completed 17-01-PLAN.md
+last_updated: "2026-04-28T13:07:41.817Z"
+last_activity: 2026-04-28
 progress:
   total_phases: 16
   completed_phases: 9
   total_plans: 61
-  completed_plans: 42
-  percent: 69
+  completed_plans: 43
+  percent: 70
 ---
 
 # Project State
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 17 (User Attachments) — EXECUTING
-Plan: 1 of 4
-Status: Executing Phase 17
-Last activity: 2026-04-28 -- Phase 17 execution started
+Plan: 2 of 4
+Status: Ready to execute
+Last activity: 2026-04-28
 
 Progress: [█████████░] 94%
 
@@ -88,6 +88,7 @@ Progress: [█████████░] 94%
 | Phase 14 P01 | 6min | 2 tasks | 3 files |
 | Phase 16-visual-overhaul P01 | 272 | 2 tasks | 9 files |
 | Phase 16-visual-overhaul P03 | 3min | 2 tasks | 6 files |
+| Phase 17-attachments P01 | 6min | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -169,6 +170,11 @@ Recent decisions affecting current work:
 - [Phase 16-visual-overhaul]: [Phase 16-03]: KPI summary endpoint computes avgCostUsd = totalSpendUsd / completedRuns (sum-then-divide, one round-trip) rather than per-event AVG; matches user-facing tenant-level intuition.
 - [Phase 16-visual-overhaul]: [Phase 16-03]: completedToday uses runs.updatedAt >= start-of-today UTC because runs has no completedAt column; phase 14-02 hub flips status+updatedAt at completion.
 - [Phase 16-visual-overhaul]: [Phase 16-03]: KPI strip stays mounted with per-tile skeletons during fetch (not strip-level placeholder) so the table below renders independently.
+- [Phase 17-attachments]: [Phase 17-01]: formatSize extracted to apps/web/lib/format-size.ts as single source of truth — artifact-card.tsx imports it, no inline duplicate
+- [Phase 17-attachments]: [Phase 17-01]: useSendMessage widened to SendMessageVars (content + optional attachmentIds + targetAgent + metadata); pure buildSendMessageBody helper exported for unit-testing without React Query
+- [Phase 17-attachments]: [Phase 17-01]: Composer attachments are local useState (NOT Zustand) per CONTEXT; parallel uploadAttachment per file, fire-and-forget, fold by localId
+- [Phase 17-attachments]: [Phase 17-01]: AttachmentChip uses rounded-md (per CONTEXT) to differentiate from rounded-full @-mention badges; same bg-white/5 + size-3 lucide icon skeleton
+- [Phase 17-attachments]: [Phase 17-01]: Forward-compatible passthrough — Zod v4 strips unknown keys silently, so passing attachmentIds through the pre-17-03 schema is safe (verified inline)
 
 ### Pending Todos
 
@@ -191,8 +197,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-04-27T19:12:57.667Z
-Stopped at: Completed 16-03-PLAN.md
+Last session: 2026-04-28T13:07:17.639Z
+Stopped at: Completed 17-01-PLAN.md
 Resume file: None
 
 **Planned Phase:** 11 (Run-view tabs: Writers' Room, Timeline, Boardroom, Canvas) — 5 plans — 2026-04-22T12:38:11.467Z
