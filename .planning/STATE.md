@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 17-02-PLAN.md
-last_updated: "2026-04-28T13:18:00.000Z"
+stopped_at: Completed 17-03-PLAN.md
+last_updated: "2026-04-28T13:31:03.858Z"
 last_activity: 2026-04-28
 progress:
   total_phases: 16
   completed_phases: 9
   total_plans: 61
-  completed_plans: 44
-  percent: 72
+  completed_plans: 45
+  percent: 74
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 17 (User Attachments) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-04-28
 
@@ -90,6 +90,7 @@ Progress: [█████████░] 95%
 | Phase 16-visual-overhaul P03 | 3min | 2 tasks | 6 files |
 | Phase 17-attachments P01 | 6min | 2 tasks | 10 files |
 | Phase 17-attachments P02 | 9min | 2 tasks | 14 files |
+| Phase 17-attachments P03 | 4min | 1 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -176,6 +177,10 @@ Recent decisions affecting current work:
 - [Phase 17-attachments]: [Phase 17-01]: Composer attachments are local useState (NOT Zustand) per CONTEXT; parallel uploadAttachment per file, fire-and-forget, fold by localId
 - [Phase 17-attachments]: [Phase 17-01]: AttachmentChip uses rounded-md (per CONTEXT) to differentiate from rounded-full @-mention badges; same bg-white/5 + size-3 lucide icon skeleton
 - [Phase 17-attachments]: [Phase 17-01]: Forward-compatible passthrough — Zod v4 strips unknown keys silently, so passing attachmentIds through the pre-17-03 schema is safe (verified inline)
+- [Phase 17-attachments]: [Phase 17-03]: Web-app-side prompt-prepend (Option A in PATTERNS.md) chosen — buildAttachmentBlock helper extracted to apps/web/lib/attachment-block.ts; hub schema unchanged (RunStartBody, OpenClawOutbound, openclaw-cli-bridge.ts all stable)
+- [Phase 17-attachments]: [Phase 17-03]: Strict 404 ownership path — rows.length !== attachmentIds.length triggers { error: 'attachment not found' } 404; blocks cross-run reuse (T-17-03-02) and agent-output impersonation (T-17-03-03)
+- [Phase 17-attachments]: [Phase 17-03]: Image base64 pass-through deferred — image attachments contribute textual placeholder '(image — included with this message)' for V1; OpenClaw CLI bridge image-block extension is a future-track effort
+- [Phase 17-attachments]: [Phase 17-03]: ZodError → 400 branch added to messages route catch block — pre-17-03 the route caught only generic errors and returned 500; new attachmentIds validation requires the explicit branch for usable error messages
 
 ### Pending Todos
 
@@ -198,8 +203,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-04-28T13:07:17.639Z
-Stopped at: Completed 17-01-PLAN.md
+Last session: 2026-04-28T13:31:03.852Z
+Stopped at: Completed 17-03-PLAN.md
 Resume file: None
 
 **Planned Phase:** 11 (Run-view tabs: Writers' Room, Timeline, Boardroom, Canvas) — 5 plans — 2026-04-22T12:38:11.467Z

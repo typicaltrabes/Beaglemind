@@ -299,12 +299,12 @@ Plans:
 **Goal:** Let users attach files to a prompt so agents can read/see them and respond. Three sub-tracks: (1) composer paperclip + drag-drop UI in `apps/web/components/transcript/composer.tsx` with client-side mime/size validation and a chip stack for pending uploads; (2) `POST /api/runs/[id]/attachments` endpoint that uploads to existing MinIO bucket `tenant-${tenantId}` under `runs/${runId}/uploads/${key}.${ext}`, inserts an `artifacts` row with `agent_id='user'`, and runs synchronous text extraction (pdf-parse for PDF, mammoth for DOCX, utf-8 read for TXT/MD, NULL for images) capped at 50K chars persisted to a new `artifacts.extracted_text` column via idempotent migration; (3) round-table prompt prepend with structured `--- USER ATTACHMENTS ---` block before the user prompt, plus base64 image pass-through to OpenClaw for vision-capable agents (textual placeholder fallback if CLI bridge image support proves complex).
 **Requirements:** UAT-17-01, UAT-17-02, UAT-17-03
 **Depends on:** Phase 14 (run lifecycle), Phase 7 (artifacts + MinIO)
-**Plans:** 2/4 plans executed
+**Plans:** 3/4 plans executed
 
 Plans:
 - [x] 17-01-PLAN.md — Track 1 (UAT-17-01): Composer paperclip + drag-drop + chip stack + send-blocking + AttachmentChip + uploadAttachment client + format-size dedupe
 - [x] 17-02-PLAN.md — Track 2 (UAT-17-02): pdf-parse install + Drizzle artifacts.extracted_text column + migrate-17.ts + extractAttachment server module + rate limiter + POST /api/runs/[id]/attachments endpoint
-- [ ] 17-03-PLAN.md — Track 3 (UAT-17-03): Messages route accepts attachmentIds, fetches artifacts scoped to run+user, prepends --- USER ATTACHMENTS --- block to prompt (web-only V1 simplification, hub schema unchanged)
+- [x] 17-03-PLAN.md — Track 3 (UAT-17-03): Messages route accepts attachmentIds, fetches artifacts scoped to run+user, prepends --- USER ATTACHMENTS --- block to prompt (web-only V1 simplification, hub schema unchanged)
 - [ ] 17-04-PLAN.md — Deploy + UAT: pre-flight typecheck/vitest, [BLOCKING] migrate-17.ts BEFORE container rebuild, console-web only force-recreate, smoke checks, human-verify checkpoint covering UAT-17-01..03
 
 **Success Criteria**:
