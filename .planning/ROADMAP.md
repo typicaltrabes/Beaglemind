@@ -313,3 +313,13 @@ Plans:
 3. Agents in the round-table receive the structured `--- USER ATTACHMENTS ---` block prepended to the user prompt and reference the attached content in their replies (verified by manual UAT with a PDF + an image)
 
 
+
+### Phase 17.1: Vision Pass-Through — All Agents See Image Content (INSERTED)
+
+**Goal:** [Urgent work - to be planned]
+**Requirements**: TBD
+**Depends on:** Phase 17
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 17.1 to break down)

@@ -134,9 +134,15 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### User Attachments (Phase 17)
 
-- [ ] **UAT-17-01**: User can attach up to 4 files per message (≤20 MB each) of type PDF / DOCX / PNG / JPG / WEBP / TXT / MD via a paperclip button (between Improve and Send) or drag-drop on the composer; pending attachments appear as chips above the textarea with per-file status (`uploading…` → `ready`); Send is disabled while any attachment is uploading; client-side validation rejects unsupported mime/oversized files with an inline error.
+- [x] **UAT-17-01**: User can attach up to 4 files per message (≤20 MB each) of type PDF / DOCX / PNG / JPG / WEBP / TXT / MD via a paperclip button (between Improve and Send) or drag-drop on the composer; pending attachments appear as chips above the textarea with per-file status (`uploading…` → `ready`); Send is disabled while any attachment is uploading; client-side validation rejects unsupported mime/oversized files with an inline error.
 - [x] **UAT-17-02**: `POST /api/runs/[id]/attachments` (multipart) is auth-scoped to the current tenant + run, validates type/size, uploads to MinIO bucket `tenant-${tenantId}` under `runs/${runId}/uploads/${key}.${ext}`, inserts an `artifacts` row with `agent_id='user'` and synchronously-extracted text in a new `artifacts.extracted_text TEXT` column (PDF via pdf-parse, DOCX via mammoth, TXT/MD via utf-8 read, NULL for images), capping extracted text at 50,000 chars with a truncation marker.
-- [x] **UAT-17-03**: When the round-table fires for a message with attachments, agents see a structured `--- USER ATTACHMENTS ---` block (filename, mime, size, extracted text or image placeholder) prepended to the user prompt and reference attachment content in their replies; manual UAT (one PDF + one image attached to a fresh run) confirms agents quote/discuss the attached content end-to-end.
+- [ ] **UAT-17-03**: When the round-table fires for a message with attachments, agents see a structured `--- USER ATTACHMENTS ---` block (filename, mime, size, extracted text or image description) prepended to the user prompt and reference attachment content in their replies; manual UAT (one PDF + one image attached to a fresh run) confirms agents quote/discuss the attached content end-to-end. (BLOCKED on Phase 17.1 — V1 placeholder did not satisfy product bar; image description from 17.1 will satisfy this requirement.)
+
+### Vision Pass-Through (Phase 17.1)
+
+- [ ] **UAT-17-1-01**: Uploading an image to a run automatically generates a written description via the Anthropic vision API; description is persisted to `artifacts.description`, visible in agent-hub logs as part of the prepended `--- USER ATTACHMENTS ---` block, and reaches every agent (Mo, Jarvis, Herman) in the round-table prompt.
+- [ ] **UAT-17-1-02**: Mo and Jarvis (vision-capable agents) reference specific visual details in their replies that go beyond what's in the description — proves image bytes reached them through the OpenClaw CLI bridge.
+- [ ] **UAT-17-1-03**: Herman (non-vision agent) references the description content in its reply even without seeing the image — proves the description fallback works for weaker agents and is sufficient for meaningful engagement.
 
 ## v2 Requirements
 
@@ -261,13 +267,16 @@ Deferred to future release. Tracked but not in current roadmap.
 | UAT-12-02 | Phase 12 | Complete |
 | UAT-12-03 | Phase 12 | Complete |
 | UAT-12-04 | Phase 12 | Pending |
-| UAT-17-01 | Phase 17 | Pending |
+| UAT-17-01 | Phase 17 | Complete |
 | UAT-17-02 | Phase 17 | Complete |
-| UAT-17-03 | Phase 17 | Complete |
+| UAT-17-03 | Phase 17 | Pending (blocked on 17.1) |
+| UAT-17-1-01 | Phase 17.1 | Pending |
+| UAT-17-1-02 | Phase 17.1 | Pending |
+| UAT-17-1-03 | Phase 17.1 | Pending |
 
 **Coverage:**
-- v1 requirements: 71 total
-- Mapped to phases: 71
+- v1 requirements: 74 total
+- Mapped to phases: 74
 - Unmapped: 0
 
 ---

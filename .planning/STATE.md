@@ -98,6 +98,7 @@ Progress: [█████████░] 95%
 
 - Phase 11 added: Run-view tabs: Writers' Room, Timeline, Boardroom, Canvas
 - Phase 12 added 2026-04-27: UI Polish from Phase 11 UAT (Track A — dark Run History, Writers' Room loading skeleton, speaker chips with full agent config, prompt-as-run-title). Track B (run lifecycle, artifact counts, status/cost mismatch) deferred to a separate phase.
+- Phase 17.1 inserted after Phase 17 (URGENT, 2026-04-28): Vision pass-through — all agents see image content. Triggered by Phase 17 UAT: V1 placeholder reached agents but Lucas needs all agents (including future weaker LLMs) to engage with image content, not just see "(image attached)". 17.1 adds server-side vision-API description at upload + base64 bytes through CLI bridge for vision-capable agents.
 
 ### Decisions
 
