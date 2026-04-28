@@ -316,10 +316,13 @@ Plans:
 
 ### Phase 17.1: Vision Pass-Through — All Agents See Image Content (INSERTED)
 
-**Goal:** [Urgent work - to be planned]
-**Requirements**: TBD
+**Goal:** Every agent (Mo, Jarvis, Herman, Sam, future weaker LLMs) engages meaningfully with image content uploaded to a run. Two complementary mechanisms: (Track 1) server-side Anthropic vision-API description generated at upload time and persisted to a new `artifacts.description` column, replacing Phase 17's V1 placeholder in the prepended `--- USER ATTACHMENTS ---` block — every agent sees a textual rendering of every image; (Track 2) base64 image bytes pass through the OpenClaw CLI bridge for vision-capable agents (Mo + Jarvis on Anthropic Opus) so they can pick up details the description missed. Non-vision agents get description-only, no degradation. Same trust level as user prompt content. LiteLLM-bypass: 17.1 calls Anthropic SDK direct because LiteLLM is down.
+**Requirements**: UAT-17-1-01, UAT-17-1-02, UAT-17-1-03
 **Depends on:** Phase 17
-**Plans:** 0 plans
+**Plans:** 4 plans
 
 Plans:
-- [ ] TBD (run /gsd-plan-phase 17.1 to break down)
+- [ ] 17.1-01-PLAN.md — Track 1 (UAT-17-1-01): install @anthropic-ai/sdk, add `artifacts.description` Drizzle column + migrate-17-1.ts, extend extract-attachment.ts with extractImageDescription (Haiku→Sonnet fallback, fail-soft to NULL), wire into POST /attachments via Promise.all
+- [ ] 17.1-02-PLAN.md — Track 3 (UAT-17-1-01): replace V1 image placeholder with Description: <text> in attachment-block.ts; rewrite affected vitest cases; widen messages route SELECT projection to include description
+- [ ] 17.1-03-PLAN.md — Track 2 (UAT-17-1-02 + UAT-17-1-03): pre-implementation OpenClaw flag verification, agent-config.visionCapable flag (mo/jarvis=true; herman/sam=false), MinIO base64 fetch with 10MB budget guard, hub Zod widen with HubImageAttachment, VISION_CAPABLE per-agent gate, CLI bridge SSH temp-file write + verified flag invocation + cleanup
+- [ ] 17.1-04-PLAN.md — Deploy + UAT: pre-flight (typecheck + vitest + push), [HUMAN] ANTHROPIC_API_KEY injection into prod .env + compose, [BLOCKING] migrate-17-1.ts run BEFORE container rebuild, force-recreate console-web AND console-agent-hub, smoke check via DB query + log grep, [HUMAN UAT] verify UAT-17-1-01..03 with fresh run + image (`autonomous: false`)
