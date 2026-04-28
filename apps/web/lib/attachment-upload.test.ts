@@ -33,7 +33,8 @@ describe('uploadAttachment', () => {
       sizeBytes: 1234,
     });
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    const [url, init] = fetchMock.mock.calls[0];
+    const call = fetchMock.mock.calls[0] as [string, RequestInit];
+    const [url, init] = call;
     expect(url).toBe('/api/runs/run-uuid/attachments');
     expect(init.method).toBe('POST');
     expect(init.body).toBeInstanceOf(FormData);

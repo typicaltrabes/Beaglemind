@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { EyeIcon } from 'lucide-react';
 import { ArtifactPreviewPanel } from './artifact-preview-panel';
+import { formatSize } from '@/lib/format-size';
 
 interface ArtifactCardProps {
   event: HubEventEnvelope;
@@ -15,12 +16,6 @@ export const PREVIEWABLE_MIMES = new Set<string>([
   'application/pdf',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 ]);
-
-function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
 
 export function ArtifactCard({ event }: ArtifactCardProps) {
   const [previewOpen, setPreviewOpen] = useState(false);
