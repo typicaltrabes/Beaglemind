@@ -27,6 +27,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 13: UI Polish R2 + Tabs Redesign + Settings + Title Summarization** - Seven items from post-Phase-12 UAT: kill horizontal scroll, avatar-edge padding, prettier run-id chip, run-title summarization (Haiku via LiteLLM), settings page (theme/defaultTab/verbosity/notifications), Improve-prompt button scaffold, Timeline scrubber + Boardroom scene-grid + Canvas empty state
 - [ ] **Phase 14: Track B Bugs — Run Lifecycle + Timestamps** - Fix NaN:NaN timestamps on historical events (SSE replay missing `createdAt → timestamp` map), runs stuck on `executing` because hub never marks them `completed`, and 18 orphan `pending` runs. Folds in the migrate-13 tenant-discovery fix.
 - [ ] **Phase 16: Visual Overhaul** - 5 tracks of brand/density polish from afternoon UAT + sister-site references: italic-accent header + system pulse + operator LiteLLM/Grafana links, agent-roster sidebar with presence + filter-by-agent, Run History KPI strip, agent role rebrand (Governance / Commercial Risk / Stress-Test), run page metadata row + pill tabs.
+- [ ] **Phase 17: User Attachments — Documents & Images to Agents** - Three tracks: composer paperclip + drag-drop, MinIO upload + text extraction (pdf-parse + mammoth, already in repo from Phase 7), and agent context delivery via prompt prepend. PDF / DOCX / PNG / JPG / WEBP / TXT / MD; max 20 MB / 4 files per message.
 
 ## Phase Details
 
@@ -291,4 +292,18 @@ Plans:
 - [ ] 16-04-PLAN.md — Track 4 (UAT-16-04): four agent role string changes in apps/web/lib/agent-config.ts (Governance / Commercial Risk / Stress-Test / Sentinel)
 - [ ] 16-05-PLAN.md — Track 5 (UAT-16-05): run-metadata pure helpers + RunMetadataRow component + run page wiring + RunViewTabs pill styling
 - [ ] 16-06-PLAN.md — Deploy to console.beaglemind.ai + smoke checks + human-verify UAT checkpoint covering UAT-16-01..05
+
+
+### Phase 17: User Attachments — Documents & Images to Agents
+
+**Goal:** Let users attach files to a prompt so agents can read/see them and respond. Three sub-tracks: (1) composer paperclip + drag-drop UI in `apps/web/components/transcript/composer.tsx` with client-side mime/size validation and a chip stack for pending uploads; (2) `POST /api/runs/[id]/attachments` endpoint that uploads to existing MinIO bucket `tenant-${tenantId}` under `runs/${runId}/uploads/${key}.${ext}`, inserts an `artifacts` row with `agent_id='user'`, and runs synchronous text extraction (pdf-parse for PDF, mammoth for DOCX, utf-8 read for TXT/MD, NULL for images) capped at 50K chars persisted to a new `artifacts.extracted_text` column via idempotent migration; (3) round-table prompt prepend with structured `--- USER ATTACHMENTS ---` block before the user prompt, plus base64 image pass-through to OpenClaw for vision-capable agents (textual placeholder fallback if CLI bridge image support proves complex).
+**Requirements:** UAT-17-01, UAT-17-02, UAT-17-03
+**Depends on:** Phase 14 (run lifecycle), Phase 7 (artifacts + MinIO)
+**Plans:** 0/0 plans executed
+
+**Success Criteria**:
+1. User can attach up to 4 files (≤20 MB each) of types PDF / DOCX / PNG / JPG / WEBP / TXT / MD via paperclip or drag-drop and see chip-status feedback before Send
+2. Files persist to MinIO at `tenant-${tenantId}/runs/${runId}/uploads/...` and `artifacts` row is created with `agent_id='user'` and (for text formats) populated `extracted_text`
+3. Agents in the round-table receive the structured `--- USER ATTACHMENTS ---` block prepended to the user prompt and reference the attached content in their replies (verified by manual UAT with a PDF + an image)
+
 
