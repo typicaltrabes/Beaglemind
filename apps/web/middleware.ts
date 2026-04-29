@@ -9,6 +9,13 @@ const publicPaths = [
   '/mfa-setup',
   '/accept-invite',
   '/no-org',
+  // Phase 18-02: shared-replay tokens are public by design — anyone with
+  // the URL can view a read-only replay (route-level auth happens in
+  // /app/replay/[token]/page.tsx, where an invalid/revoked/expired token
+  // returns notFound()). Middleware was bouncing anon recipients to /login,
+  // breaking the entire share feature.
+  '/replay/',
+  '/api/replay/',
 ];
 
 export function middleware(request: NextRequest) {
