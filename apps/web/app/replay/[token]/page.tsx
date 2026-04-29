@@ -174,8 +174,10 @@ export default function ReplayPage({
         </div>
       )}
 
-      {/* Read-only transcript */}
-      <div className="flex-1 overflow-hidden px-4">
+      {/* Read-only transcript — min-h-0 lets the Virtuoso scroller's
+          h-full inside ReplayMessageList resolve to a real pixel height
+          inside this flex column (Phase 18-02 followup). */}
+      <div className="min-h-0 flex-1 overflow-hidden px-4">
         <ReplayMessageList events={state.events} />
       </div>
     </div>
