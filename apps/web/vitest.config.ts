@@ -10,12 +10,12 @@ export default defineConfig({
   plugins: [react()],
   test: {
     globals: true,
-    // Phase 17.1-06: happy-dom provides the DOM emulation @testing-library/react
-    // needs to render UserMessageAttachments and friends. The 13-02 follow-up
-    // ("install @testing-library/react + happy-dom in a dedicated test
-    // infrastructure plan") landed here because the transcript chip render
-    // tests required it.
-    environment: 'happy-dom',
+    // Phase 17.1-06: default environment stays `node` so existing lib + route
+    // tests (notably extract-attachment, which depends on pdf-parse's Node-
+    // worker setup) keep passing. Component render tests opt into happy-dom
+    // file-by-file via the `// @vitest-environment happy-dom` annotation —
+    // see e.g. components/transcript/user-message-attachments.test.tsx.
+    environment: 'node',
   },
   resolve: {
     alias: {

@@ -1,3 +1,5 @@
+// @vitest-environment happy-dom
+
 /**
  * Phase 17.1-06 (DEFECT-17-B) — UserMessageAttachments component.
  *
@@ -67,7 +69,9 @@ describe('UserMessageAttachments', () => {
 
   it('renders nothing when attachmentIds is empty', () => {
     const { container } = render(<UserMessageAttachments attachmentIds={[]} />);
-    expect(container).toBeEmptyDOMElement();
+    // Avoid jest-dom matcher to skip extra type-augmentation wiring; check the
+    // DOM directly. The component returns null → no children appended.
+    expect(container.children.length).toBe(0);
   });
 
   it('renders an inline <img> using the download URL for image/png attachments', () => {
