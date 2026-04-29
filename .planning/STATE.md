@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 17.1-02-PLAN.md
-last_updated: "2026-04-29T12:53:45.020Z"
+stopped_at: Completed 17.1-06-PLAN.md
+last_updated: "2026-04-29T13:09:09.508Z"
 last_activity: 2026-04-29
 progress:
   total_phases: 17
   completed_phases: 10
   total_plans: 68
-  completed_plans: 49
-  percent: 72
+  completed_plans: 50
+  percent: 74
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 17.1 (vision-pass-through-all-agents-see-image-content) — EXECUTING
-Plan: 4 of 7
+Plan: 5 of 7
 Status: Ready to execute
 Last activity: 2026-04-29
 
@@ -94,6 +94,7 @@ Progress: [█████████░] 95%
 | Phase 17.1 P01 | 5min | 2 tasks | 7 files |
 | Phase 17.1 P05 | 5min | 4 tasks | 5 files |
 | Phase 17.1 P02 | 2min | 2 tasks | 3 files |
+| Phase 17.1 P06 | 12min | 5 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -196,6 +197,11 @@ Recent decisions affecting current work:
 - [Phase 17.1]: [Phase 17.1-02]: Image branch is FIRST in buildAttachmentBlock body-precedence chain — description always wins for image mimes even if extractedText is defensively non-null
 - [Phase 17.1]: [Phase 17.1-02]: ArtifactRow.description is required-but-nullable (not optional) — every Drizzle SELECT consumer must explicitly project the column, no silent undefined fallthrough
 - [Phase 17.1]: [Phase 17.1-02]: V1 placeholder removed from production code; defensive not.toContain guards retained in test cases to catch silent regression
+- [Phase 17.1]: [Phase 17.1-06]: Hub RunStartBody widened with optional agentPrompt + attachmentIds — backward-compatible split between user-visible content (persisted to user event) and agent-visible prompt (with attachment block, sent to OpenClaw round-table)
+- [Phase 17.1]: [Phase 17.1-06]: User event content shape gains optional attachmentIds; AgentMessage renders <UserMessageAttachments> only when agentId==='user' AND content.attachmentIds?.length>0 — legacy events render byte-identical, no visual regression
+- [Phase 17.1]: [Phase 17.1-06]: GET /api/artifacts/[id] returns { id, filename, mimeType, sizeBytes } only — extractedText/description deliberately excluded so canonical PDF text stays server-side (agent-prompt-only)
+- [Phase 17.1]: [Phase 17.1-06]: Per-file vitest environment via // @vitest-environment happy-dom annotation; project default stays 'node' so pdf-parse Node-worker code paths don't regress. Closes 13-02 testing-infra TODO.
+- [Phase 17.1]: [Phase 17.1-06]: UserMessageAttachments synthesizes a fake event-shaped content object to reuse ArtifactCard rather than refactor the card to accept a metadata prop — single source of truth for preview/download chrome, scoped cast (as unknown as HubEventEnvelope) bounded to one call site
 
 ### Pending Todos
 
@@ -218,8 +224,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-04-29T12:53:36.135Z
-Stopped at: Completed 17.1-02-PLAN.md
+Last session: 2026-04-29T13:08:52.619Z
+Stopped at: Completed 17.1-06-PLAN.md
 Resume file: None
 
 **Planned Phase:** 11 (Run-view tabs: Writers' Room, Timeline, Boardroom, Canvas) — 5 plans — 2026-04-22T12:38:11.467Z
