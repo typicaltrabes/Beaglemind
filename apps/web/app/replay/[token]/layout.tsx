@@ -14,8 +14,13 @@ export default function ReplayLayout({ children }: { children: ReactNode }) {
         </span>
       </header>
 
-      {/* Main content area */}
-      <main className="flex-1 overflow-hidden">{children}</main>
+      {/* Main content area — needs flex+min-h-0 so the inner h-full /
+          flex-1 chains in the page resolve to a real pixel height; previously
+          the Virtuoso scroller collapsed to 0px and the transcript was
+          invisible (Phase 18-02 followup). */}
+      <main className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        {children}
+      </main>
 
       {/* Footer */}
       <footer className="flex h-10 shrink-0 items-center justify-center border-t border-white/5">
