@@ -134,7 +134,10 @@ export function RunHistoryTable({ runs, isLoading }: RunHistoryTableProps) {
                   </Badge>
                 </td>
                 <td className="px-3 py-3 text-right">
-                  <RunCostBadge costUsd={run.totalCostUsd} />
+                  <RunCostBadge
+                    costUsd={run.totalCostUsd}
+                    cancelled={run.status === 'cancelled'}
+                  />
                 </td>
                 <td className="px-3 py-3 text-right text-xs text-muted-foreground">
                   {formatDuration(run.durationSeconds)}

@@ -29,6 +29,23 @@ import {
 } from '@/lib/timeline-playback';
 import { EmptyState } from './empty-state';
 
+// Phase 18-05 (H5): humanize internal event types in tooltips. The DB types
+// (agent_message, state_transition, sentinel_flag, plan_proposal,
+// question_proposal) leaked through to user-facing tooltips before — even
+// the user's OWN message tooltip said "agent_message" since the user is just
+// another speaker in the events stream.
+function humanizeEventType(eventType: string, agentId: string | null): string {
+  if (eventType === 'agent_message') {
+    return agentId === 'user' ? 'User message' : 'Agent reply';
+  }
+  if (eventType === 'state_transition') return 'Run state changed';
+  if (eventType === 'sentinel_flag') return 'Sentinel observation';
+  if (eventType === 'plan_proposal') return 'Plan proposed';
+  if (eventType === 'question_proposal') return 'Question raised';
+  if (eventType === 'tldr_update') return 'Summary updated';
+  return eventType.replace(/_/g, ' ');
+}
+
 interface TimelineViewProps {
   runId: string;
 }
@@ -219,7 +236,7 @@ export function TimelineView({ runId }: TimelineViewProps) {
                       <div className="space-y-0.5">
                         <div className="font-medium">{config.displayName}</div>
                         <div className="text-muted-foreground">
-                          {event.type}
+                          {humanizeEventType(event.type, event.agentId)}
                         </div>
                         {preview && (
                           <div className="text-[11px]">{preview}</div>
