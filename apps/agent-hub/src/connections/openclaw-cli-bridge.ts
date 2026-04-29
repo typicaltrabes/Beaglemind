@@ -1,21 +1,43 @@
-import { exec } from 'node:child_process';
-import { promisify } from 'node:util';
+import { spawn } from 'node:child_process';
 import { createChildLogger } from '../logger';
 
-const execAsync = promisify(exec);
 const log = createChildLogger({ component: 'openclaw-cli-bridge' });
 
 export interface OpenClawBridgeConfig {
   agentId: string;
   sshHost: string;
   runId: string;
-  sudoUser?: string; // Run openclaw as this user (e.g. 'mo', 'sam') via sudo -u
+  sudoUser?: string;
+}
+
+// Remote bash script — single-quoted as the bash -c arg, contains no single
+// quotes by design. Reads the user's message from stdin (via $(cat)) so the
+// content never touches shell escaping. Phase 17.1 gap-fix: the prior version
+// inlined the message into the SSH command and broke on apostrophes/newlines
+// once attachment blocks pushed the prompt past trivial size.
+const REMOTE_SCRIPT = `set -eu
+MSG=$(cat)
+exec timeout 120 \${OC_SUDO_USER:+sudo -u $OC_SUDO_USER} openclaw agent --message "$MSG" --session-id "$OC_SESSION_ID" --agent main --json`;
+
+function buildRemoteCommand(sudoUser: string, sessionId: string): string {
+  // sudoUser is one of 'mo'|'sam'|'herman'|'' — known safe identifiers.
+  // sessionId is `console:<agentId>:<uuid>` — alphanumeric + hyphens + colons.
+  // Neither can contain quotes; we still validate to be defensive.
+  if (!/^[a-z0-9_-]*$/.test(sudoUser)) {
+    throw new Error(`Invalid sudoUser: ${sudoUser}`);
+  }
+  if (!/^[a-zA-Z0-9:_-]+$/.test(sessionId)) {
+    throw new Error(`Invalid sessionId: ${sessionId}`);
+  }
+  // Use bash -c '<script>'. The script has no single quotes inside, so the
+  // outer single-quoting is safe. Env vars passed inline before bash so they
+  // populate the bash -c subshell environment.
+  return `OC_SUDO_USER=${sudoUser} OC_SESSION_ID=${sessionId} bash -c '${REMOTE_SCRIPT}'`;
 }
 
 export async function sendToAgent(
   cfg: OpenClawBridgeConfig,
   message: string,
-  imageAttachments?: Array<{ filename: string; mimeType: string; base64: string }>,
 ): Promise<{
   text: string;
   runId: string;
@@ -23,85 +45,105 @@ export async function sendToAgent(
   costUsd: number;
   model: string;
 } | null> {
-  // Phase 17.1-03 (outcome D from openclaw-flag-verification.md):
-  // OpenClaw's `agent` CLI does not yet support image input. Inspecting
-  // /usr/lib/node_modules/openclaw/dist/register.agent-DA0Frq4g.js confirms
-  // the available options are -m/--message, -t/--to, --session-id, --agent,
-  // --thinking, --verbose, --channel, --reply-to, --reply-channel,
-  // --reply-account, --local, --deliver, --json, --timeout — no image,
-  // attachment, or media flag.
-  //
-  // We accept the imageAttachments parameter for forward-compatibility (the
-  // VISION_CAPABLE gate in routes.ts already routes only Mo/Jarvis bytes
-  // here) and log-and-skip the bytes. Description-only path still works:
-  // the textual vision-API description from Plan 17.1-01 is already in the
-  // prompt block via Plan 17.1-02. UAT-17-1-02 (Mo/Jarvis quote pixel-level
-  // details) is deferred until OpenClaw ships a vision flag — at that
-  // point only this function body changes, no caller touch-up.
-  if (imageAttachments && imageAttachments.length > 0) {
-    log.warn(
-      { agentId: cfg.agentId, imageCount: imageAttachments.length },
-      'imageAttachments received but OpenClaw CLI does not support image input — dropping bytes (description-only path)',
-    );
-  }
-
-  const escapedMessage = message.replace(/'/g, "'\\''");
-  // Unique isolated session per agent per run — never overlaps with WhatsApp sessions
   const sessionId = `console:${cfg.agentId}:${cfg.runId}`;
-  const openclawCmd = cfg.sudoUser
-    ? `sudo -u ${cfg.sudoUser} openclaw agent --message '${escapedMessage}' --session-id '${sessionId}' --agent main --json 2>/dev/null`
-    : `openclaw agent --message '${escapedMessage}' --session-id '${sessionId}' --agent main --json 2>/dev/null`;
-  const cmd = `ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 ${cfg.sshHost} "timeout 120 ${openclawCmd}"`;
+  const remoteCmd = buildRemoteCommand(cfg.sudoUser ?? '', sessionId);
 
-  log.info({ agentId: cfg.agentId, messageLength: message.length }, 'Sending message to agent via CLI bridge');
+  log.info(
+    { agentId: cfg.agentId, messageLength: message.length },
+    'Sending message to agent via CLI bridge',
+  );
 
-  try {
-    const { stdout } = await execAsync(cmd, { timeout: 130000, maxBuffer: 10 * 1024 * 1024 });
+  return new Promise((resolve) => {
+    const proc = spawn(
+      'ssh',
+      ['-o', 'StrictHostKeyChecking=no', '-o', 'ConnectTimeout=5', cfg.sshHost, remoteCmd],
+      { stdio: ['pipe', 'pipe', 'pipe'] },
+    );
 
-    // Parse the JSON response — the output may have [plugins] log lines before the JSON
-    // The JSON object is multi-line pretty-printed, so find the first '{' and take everything from there
-    const jsonStart = stdout.indexOf('\n{');
-    const jsonStr = jsonStart >= 0 ? stdout.substring(jsonStart + 1) : stdout.trim();
+    let stdout = '';
+    let stderr = '';
+    const killer = setTimeout(() => {
+      log.error({ agentId: cfg.agentId }, 'CLI bridge hard-timeout (130s) — killing ssh');
+      proc.kill('SIGKILL');
+    }, 130_000);
 
-    log.debug({ agentId: cfg.agentId, rawLength: stdout.length, jsonStart }, 'Parsing CLI response');
+    proc.stdout.on('data', (chunk) => {
+      stdout += chunk.toString();
+    });
+    proc.stderr.on('data', (chunk) => {
+      stderr += chunk.toString();
+    });
 
-    let result: any;
-    try {
-      result = JSON.parse(jsonStr);
-    } catch {
-      // Try finding JSON between first { and last }
-      const firstBrace = stdout.indexOf('{');
-      const lastBrace = stdout.lastIndexOf('}');
-      if (firstBrace >= 0 && lastBrace > firstBrace) {
-        result = JSON.parse(stdout.substring(firstBrace, lastBrace + 1));
-      } else {
-        log.error({ agentId: cfg.agentId, stdout: stdout.substring(0, 300) }, 'No parseable JSON in agent response');
-        return null;
+    proc.on('error', (err) => {
+      clearTimeout(killer);
+      log.error({ agentId: cfg.agentId, error: err.message }, 'CLI bridge spawn error');
+      resolve(null);
+    });
+
+    proc.on('close', (code) => {
+      clearTimeout(killer);
+      if (code !== 0) {
+        log.error(
+          { agentId: cfg.agentId, code, stderrTail: stderr.slice(-400) },
+          'CLI bridge non-zero exit',
+        );
+        resolve(null);
+        return;
       }
-    }
-    if (result.status !== 'ok') {
-      log.error({ agentId: cfg.agentId, status: result.status }, 'Agent returned non-ok status');
-      return null;
-    }
 
-    const text = result.result?.payloads?.[0]?.text ?? '';
-    const runId = result.runId ?? '';
-    const durationMs = result.result?.meta?.durationMs ?? 0;
-    const usage = result.result?.meta?.agentMeta?.usage;
-    const model = result.result?.meta?.agentMeta?.model ?? 'unknown';
+      try {
+        const jsonStart = stdout.indexOf('\n{');
+        const jsonStr = jsonStart >= 0 ? stdout.substring(jsonStart + 1) : stdout.trim();
 
-    // Estimate cost from token usage (rough: $15/M input, $75/M output for Opus)
-    let costUsd = 0;
-    if (usage) {
-      const inputTokens = (usage.input ?? 0) + (usage.cacheRead ?? 0) + (usage.cacheWrite ?? 0);
-      const outputTokens = usage.output ?? 0;
-      costUsd = (inputTokens * 15 + outputTokens * 75) / 1_000_000;
-    }
+        let result: any;
+        try {
+          result = JSON.parse(jsonStr);
+        } catch {
+          const firstBrace = stdout.indexOf('{');
+          const lastBrace = stdout.lastIndexOf('}');
+          if (firstBrace >= 0 && lastBrace > firstBrace) {
+            result = JSON.parse(stdout.substring(firstBrace, lastBrace + 1));
+          } else {
+            log.error(
+              { agentId: cfg.agentId, stdout: stdout.substring(0, 300) },
+              'No parseable JSON in agent response',
+            );
+            resolve(null);
+            return;
+          }
+        }
 
-    log.info({ agentId: cfg.agentId, responseLength: text.length, durationMs, costUsd: costUsd.toFixed(4) }, 'Agent responded');
-    return { text, runId, durationMs, costUsd, model };
-  } catch (err: any) {
-    log.error({ agentId: cfg.agentId, error: err.message }, 'CLI bridge error');
-    return null;
-  }
+        if (result.status !== 'ok') {
+          log.error({ agentId: cfg.agentId, status: result.status }, 'Agent returned non-ok status');
+          resolve(null);
+          return;
+        }
+
+        const text = result.result?.payloads?.[0]?.text ?? '';
+        const runId = result.runId ?? '';
+        const durationMs = result.result?.meta?.durationMs ?? 0;
+        const usage = result.result?.meta?.agentMeta?.usage;
+        const model = result.result?.meta?.agentMeta?.model ?? 'unknown';
+
+        let costUsd = 0;
+        if (usage) {
+          const inputTokens = (usage.input ?? 0) + (usage.cacheRead ?? 0) + (usage.cacheWrite ?? 0);
+          const outputTokens = usage.output ?? 0;
+          costUsd = (inputTokens * 15 + outputTokens * 75) / 1_000_000;
+        }
+
+        log.info(
+          { agentId: cfg.agentId, responseLength: text.length, durationMs, costUsd: costUsd.toFixed(4) },
+          'Agent responded',
+        );
+        resolve({ text, runId, durationMs, costUsd, model });
+      } catch (err: any) {
+        log.error({ agentId: cfg.agentId, error: err.message }, 'CLI bridge parse error');
+        resolve(null);
+      }
+    });
+
+    proc.stdin.write(message);
+    proc.stdin.end();
+  });
 }

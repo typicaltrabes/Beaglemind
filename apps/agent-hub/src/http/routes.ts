@@ -322,21 +322,15 @@ export async function runRoundTable(
 
     log.info({ runId, agentId, transcriptLength: fullPrompt.length }, 'Sending to agent with full transcript');
 
-    // Phase 17.1-03: only vision-capable agents (Mo, Jarvis) get image bytes.
-    // Non-vision agents see only the textual description in the prompt block
-    // built by Plan 17.1-02 (already baked into fullPrompt via the web app).
-    // Per outcome D in openclaw-flag-verification.md, the bridge currently
-    // logs-and-skips these bytes — the gate is in place for the day OpenClaw
-    // ships a vision flag.
-    const imagesForAgent =
-      imageAttachments && VISION_CAPABLE.has(agentId)
-        ? imageAttachments
-        : undefined;
-
+    // Vision pass-through: image bytes flow through a separate path
+    // (direct Anthropic call) implemented as a follow-up. The CLI bridge
+    // is text-only — see openclaw-cli-bridge.ts. The textual description
+    // from Plan 17.1-01 is already in fullPrompt, so non-vision agents
+    // and the text-only path remain functional.
+    let agentFailureReason: string | null = null;
     try {
-      const result = await sendToAgent(bridgeCfg, fullPrompt, imagesForAgent);
+      const result = await sendToAgent(bridgeCfg, fullPrompt);
       if (result && result.text) {
-        // Publish agent response as an event (appears in UI immediately)
         await router.persistAndPublish(tenantId, {
           type: 'agent_message',
           agentId,
@@ -346,14 +340,21 @@ export async function runRoundTable(
           metadata: { durationMs: result.durationMs, costUsd: result.costUsd, model: result.model },
         });
 
-        // Add to transcript so next agent sees it
         transcript.push(`${displayName}: ${result.text}`);
 
         log.info({ runId, agentId, responseLength: result.text.length }, 'Agent responded in round-table');
+      } else {
+        // sendToAgent returns null on CLI bridge errors (non-zero exit, parse
+        // failure, non-ok status). Phase 17.1 gap-fix: surface this as a
+        // failure-bubble in the transcript so the user isn't met with silence.
+        agentFailureReason = result === null ? 'cli-bridge-null' : 'empty-text';
       }
     } catch (err: any) {
-      log.error({ error: err.message, runId, agentId }, 'Agent failed in round-table, continuing');
+      log.error({ error: err.message, runId, agentId }, 'Agent threw in round-table, continuing');
+      agentFailureReason = err.message || 'unknown-throw';
+    }
 
+    if (agentFailureReason) {
       // Phase 17.1-07 (DEFECT-17-C): surface the failure in the transcript as
       // a one-line marker so the user sees who failed instead of silence.
       // We emit a normal `agent_message` (NOT a new event type) so SSE replay
@@ -369,7 +370,7 @@ export async function runRoundTable(
           content: {
             text: `(${displayName} failed to respond — see logs for details)`,
           },
-          metadata: { errorKind: 'agent_failure', errorMessage: err.message },
+          metadata: { errorKind: 'agent_failure', errorMessage: agentFailureReason },
         });
       } catch (publishErr: any) {
         log.error(
