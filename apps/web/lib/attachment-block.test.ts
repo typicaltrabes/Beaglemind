@@ -34,6 +34,7 @@ describe('buildAttachmentBlock', () => {
         mimeType: 'application/pdf',
         sizeBytes: 142_000,
         extractedText: 'project plan v1',
+        description: null,
       },
     ]);
     expect(block).toContain('--- USER ATTACHMENTS ---');
@@ -43,16 +44,18 @@ describe('buildAttachmentBlock', () => {
     expect(block.endsWith('\n\n')).toBe(true);
   });
 
-  it('emits image placeholder when extractedText is null and mime is image/*', () => {
+  it('emits unavailable-description placeholder when image description is null', () => {
     const block = buildAttachmentBlock([
       {
         filename: 'screenshot.png',
         mimeType: 'image/png',
         sizeBytes: 38_000,
         extractedText: null,
+        description: null,
       },
     ]);
-    expect(block).toContain('(image — included with this message)');
+    expect(block).toContain('(image attached — description unavailable)');
+    expect(block).not.toContain('(image — included with this message)');
   });
 
   it('emits no-text placeholder when extractedText is null and mime is non-image', () => {
@@ -62,6 +65,7 @@ describe('buildAttachmentBlock', () => {
         mimeType: 'application/pdf',
         sizeBytes: 1024,
         extractedText: null,
+        description: null,
       },
     ]);
     expect(block).toContain('(no extracted text available)');
@@ -74,30 +78,34 @@ describe('buildAttachmentBlock', () => {
         mimeType: 'text/plain',
         sizeBytes: 10,
         extractedText: 'A',
+        description: null,
       },
       {
         filename: 'b.txt',
         mimeType: 'text/plain',
         sizeBytes: 10,
         extractedText: 'B',
+        description: null,
       },
     ]);
     expect(block.indexOf('[1] a.txt')).toBeLessThan(block.indexOf('[2] b.txt'));
   });
 
-  it('mixes extracted-text and image-placeholder attachments correctly', () => {
+  it('mixes extracted-text and image-with-description attachments correctly', () => {
     const block = buildAttachmentBlock([
       {
         filename: 'doc.pdf',
         mimeType: 'application/pdf',
         sizeBytes: 5000,
         extractedText: 'doc body',
+        description: null,
       },
       {
         filename: 'pic.png',
         mimeType: 'image/png',
         sizeBytes: 5000,
         extractedText: null,
+        description: 'a screenshot of a dashboard',
       },
     ]);
     // Both numbered correctly
@@ -105,8 +113,40 @@ describe('buildAttachmentBlock', () => {
     expect(block).toContain('[2] pic.png (PNG,');
     // Each gets its appropriate body
     expect(block).toContain('doc body');
-    expect(block).toContain('(image — included with this message)');
+    expect(block).toContain('Description: a screenshot of a dashboard');
+    // Defensive: V1 placeholder must be gone
+    expect(block).not.toContain('(image — included with this message)');
     // Ends with sentinel + double newline
     expect(block.endsWith('--- END ATTACHMENTS ---\n\n')).toBe(true);
+  });
+
+  it('emits Description line when image has a non-null description', () => {
+    const block = buildAttachmentBlock([
+      {
+        filename: 'screenshot.png',
+        mimeType: 'image/png',
+        sizeBytes: 38_000,
+        extractedText: null,
+        description: 'A dashboard with four KPI cards',
+      },
+    ]);
+    expect(block).toContain('Description: A dashboard with four KPI cards');
+    expect(block).not.toContain('(image — included with this message)');
+  });
+
+  it('image description takes precedence over extractedText (defensive)', () => {
+    // In normal flow extractedText is always null for image mimes, but the
+    // image branch must check description FIRST regardless of extractedText.
+    const block = buildAttachmentBlock([
+      {
+        filename: 'pic.jpg',
+        mimeType: 'image/jpeg',
+        sizeBytes: 1000,
+        extractedText: 'should not appear',
+        description: 'real description here',
+      },
+    ]);
+    expect(block).toContain('Description: real description here');
+    expect(block).not.toContain('should not appear');
   });
 });
