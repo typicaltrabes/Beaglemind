@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 17-03-PLAN.md
-last_updated: "2026-04-28T16:42:33.925Z"
-last_activity: 2026-04-28 -- Phase 17.1 planning complete
+stopped_at: Phase 17.1 expanded with DEFECT-17-A/B/C plans (17.1-05/06/07) — ready to execute
+last_updated: "2026-04-29T00:00:00.000Z"
+last_activity: 2026-04-29 -- Phase 17 UAT failed on 3 defects; rolled into Phase 17.1 (now 7 plans + deploy); ready to execute expanded 17.1
 progress:
   total_phases: 17
   completed_phases: 10
-  total_plans: 65
+  total_plans: 68
   completed_plans: 46
-  percent: 71
+  percent: 68
 ---
 
 # Project State
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-21)
 
 **Core value:** Users can observe multi-agent reasoning in real time, steer it at governance gates, and share the full replay externally.
-**Current focus:** Phase 17 — User Attachments
+**Current focus:** Phase 17.1 — Vision Pass-Through + Phase 17 UAT Defect Fixes (expanded scope)
 
 ## Current Position
 
-Phase: 17 (User Attachments) — EXECUTING
-Plan: 4 of 4
+Phase: 17.1 (Vision Pass-Through + Phase 17 UAT Defect Fixes) — READY TO EXECUTE
+Plan: 0 of 7 (+ deploy plan 17.1-04)
 Status: Ready to execute
-Last activity: 2026-04-28 -- Phase 17.1 planning complete
+Last activity: 2026-04-29 -- Phase 17 UAT defects rolled into Phase 17.1; 3 new plans (17.1-05/06/07); deploy plan 17.1-04 updated to cover all 6 vision+defect UATs plus retest UAT-17-01 and UAT-17-03
 
 Progress: [█████████░] 95%
 

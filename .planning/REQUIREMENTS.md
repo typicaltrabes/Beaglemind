@@ -134,15 +134,18 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### User Attachments (Phase 17)
 
-- [x] **UAT-17-01**: User can attach up to 4 files per message (≤20 MB each) of type PDF / DOCX / PNG / JPG / WEBP / TXT / MD via a paperclip button (between Improve and Send) or drag-drop on the composer; pending attachments appear as chips above the textarea with per-file status (`uploading…` → `ready`); Send is disabled while any attachment is uploading; client-side validation rejects unsupported mime/oversized files with an inline error.
+- [ ] **UAT-17-01**: User can attach up to 4 files per message (≤20 MB each) of type PDF / DOCX / PNG / JPG / WEBP / TXT / MD via a paperclip button (between Improve and Send) or drag-drop on the composer; pending attachments appear as chips above the textarea with per-file status (`uploading…` → `ready`); Send is disabled while any attachment is uploading; client-side validation rejects unsupported mime/oversized files with an inline error. **(REOPENED 2026-04-29: Lucas's UAT failed for `.md` uploads on Windows — `file.type === ''` rejects against allowlist. Fix: 17.1-05 adds extension-fallback. Re-tested in 17.1-04 UAT.)**
 - [x] **UAT-17-02**: `POST /api/runs/[id]/attachments` (multipart) is auth-scoped to the current tenant + run, validates type/size, uploads to MinIO bucket `tenant-${tenantId}` under `runs/${runId}/uploads/${key}.${ext}`, inserts an `artifacts` row with `agent_id='user'` and synchronously-extracted text in a new `artifacts.extracted_text TEXT` column (PDF via pdf-parse, DOCX via mammoth, TXT/MD via utf-8 read, NULL for images), capping extracted text at 50,000 chars with a truncation marker.
 - [ ] **UAT-17-03**: When the round-table fires for a message with attachments, agents see a structured `--- USER ATTACHMENTS ---` block (filename, mime, size, extracted text or image description) prepended to the user prompt and reference attachment content in their replies; manual UAT (one PDF + one image attached to a fresh run) confirms agents quote/discuss the attached content end-to-end. (BLOCKED on Phase 17.1 — V1 placeholder did not satisfy product bar; image description from 17.1 will satisfy this requirement.)
 
-### Vision Pass-Through (Phase 17.1)
+### Vision Pass-Through + Phase 17 UAT Defect Fixes (Phase 17.1)
 
 - [ ] **UAT-17-1-01**: Uploading an image to a run automatically generates a written description via the Anthropic vision API; description is persisted to `artifacts.description`, visible in agent-hub logs as part of the prepended `--- USER ATTACHMENTS ---` block, and reaches every agent (Mo, Jarvis, Herman) in the round-table prompt.
 - [ ] **UAT-17-1-02**: Mo and Jarvis (vision-capable agents) reference specific visual details in their replies that go beyond what's in the description — proves image bytes reached them through the OpenClaw CLI bridge.
 - [ ] **UAT-17-1-03**: Herman (non-vision agent) references the description content in its reply even without seeing the image — proves the description fallback works for weaker agents and is sufficient for meaningful engagement.
+- [ ] **UAT-17-1-04** *(DEFECT-17-A fix)*: User attaches a `.md` file via paperclip OR drag-drop on Windows AND macOS — chip appears `ready`, upload succeeds, persisted `artifacts.mime_type === 'text/markdown'`, agents receive the markdown content. Fix: filename-extension fallback shared between composer and upload route.
+- [ ] **UAT-17-1-05** *(DEFECT-17-B fix)*: User uploads a PDF + an image to a run; the user message bubble in the transcript renders attachment chips (filename + size + click-to-view for documents; inline thumbnail for images) — NOT the extracted PDF text. Clicking opens the existing artifact preview panel (PDF inline; DOCX via mammoth; image full-size in new tab). Agents continue to receive the extracted text in their prompt block (verified via agent-hub log grep). WhatsApp-style UX per Lucas's product call.
+- [ ] **UAT-17-1-06** *(DEFECT-17-C fix)*: User sends a follow-up message (with or without attachments) to a run whose status is `completed`; agents respond in the same round-table format AND demonstrate awareness of prior conversation context (reference earlier messages by content). Run status flips back to `executing` for the duration of the new round, then to `completed` again. Agent failures surface as one-line "(<agent> failed to respond)" markers in the transcript instead of silence.
 
 ## v2 Requirements
 
@@ -267,18 +270,21 @@ Deferred to future release. Tracked but not in current roadmap.
 | UAT-12-02 | Phase 12 | Complete |
 | UAT-12-03 | Phase 12 | Complete |
 | UAT-12-04 | Phase 12 | Pending |
-| UAT-17-01 | Phase 17 | Complete |
+| UAT-17-01 | Phase 17 → 17.1 | Reopened (DEFECT-17-A — fixed in 17.1-05) |
 | UAT-17-02 | Phase 17 | Complete |
-| UAT-17-03 | Phase 17 | Pending (blocked on 17.1) |
+| UAT-17-03 | Phase 17 → 17.1 | Pending (blocked on 17.1; satisfied by 17.1-02 + 17.1-06) |
 | UAT-17-1-01 | Phase 17.1 | Pending |
 | UAT-17-1-02 | Phase 17.1 | Pending |
 | UAT-17-1-03 | Phase 17.1 | Pending |
+| UAT-17-1-04 | Phase 17.1 (DEFECT-17-A) | Pending |
+| UAT-17-1-05 | Phase 17.1 (DEFECT-17-B) | Pending |
+| UAT-17-1-06 | Phase 17.1 (DEFECT-17-C) | Pending |
 
 **Coverage:**
-- v1 requirements: 74 total
-- Mapped to phases: 74
+- v1 requirements: 77 total
+- Mapped to phases: 77
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-04-21*
-*Last updated: 2026-04-21 after roadmap creation*
+*Last updated: 2026-04-29 — Phase 17 UAT defects rolled into Phase 17.1 (UAT-17-1-04..06 added; UAT-17-01 reopened; UAT-17-03 traceability widened)*
