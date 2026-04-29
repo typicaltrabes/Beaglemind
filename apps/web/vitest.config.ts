@@ -10,6 +10,12 @@ export default defineConfig({
   plugins: [react()],
   test: {
     globals: true,
+    // Phase 17.1-06: happy-dom provides the DOM emulation @testing-library/react
+    // needs to render UserMessageAttachments and friends. The 13-02 follow-up
+    // ("install @testing-library/react + happy-dom in a dedicated test
+    // infrastructure plan") landed here because the transcript chip render
+    // tests required it.
+    environment: 'happy-dom',
   },
   resolve: {
     alias: {
