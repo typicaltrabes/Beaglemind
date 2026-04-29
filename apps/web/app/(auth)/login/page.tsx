@@ -26,7 +26,7 @@ export default function LoginPage() {
         onSuccess: () => {
           router.push('/');
         },
-        onError: (ctx) => {
+        onError: (ctx: { error: { message?: string } }) => {
           setError(ctx.error.message ?? 'Sign in failed');
           setLoading(false);
         },
