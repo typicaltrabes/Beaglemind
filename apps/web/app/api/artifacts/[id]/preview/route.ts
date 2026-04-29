@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { getMinioClient } from '@beagle-console/db';
 import { requireTenantContext, getTenantDb } from '@/lib/get-tenant';
 import mammoth from 'mammoth';
@@ -34,12 +33,13 @@ export async function GET(
     const client = getMinioClient();
 
     if (artifact.mimeType === 'application/pdf') {
-      // PDF: return presigned URL for iframe embedding (D-04)
-      const command = new GetObjectCommand({
-        Bucket: `tenant-${tenantId}`,
-        Key: artifact.minioKey,
-      });
-      const url = await getSignedUrl(client, command, { expiresIn: 300 });
+      // Phase 18-01: stream PDF through /api/artifacts/[id]/download?inline=1
+      // instead of a presigned MinIO URL. The presigned URL pointed to the
+      // internal Docker hostname (beagle-console-minio-1) which browsers
+      // can't resolve from the public internet and which trips mixed-content
+      // blocking on HTTPS pages. Streaming through our own route keeps the
+      // internal hostname server-side only.
+      const url = `/api/artifacts/${id}/download?inline=1`;
       return NextResponse.json({ type: 'pdf', url });
     }
 

@@ -48,16 +48,19 @@ export function UserMessageAttachments({ attachmentIds }: Props) {
     <div className="mt-2 flex flex-col gap-2">
       {metadata.map((m) => {
         if (m.mimeType.startsWith('image/')) {
+          // Phase 18-01: ?inline=1 → server returns Content-Disposition: inline
+          // so click-to-fullsize opens in a new tab instead of forcing download.
+          const inlineUrl = `/api/artifacts/${m.id}/download?inline=1`;
           return (
             <a
               key={m.id}
-              href={`/api/artifacts/${m.id}/download`}
+              href={inlineUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="block max-w-sm"
             >
               <img
-                src={`/api/artifacts/${m.id}/download`}
+                src={inlineUrl}
                 alt={m.filename}
                 loading="lazy"
                 className="max-h-60 rounded-md border border-border object-contain"
