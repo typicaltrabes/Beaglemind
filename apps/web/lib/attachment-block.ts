@@ -12,24 +12,29 @@
  *
  *     --- USER ATTACHMENTS ---
  *     [1] filename.pdf (PDF, 142 KB)
- *     <extracted text or "(image — included with this message)">
+ *     <extracted text>
  *     [2] screenshot.png (PNG, 38 KB)
- *     (image — included with this message)
+ *     Description: A dashboard with four KPI cards and a sidebar.
  *     --- END ATTACHMENTS ---
  *
  * Body-line precedence per attachment:
- *   1. extractedText non-null  → emit it raw on the next line
- *   2. mimeType starts with 'image/'  → emit `(image — included with this message)`
- *   3. otherwise  → emit `(no extracted text available)`
+ *   1. mimeType starts with 'image/'
+ *      → r.description non-null  → emit `Description: <description>`
+ *      → r.description null      → emit `(image attached — description unavailable)`
+ *   2. extractedText non-null  → emit it raw on the next line
+ *   3. otherwise               → emit `(no extracted text available)`
  *
  * Trailing whitespace: the block ends with `--- END ATTACHMENTS ---` followed
  * by exactly two newlines (`\n\n`) so the user content begins on its own line
  * with a clean visual separator.
  *
- * V1 simplification per PATTERNS.md: this builder runs in the web app, NOT
- * the agent-hub. The hub's `RunStartBody` schema is unchanged — it just sees
- * a longer prompt string. Image base64 pass-through (which DOES require hub
- * changes) is explicitly deferred.
+ * Phase 17.1 update: the V1 image placeholder `(image — included with this
+ * message)` was REPLACED with the vision-API description from the artifacts
+ * row (Plan 17.1-01 generates it; Plan 17.1-02 threads it here). Every agent
+ * — vision-capable (Mo, Jarvis) AND non-vision (Herman, Sam, future weaker
+ * LLMs) — sees the same description floor. Vision-capable agents ALSO receive
+ * raw image bytes via the CLI bridge (Plan 17.1-03), but this prompt block is
+ * identical for everyone.
  */
 
 import { formatSize } from './format-size';
@@ -58,6 +63,7 @@ export interface ArtifactRow {
   mimeType: string;
   sizeBytes: number;
   extractedText: string | null;
+  description: string | null; // Phase 17.1: vision-API description for images
 }
 
 /**
@@ -72,14 +78,21 @@ export function buildAttachmentBlock(rows: ArtifactRow[]): string {
     lines.push(
       `[${i + 1}] ${r.filename} (${mimeLabel(r.mimeType)}, ${formatSize(r.sizeBytes)})`,
     );
-    if (r.extractedText) {
+    if (r.mimeType.startsWith('image/')) {
+      // Phase 17.1: vision-API description (from extractImageDescription) is
+      // the floor — every agent (vision-capable or not) sees this textual
+      // rendering of the image. Vision-capable agents ALSO receive the
+      // image bytes via the CLI bridge in Plan 17.1-03; this prompt block
+      // is identical for everyone.
+      if (r.description) {
+        lines.push(`Description: ${r.description}`);
+      } else {
+        // Fallback when vision call failed OR row predates 17.1.
+        // Exact wording from CONTEXT — do not alter.
+        lines.push('(image attached — description unavailable)');
+      }
+    } else if (r.extractedText) {
       lines.push(r.extractedText);
-    } else if (r.mimeType.startsWith('image/')) {
-      // Exact wording from CONTEXT.md — Mo/Jarvis/Herman pattern-match on
-      // this string in the prompt to know they're being shown an image they
-      // can't read directly (V1 ships text-only; image-via-CLI-bridge is
-      // deferred to a future track).
-      lines.push('(image — included with this message)');
     } else {
       lines.push('(no extracted text available)');
     }
