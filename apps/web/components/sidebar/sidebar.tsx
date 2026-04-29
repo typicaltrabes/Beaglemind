@@ -23,8 +23,10 @@ import {
 } from '@/components/ui/tooltip';
 import { useUIStore } from '@/lib/stores/ui-store';
 import { orgClient } from '@/lib/auth-client';
+import { useOperator } from '@/lib/hooks/use-operator';
 
-const ROSTER = ['mo', 'jarvis', 'herman', 'sam'] as const;
+const CUSTOMER_ROSTER = ['mo', 'jarvis', 'herman'] as const;
+const OPERATOR_ROSTER = ['mo', 'jarvis', 'herman', 'sam'] as const;
 
 function NavIcon({
   href,
@@ -54,6 +56,10 @@ function NavIcon({
 }
 
 function SidebarContent({ isOwner }: { isOwner: boolean }) {
+  // Phase 18-04 (H2): Sam (Sentinel) is internal QA — not customer-facing.
+  // Hide from customer sidebar; operators still see all four.
+  const { data: isOperator } = useOperator();
+  const roster = isOperator ? OPERATOR_ROSTER : CUSTOMER_ROSTER;
   return (
     <ScrollArea className="flex-1">
       {/* AGENTS */}
@@ -62,7 +68,7 @@ function SidebarContent({ isOwner }: { isOwner: boolean }) {
           Agents
         </span>
         <div className="mt-2 flex flex-col gap-0.5">
-          {ROSTER.map((id) => (
+          {roster.map((id) => (
             <AgentRow key={id} agentId={id} />
           ))}
         </div>

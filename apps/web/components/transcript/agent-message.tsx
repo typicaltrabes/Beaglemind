@@ -53,6 +53,13 @@ export function AgentMessage({ event }: AgentMessageProps) {
   // suppresses the chip surface entirely so older runs render unchanged.
   const content = event.content as { text?: string; attachmentIds?: string[] };
 
+  // Phase 18-04 (M3): failure-bubbles get distinct visual treatment so they
+  // don't read like a real reply. Hub sets metadata.errorKind='agent_failure'.
+  const isFailure =
+    event.metadata !== null &&
+    typeof event.metadata === 'object' &&
+    (event.metadata as Record<string, unknown>).errorKind === 'agent_failure';
+
   return (
     <div className="flex gap-3 px-4 py-2">
       <AgentAvatar agentId={event.agentId} />
@@ -64,16 +71,27 @@ export function AgentMessage({ event }: AgentMessageProps) {
           <span className={`text-[13px] font-semibold leading-tight ${config.nameColor}`}>
             {config.displayName}
           </span>
-          {config.role && (
+          {config.role && !isFailure && (
             <span className="text-[11px] text-muted-foreground">
               &middot; {config.role}
+            </span>
+          )}
+          {isFailure && (
+            <span className="text-[11px] uppercase tracking-wider text-amber-500/80">
+              &middot; failure
             </span>
           )}
           <span className="text-[11px] text-[#6b7389]">
             {formatRelativeTime(event.timestamp)}
           </span>
         </div>
-        <p className="mt-1 text-sm text-foreground whitespace-pre-wrap">
+        <p
+          className={
+            isFailure
+              ? 'mt-1 text-xs italic text-muted-foreground/70 whitespace-pre-wrap'
+              : 'mt-1 text-sm text-foreground whitespace-pre-wrap'
+          }
+        >
           {content.text ?? JSON.stringify(event.content)}
         </p>
         {/* Phase 17.1-06 (DEFECT-17-B): user-authored events with

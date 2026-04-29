@@ -128,6 +128,19 @@ export function RunMetadataRow({
   const isExecuting = status === 'executing' || status === 'approved';
   const isCompleted = status === 'completed';
 
+  // Phase 18-04 (H4): each metadata item gets a hover tooltip with a
+  // descriptive label. The compact dot-separated row stays scannable but
+  // new users can decode "4 agents" / "10 events" / "#abc123" without
+  // guessing.
+  function MetaItem({ label, children }: { label: string; children: React.ReactNode }) {
+    return (
+      <Tooltip>
+        <TooltipTrigger render={<span className="cursor-help">{children}</span>} />
+        <TooltipContent>{label}</TooltipContent>
+      </Tooltip>
+    );
+  }
+
   return (
     <TooltipProvider>
       <div className="flex min-w-0 items-center gap-3 px-4 py-2">
@@ -143,19 +156,31 @@ export function RunMetadataRow({
           <span aria-hidden="true">·</span>
           <RunIdChip runId={runId} className="text-[11px]" />
           <span aria-hidden="true">·</span>
-          <span>{formatDuration(durationSeconds)}</span>
+          <MetaItem label="Run duration">
+            {formatDuration(durationSeconds)}
+          </MetaItem>
           <span aria-hidden="true">·</span>
-          <span>${totalCostUsd.toFixed(2)}</span>
+          <MetaItem label="Total agent cost">
+            ${totalCostUsd.toFixed(2)}
+          </MetaItem>
           <span aria-hidden="true">·</span>
-          <span>
+          <MetaItem
+            label={
+              agentsCount === 1
+                ? 'Distinct agents that participated'
+                : 'Distinct agents that participated'
+            }
+          >
             {agentsCount} {agentsCount === 1 ? 'agent' : 'agents'}
-          </span>
+          </MetaItem>
           <span aria-hidden="true">·</span>
-          <span>
+          <MetaItem label="Total events recorded">
             {eventsCount} {eventsCount === 1 ? 'event' : 'events'}
-          </span>
+          </MetaItem>
           <span aria-hidden="true">·</span>
-          <span>{formatRelativeTimestamp(run?.createdAt ?? null)}</span>
+          <MetaItem label="When this run started">
+            {formatRelativeTimestamp(run?.createdAt ?? null)}
+          </MetaItem>
         </div>
 
         <div className="flex items-center gap-1">
