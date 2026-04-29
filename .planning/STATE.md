@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 17.1-01-PLAN.md
-last_updated: "2026-04-29T12:29:03.559Z"
+stopped_at: Completed 17.1-05-PLAN.md
+last_updated: "2026-04-29T12:47:38.330Z"
 last_activity: 2026-04-29
 progress:
   total_phases: 17
   completed_phases: 10
   total_plans: 68
-  completed_plans: 47
-  percent: 69
+  completed_plans: 48
+  percent: 71
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 17.1 (vision-pass-through-all-agents-see-image-content) — EXECUTING
-Plan: 2 of 7
+Plan: 3 of 7
 Status: Ready to execute
 Last activity: 2026-04-29
 
@@ -92,6 +92,7 @@ Progress: [█████████░] 95%
 | Phase 17-attachments P02 | 9min | 2 tasks | 14 files |
 | Phase 17-attachments P03 | 4min | 1 tasks | 4 files |
 | Phase 17.1 P01 | 5min | 2 tasks | 7 files |
+| Phase 17.1 P05 | 5min | 4 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -187,6 +188,10 @@ Recent decisions affecting current work:
 - [Phase 17.1]: [Phase 17.1-01]: extractImageDescription returns null on empty content array WITHOUT trying Sonnet fallback — call succeeded, model just chose silence; retry with stronger model unlikely to flip outcome
 - [Phase 17.1]: [Phase 17.1-01]: media_type cast to literal union 'image/png' | 'image/jpeg' | 'image/webp' — IMAGE_MIMES gate above proves the cast is sound; SDK Base64ImageSource.media_type uses strict union
 - [Phase 17.1]: [Phase 17.1-01]: lazy module-singleton vision client + warn-once on missing ANTHROPIC_API_KEY — mirrors litellm-client.ts pattern; _resetClientForTest exported for test isolation per resetRateLimiterForTest precedent
+- [Phase 17.1]: [Phase 17.1-05]: shared apps/web/lib/mime-from-extension.ts (single source of truth for client + server mime gating) — DEFECT-17-A fix for Windows .md uploads where file.type comes through empty
+- [Phase 17.1]: [Phase 17.1-05]: resolveMime falls back to filename extension only for UNRELIABLE_BROWSER_MIMES = {'', 'application/octet-stream'} — narrower than 'always fall back' (preserves Phase 17 trust model for normal uploads)
+- [Phase 17.1]: [Phase 17.1-05]: persist resolvedMime to artifacts.mime_type AND pass it to extractAttachment + extractImageDescription + MinIO ContentType — not just the validation gate; downstream branches key on the canonical mime so empty file.type would mis-route
+- [Phase 17.1]: [Phase 17.1-05]: API-route vitest test fixtures need real RFC 4122 v4 UUIDs for run-id path — Zod v4 .uuid() format is strict on version + variant nibbles; placeholder '00000000-...-001' fails the format check and masks downstream test failures
 
 ### Pending Todos
 
@@ -209,8 +214,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-04-29T12:29:03.553Z
-Stopped at: Completed 17.1-01-PLAN.md
+Last session: 2026-04-29T12:47:38.324Z
+Stopped at: Completed 17.1-05-PLAN.md
 Resume file: None
 
 **Planned Phase:** 11 (Run-view tabs: Writers' Room, Timeline, Boardroom, Canvas) — 5 plans — 2026-04-22T12:38:11.467Z
