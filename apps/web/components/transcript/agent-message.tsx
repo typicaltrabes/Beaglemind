@@ -2,6 +2,7 @@
 
 import type { HubEventEnvelope } from '@beagle-console/shared';
 import { AgentAvatar } from './agent-avatar';
+import { UserMessageAttachments } from './user-message-attachments';
 import { getAgentConfig } from '@/lib/agent-config';
 
 function formatRelativeTime(isoString: string): string {
@@ -46,7 +47,11 @@ function chipBgClass(bgColor: string): string {
 
 export function AgentMessage({ event }: AgentMessageProps) {
   const config = getAgentConfig(event.agentId);
-  const content = event.content as { text?: string };
+  // Phase 17.1-06 (DEFECT-17-B): widen the content cast so user-authored
+  // events with attachments can render chips below the text. Pre-17.1-06
+  // user events have no `attachmentIds` field — the conditional below
+  // suppresses the chip surface entirely so older runs render unchanged.
+  const content = event.content as { text?: string; attachmentIds?: string[] };
 
   return (
     <div className="flex gap-3 px-4 py-2">
@@ -71,6 +76,16 @@ export function AgentMessage({ event }: AgentMessageProps) {
         <p className="mt-1 text-sm text-foreground whitespace-pre-wrap">
           {content.text ?? JSON.stringify(event.content)}
         </p>
+        {/* Phase 17.1-06 (DEFECT-17-B): user-authored events with
+            attachmentIds render WhatsApp-style chips beneath the text —
+            never the extracted PDF/MD content dump. Suppressed for agent
+            messages and for legacy user events without attachmentIds, so
+            no visual regression on existing transcripts. */}
+        {event.agentId === 'user' &&
+          content.attachmentIds &&
+          content.attachmentIds.length > 0 && (
+            <UserMessageAttachments attachmentIds={content.attachmentIds} />
+          )}
       </div>
     </div>
   );
