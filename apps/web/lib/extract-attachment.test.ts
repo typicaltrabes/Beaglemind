@@ -10,12 +10,16 @@ import {
 
 // SDK mock — must be hoisted via vi.mock so the mock applies before
 // extract-attachment.ts evaluates its `import Anthropic from ...` statement.
+// Use a real class so `new Anthropic({...})` works at the call site;
+// vi.fn().mockImplementation() returns a non-constructable mock under
+// vitest 4's defaults, which trips a "is not a constructor" TypeError.
 const messagesCreateMock = vi.fn();
-vi.mock('@anthropic-ai/sdk', () => ({
-  default: vi.fn().mockImplementation(() => ({
-    messages: { create: messagesCreateMock },
-  })),
-}));
+vi.mock('@anthropic-ai/sdk', () => {
+  class FakeAnthropic {
+    messages = { create: messagesCreateMock };
+  }
+  return { default: FakeAnthropic };
+});
 
 const fixturesDir = path.join(__dirname, '__fixtures__');
 const readFixture = (name: string) =>
