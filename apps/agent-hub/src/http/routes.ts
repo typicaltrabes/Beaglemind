@@ -6,6 +6,7 @@ import type { EventStore } from '../events/event-store';
 import type { OpenClawOutbound } from '@beagle-console/shared';
 import { createChildLogger } from '../logger';
 import { sendToAgent, type OpenClawBridgeConfig } from '../connections/openclaw-cli-bridge';
+import { sendToAgentWithVision } from '../connections/anthropic-vision-bridge';
 import { db, createTenantSchema } from '@beagle-console/db';
 import { eq } from 'drizzle-orm';
 
@@ -322,14 +323,35 @@ export async function runRoundTable(
 
     log.info({ runId, agentId, transcriptLength: fullPrompt.length }, 'Sending to agent with full transcript');
 
-    // Vision pass-through: image bytes flow through a separate path
-    // (direct Anthropic call) implemented as a follow-up. The CLI bridge
-    // is text-only — see openclaw-cli-bridge.ts. The textual description
-    // from Plan 17.1-01 is already in fullPrompt, so non-vision agents
-    // and the text-only path remain functional.
+    // Vision dispatch (Phase 17.1-09): when the user attached images AND this
+    // agent is vision-capable, bypass the text-only OpenClaw CLI bridge and
+    // call Anthropic Messages API directly with the image as a content block.
+    // SOUL.md is loaded as the system prompt so persona/voice carry through.
+    // Falls back to the CLI bridge if the vision path fails (no API key,
+    // persona unloadable, Anthropic error) so a vision-bridge outage never
+    // produces total silence.
+    const useVision =
+      imageAttachments && imageAttachments.length > 0 && VISION_CAPABLE.has(agentId);
+
     let agentFailureReason: string | null = null;
     try {
-      const result = await sendToAgent(bridgeCfg, fullPrompt);
+      let result: Awaited<ReturnType<typeof sendToAgent>> = null;
+      if (useVision) {
+        result = await sendToAgentWithVision(
+          { agentId, runId },
+          fullPrompt,
+          imageAttachments!,
+        );
+        if (!result) {
+          log.warn(
+            { runId, agentId },
+            'Vision bridge returned null — falling back to text-only CLI bridge',
+          );
+        }
+      }
+      if (!result) {
+        result = await sendToAgent(bridgeCfg, fullPrompt);
+      }
       if (result && result.text) {
         await router.persistAndPublish(tenantId, {
           type: 'agent_message',

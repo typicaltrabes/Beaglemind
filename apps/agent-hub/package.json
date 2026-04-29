@@ -8,6 +8,7 @@
     "build": "tsc"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.91.1",
     "@beagle-console/db": "workspace:*",
     "@beagle-console/shared": "workspace:*",
     "drizzle-orm": "0.45.2",
