@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 17.1-06-PLAN.md
-last_updated: "2026-04-29T13:09:09.508Z"
+stopped_at: Completed 17.1-03-PLAN.md
+last_updated: "2026-04-29T13:22:16.503Z"
 last_activity: 2026-04-29
 progress:
   total_phases: 17
   completed_phases: 10
   total_plans: 68
-  completed_plans: 50
-  percent: 74
+  completed_plans: 51
+  percent: 75
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 17.1 (vision-pass-through-all-agents-see-image-content) — EXECUTING
-Plan: 5 of 7
+Plan: 6 of 7
 Status: Ready to execute
 Last activity: 2026-04-29
 
@@ -95,6 +95,7 @@ Progress: [█████████░] 95%
 | Phase 17.1 P05 | 5min | 4 tasks | 5 files |
 | Phase 17.1 P02 | 2min | 2 tasks | 3 files |
 | Phase 17.1 P06 | 12min | 5 tasks | 12 files |
+| Phase 17.1 P03 | 7min | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -202,6 +203,9 @@ Recent decisions affecting current work:
 - [Phase 17.1]: [Phase 17.1-06]: GET /api/artifacts/[id] returns { id, filename, mimeType, sizeBytes } only — extractedText/description deliberately excluded so canonical PDF text stays server-side (agent-prompt-only)
 - [Phase 17.1]: [Phase 17.1-06]: Per-file vitest environment via // @vitest-environment happy-dom annotation; project default stays 'node' so pdf-parse Node-worker code paths don't regress. Closes 13-02 testing-infra TODO.
 - [Phase 17.1]: [Phase 17.1-06]: UserMessageAttachments synthesizes a fake event-shaped content object to reuse ArtifactCard rather than refactor the card to accept a metadata prop — single source of truth for preview/download chrome, scoped cast (as unknown as HubEventEnvelope) bounded to one call site
+- [Phase 17.1]: [Phase 17.1-03]: OpenClaw agent CLI verified to have NO image flag (outcome D, register.agent-DA0Frq4g.js source-of-truth grep). Plan ships entire vision-pass-through pipeline anyway (visionCapable + MinIO fetch + hub Zod + VISION_CAPABLE gate); bridge log-and-skips bytes. UAT-17-1-02 deferred until OpenClaw ships a flag.
+- [Phase 17.1]: [Phase 17.1-03]: VISION_CAPABLE Set + HubImageAttachment Zod hardcoded inline in apps/agent-hub/src/http/routes.ts (PATTERNS Options A+B) — single consumer, cross-package import deferred to @beagle-console/shared until a third reader appears.
+- [Phase 17.1]: [Phase 17.1-03]: Belt-and-suspenders 10 MB total-bytes budget (web-side) PLUS hub Zod max(4) per-message — different failure modes (shed-load on huge benign messages vs. malformed-payload defense) so both stay.
 
 ### Pending Todos
 
@@ -224,8 +228,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-04-29T13:08:52.619Z
-Stopped at: Completed 17.1-06-PLAN.md
+Last session: 2026-04-29T13:22:16.497Z
+Stopped at: Completed 17.1-03-PLAN.md
 Resume file: None
 
 **Planned Phase:** 11 (Run-view tabs: Writers' Room, Timeline, Boardroom, Canvas) — 5 plans — 2026-04-22T12:38:11.467Z
