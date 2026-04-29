@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -53,9 +53,6 @@ export function ShareDialog({ runId, open, onOpenChange }: ShareDialogProps) {
   }, [runId]);
 
   const handleOpenChange = (next: boolean) => {
-    if (next && !link && !loading) {
-      generateLink();
-    }
     if (!next) {
       // Reset state when closing
       setLink(null);
@@ -64,6 +61,17 @@ export function ShareDialog({ runId, open, onOpenChange }: ShareDialogProps) {
     }
     onOpenChange(next);
   };
+
+  // Phase 18-02: parent-controlled `open` prop changes don't trigger the
+  // Dialog's own onOpenChange (Radix only fires that on user interaction),
+  // so generating the link on mount-with-open=true requires a useEffect.
+  // Without this the modal opened with title + description only — the entire
+  // share feature looked broken.
+  useEffect(() => {
+    if (open && !link && !loading && !error) {
+      generateLink();
+    }
+  }, [open, link, loading, error, generateLink]);
 
   const handleCopy = async () => {
     if (!link) return;

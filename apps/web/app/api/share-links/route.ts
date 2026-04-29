@@ -47,7 +47,12 @@ export async function POST(request: Request) {
     .returning();
 
   const shareLink = rows[0]!;
-  const url = `${process.env.NEXT_PUBLIC_APP_URL}/replay/${token}`;
+  // Phase 18-02: prefer NEXT_PUBLIC_APP_URL when set, else derive from the
+  // incoming request origin. Previous version returned `undefined/replay/...`
+  // when the env var wasn't set, which it isn't on prod.
+  const origin =
+    process.env.NEXT_PUBLIC_APP_URL ?? new URL(request.url).origin;
+  const url = `${origin}/replay/${token}`;
 
   return Response.json(
     { id: shareLink.id, token: shareLink.token, url, expiresAt: shareLink.expiresAt },
