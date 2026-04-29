@@ -116,15 +116,19 @@ export async function POST(
     // its SequenceCounter and then kicks off the round-table. Propagate failure
     // to the client so it can retry rather than silently losing the message.
     //
-    // V1 simplification per PATTERNS.md: prepend the attachment block to the
-    // user content here in the web app rather than passing structured
-    // attachments to the hub. Keeps `RunStartBody`, `OpenClawOutbound`, and
-    // `openclaw-cli-bridge.ts` schemas unchanged — the hub just sees a longer
-    // prompt string. Image base64 pass-through is explicitly deferred.
+    // Phase 17.1-06 (DEFECT-17-B): split user-visible content from agent-
+    // visible prompt. The hub persists the user event with `prompt` (clean
+    // user text) plus `attachmentIds` for chip rendering in the transcript;
+    // the OpenClaw round-table receives `agentPrompt` (with the attachment
+    // block + extracted text). When there are no attachments, agentPrompt
+    // and prompt are identical and attachmentIds is omitted — preserves the
+    // pre-17.1-06 contract for text-only messages.
     await hubClient.startRun({
       runId,
       tenantId,
-      prompt: attachmentBlock + content,
+      prompt: content,
+      agentPrompt: attachmentBlock + content,
+      attachmentIds: attachmentIds.length > 0 ? attachmentIds : undefined,
     });
 
     return NextResponse.json({ ok: true });

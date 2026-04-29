@@ -17,7 +17,22 @@ export const hubClient = {
   send: (data: { agentId: string; content: string; runId: string; tenantId: string }) =>
     hubPost<{ ok: true }>('/send', data),
 
-  startRun: (data: { runId: string; tenantId: string; prompt: string; targetAgent?: string }) =>
+  startRun: (data: {
+    runId: string;
+    tenantId: string;
+    prompt: string;
+    // Phase 17.1-06 (DEFECT-17-B): when set, the hub sends `agentPrompt` to
+    // OpenClaw (round-table input with attachment block + extracted text)
+    // while persisting the user event with the clean `prompt`. Optional —
+    // omitted callers see no behavior change.
+    agentPrompt?: string;
+    // Phase 17.1-06: artifact UUIDs included with the user message so the
+    // persisted event carries `content.attachmentIds` for chip rendering in
+    // the transcript. Capped at 4 hub-side; same cap upstream in the messages
+    // route. Empty array or omitted → no chips, existing event shape.
+    attachmentIds?: string[];
+    targetAgent?: string;
+  }) =>
     hubPost<{ ok: true; runId: string }>('/runs/start', data),
 
   stopRun: (data: { runId: string; tenantId: string }) =>
