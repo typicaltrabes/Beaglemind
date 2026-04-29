@@ -162,10 +162,24 @@ describe('runRoundTable — Phase 17.1-07 history load + agent-failure surfacing
     const router = buildRouterMock();
     const eventStore = { list: vi.fn(async () => []) } as any;
 
-    // First call throws (mo), subsequent calls return null (jarvis, herman)
+    // mo throws; jarvis + herman succeed (so only mo produces a failure
+    // marker — the rest produce real agent_message events).
     mockedSendToAgent
       .mockRejectedValueOnce(new Error('SSH timeout'))
-      .mockResolvedValue(null);
+      .mockResolvedValueOnce({
+        text: 'Jarvis ok',
+        runId: RUN_ID,
+        durationMs: 100,
+        costUsd: 0,
+        model: 'test',
+      })
+      .mockResolvedValueOnce({
+        text: 'Herman ok',
+        runId: RUN_ID,
+        durationMs: 100,
+        costUsd: 0,
+        model: 'test',
+      });
 
     await runRoundTable(
       RUN_ID,
@@ -180,7 +194,7 @@ describe('runRoundTable — Phase 17.1-07 history load + agent-failure surfacing
     // didn't abort the loop.
     expect(mockedSendToAgent).toHaveBeenCalledTimes(3);
 
-    // An agent_failure marker event was published for the failing agent.
+    // Exactly one agent_failure marker event was published — for mo only.
     const failureEvents = router.recorded.filter(
       (e) => (e.metadata as any)?.errorKind === 'agent_failure',
     );
@@ -192,6 +206,53 @@ describe('runRoundTable — Phase 17.1-07 history load + agent-failure surfacing
     expect((failure.content as any).text).toContain('failed to respond');
     expect((failure.content as any).text).toContain('Mo'); // displayName, not agentId
     expect((failure.metadata as any).errorMessage).toBe('SSH timeout');
+  });
+
+  it('when sendToAgent returns null for an agent, an agent_failure marker event is published (Phase 17.1-08 gap-fix)', async () => {
+    // sendToAgent returns null on CLI bridge errors (non-zero exit, parse
+    // failure, non-ok status). Before 17.1-08 this produced silent dropouts
+    // — only the throw path emitted a failure-bubble. Now both paths do.
+    const router = buildRouterMock();
+    const eventStore = { list: vi.fn(async () => []) } as any;
+
+    // mo returns null (CLI bridge non-zero exit); jarvis + herman succeed.
+    mockedSendToAgent
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({
+        text: 'Jarvis ok',
+        runId: RUN_ID,
+        durationMs: 100,
+        costUsd: 0,
+        model: 'test',
+      })
+      .mockResolvedValueOnce({
+        text: 'Herman ok',
+        runId: RUN_ID,
+        durationMs: 100,
+        costUsd: 0,
+        model: 'test',
+      });
+
+    await runRoundTable(
+      RUN_ID,
+      TENANT_ID,
+      'A question whose first agent fails silently',
+      { persistAndPublish: router.persistAndPublish } as any,
+      eventStore,
+      1,
+    );
+
+    expect(mockedSendToAgent).toHaveBeenCalledTimes(3);
+
+    const failureEvents = router.recorded.filter(
+      (e) => (e.metadata as any)?.errorKind === 'agent_failure',
+    );
+    expect(failureEvents).toHaveLength(1);
+    const failure = failureEvents[0]!;
+    expect(failure.agentId).toBe('mo');
+    expect((failure.content as any).text).toContain('failed to respond');
+    // The errorMessage distinguishes the failure mode (cli-bridge-null vs throw).
+    expect((failure.metadata as any).errorMessage).toBe('cli-bridge-null');
   });
 
   it('when eventStore.list throws, the round-table proceeds with empty history (graceful degradation per T-17-1-07-04)', async () => {
