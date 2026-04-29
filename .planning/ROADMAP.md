@@ -329,3 +329,38 @@ Plans:
 - [x] 17.1-06-PLAN.md — DEFECT-17-B (UAT-17-1-05 + UAT-17-03 transcript half): hub RunStartBody gains agentPrompt + attachmentIds; user events persist `{ text, attachmentIds }` shape; transcript renders chips via reused ArtifactCard for documents and inline thumbnail for images; new useArtifactMetadata hook
 - [x] 17.1-07-PLAN.md — DEFECT-17-C (UAT-17-1-06): EventStore.list method; runRoundTable loads prior conversation history (capped at 30 events / 80K chars), injects --- PRIOR CONVERSATION --- block; agent_message error events on sendToAgent failure
 - [ ] 17.1-04-PLAN.md — Deploy + UAT: pre-flight (typecheck + vitest + push), [HUMAN] ANTHROPIC_API_KEY injection into prod .env + compose, [BLOCKING] migrate-17-1.ts run BEFORE container rebuild, force-recreate console-web AND console-agent-hub, smoke check via DB query + log grep, [HUMAN UAT] verify UAT-17-1-01..06 + re-test UAT-17-01 + UAT-17-03 with fresh run + image + .md + completed-run follow-up (`autonomous: false`)
+
+
+
+### Phase 18: UX First-Class Pass (INSERTED 2026-04-29)
+
+**Goal:** Elevate console.beaglemind.ai from internal-tool feel to customer-facing first-class UX. Driven by 2026-04-29 Playwright walkthrough that surfaced 30+ findings across landing, dashboard, run page, run history, settings, share replay, and mobile. Phase split into 7 self-contained plans ordered impact-first so partial completion still ships value at every plan boundary. Two CRITICAL bugs (broken image previews via internal MinIO URL, unfinished Share Replay modal) lead the queue.
+**Requirements**: UX-18-01..07
+**Depends on:** Phase 17.1
+**Plans:** 5/7 plans landed; 18-05 partial; 18-06 deferred
+
+Plans:
+- [x] 18-01-PLAN.md — MinIO public URL: stream artifacts through web app instead of presign-redirect (commit 487387a, deployed 2026-04-29)
+- [x] 18-02-PLAN.md — Share Replay: useEffect mount-trigger + X-Forwarded-Host origin (commits 9174b7f + d96bfd6, deployed)
+- [x] 18-03-PLAN.md — Project dashboard parity with /runs: ?projectId= filter on history routes; shared KPI/table/search components; H10 capitalize agent IDs; M6 composer placeholder (commit f01c4b5, deployed)
+- [x] 18-04-PLAN.md — Trust-signal cluster: Sam hidden via OPERATOR_ROSTER gate (H2); run-header tooltips per metadata item (H4); agentsCount excludes system; failure-bubble italic+xs+muted with FAILURE tag (M3) (commit bd05ccc, deployed). H1 presence semantics deferred.
+- [~] 18-05-PLAN.md — Run-page polish: H5 timeline tooltip humanization + H8 cancelled-cost annotation (commit c2d878d, deployed). H6 Boardroom column hygiene + M2 state_transition divider DEFERRED — structural change.
+- [ ] 18-06-PLAN.md — Composer + per-message interactions DEFERRED (M4+M7). M6 placeholder shipped via 18-03.
+- [x] 18-07-PLAN.md — Mobile + relative-time polish: M12 break-words+overflow-wrap; M11 metadata-row flex-wrap; M1 already in shared table (commit bce5ed1, deployed)
+
+**Success Criteria**:
+1. Image attachments render thumbnails for all users; PDF View opens; no Mixed Content errors
+2. Share Replay modal generates + displays + revokes a working share URL; /shared-links lists active links
+3. Customer-facing surfaces (landing, run page, mobile) read as first-class — no stale "offline" presence, no admin-link exposure, no jargon-dense run header, no broken image chips, no internal event-type strings in tooltips
+
+**Deferred to future phases (see 18-DEFERRED.md):**
+- Settings expansion (D-01)
+- Theme cleanup decision (D-02)
+- Executive Summary export (D-03) — Lucas's external-feedback memo flagged as headline differentiation
+- Empty-state CTAs + cancelled-run cleanup (D-04)
+- Favorites / pin runs (D-05)
+- Keyboard shortcuts + scroll affordances (D-06)
+- Fork/Branch implementation or removal (D-07)
+- Agent role tooltips (D-08)
+- Light theme proper QA pass (D-09)
+- Settings org + member management (D-10)
