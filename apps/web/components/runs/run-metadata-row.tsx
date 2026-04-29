@@ -144,7 +144,10 @@ export function RunMetadataRow({
   return (
     <TooltipProvider>
       <div className="flex min-w-0 items-center gap-3 px-4 py-2">
-        <div className="flex min-w-0 flex-1 items-center gap-2 text-[11px] tabular-nums text-muted-foreground">
+        {/* Phase 18-07 (M11): metadata items wrap on narrow viewports
+            instead of overflowing horizontally. flex-wrap handles tablet,
+            tabular-nums keeps numbers aligned. */}
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1 text-[11px] tabular-nums text-muted-foreground">
           <Badge
             className={cn(
               'px-2 py-0.5 text-[11px]',

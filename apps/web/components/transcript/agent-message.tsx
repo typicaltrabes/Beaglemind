@@ -87,9 +87,11 @@ export function AgentMessage({ event }: AgentMessageProps) {
         </div>
         <p
           className={
+            // Phase 18-07 (M12): break-words + overflow-wrap-anywhere so long
+            // URLs / no-space content don't overflow the bubble on mobile.
             isFailure
-              ? 'mt-1 text-xs italic text-muted-foreground/70 whitespace-pre-wrap'
-              : 'mt-1 text-sm text-foreground whitespace-pre-wrap'
+              ? 'mt-1 text-xs italic text-muted-foreground/70 whitespace-pre-wrap break-words [overflow-wrap:anywhere]'
+              : 'mt-1 text-sm text-foreground whitespace-pre-wrap break-words [overflow-wrap:anywhere]'
           }
         >
           {content.text ?? JSON.stringify(event.content)}
