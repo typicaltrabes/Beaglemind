@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 17.1-05-PLAN.md
-last_updated: "2026-04-29T12:47:38.330Z"
+stopped_at: Completed 17.1-02-PLAN.md
+last_updated: "2026-04-29T12:53:45.020Z"
 last_activity: 2026-04-29
 progress:
   total_phases: 17
   completed_phases: 10
   total_plans: 68
-  completed_plans: 48
-  percent: 71
+  completed_plans: 49
+  percent: 72
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 17.1 (vision-pass-through-all-agents-see-image-content) — EXECUTING
-Plan: 3 of 7
+Plan: 4 of 7
 Status: Ready to execute
 Last activity: 2026-04-29
 
@@ -93,6 +93,7 @@ Progress: [█████████░] 95%
 | Phase 17-attachments P03 | 4min | 1 tasks | 4 files |
 | Phase 17.1 P01 | 5min | 2 tasks | 7 files |
 | Phase 17.1 P05 | 5min | 4 tasks | 5 files |
+| Phase 17.1 P02 | 2min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -192,6 +193,9 @@ Recent decisions affecting current work:
 - [Phase 17.1]: [Phase 17.1-05]: resolveMime falls back to filename extension only for UNRELIABLE_BROWSER_MIMES = {'', 'application/octet-stream'} — narrower than 'always fall back' (preserves Phase 17 trust model for normal uploads)
 - [Phase 17.1]: [Phase 17.1-05]: persist resolvedMime to artifacts.mime_type AND pass it to extractAttachment + extractImageDescription + MinIO ContentType — not just the validation gate; downstream branches key on the canonical mime so empty file.type would mis-route
 - [Phase 17.1]: [Phase 17.1-05]: API-route vitest test fixtures need real RFC 4122 v4 UUIDs for run-id path — Zod v4 .uuid() format is strict on version + variant nibbles; placeholder '00000000-...-001' fails the format check and masks downstream test failures
+- [Phase 17.1]: [Phase 17.1-02]: Image branch is FIRST in buildAttachmentBlock body-precedence chain — description always wins for image mimes even if extractedText is defensively non-null
+- [Phase 17.1]: [Phase 17.1-02]: ArtifactRow.description is required-but-nullable (not optional) — every Drizzle SELECT consumer must explicitly project the column, no silent undefined fallthrough
+- [Phase 17.1]: [Phase 17.1-02]: V1 placeholder removed from production code; defensive not.toContain guards retained in test cases to catch silent regression
 
 ### Pending Todos
 
@@ -214,8 +218,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-04-29T12:47:38.324Z
-Stopped at: Completed 17.1-05-PLAN.md
+Last session: 2026-04-29T12:53:36.135Z
+Stopped at: Completed 17.1-02-PLAN.md
 Resume file: None
 
 **Planned Phase:** 11 (Run-view tabs: Writers' Room, Timeline, Boardroom, Canvas) — 5 plans — 2026-04-22T12:38:11.467Z
