@@ -12,6 +12,8 @@ export interface RunHistorySummary {
 interface SummaryParams {
   /** Optional agent filter — same predicate as /api/runs/history accepts. */
   agent?: string;
+  /** Phase 18-03: optional project scope. */
+  projectId?: string;
 }
 
 /**
@@ -27,6 +29,7 @@ export function useRunHistorySummary(params: SummaryParams = {}) {
     queryFn: async () => {
       const sp = new URLSearchParams();
       if (params.agent) sp.set('agent', params.agent);
+      if (params.projectId) sp.set('projectId', params.projectId);
       const qs = sp.toString();
       const url = `/api/runs/history/summary${qs ? `?${qs}` : ''}`;
       const res = await fetch(url);

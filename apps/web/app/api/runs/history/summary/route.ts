@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireTenantContext, getTenantDb } from '@/lib/get-tenant';
-import { sql, and, type SQL } from 'drizzle-orm';
+import { sql, eq, and, type SQL } from 'drizzle-orm';
 
 export const runtime = 'nodejs';
 
@@ -34,9 +34,19 @@ export async function GET(request: Request) {
     const agentFilter =
       agentParam && AGENT_REGEX.test(agentParam) ? agentParam.toLowerCase() : null;
 
+    // Phase 18-03: project filter; UUID-shaped only.
+    const projectParam = url.searchParams.get('projectId');
+    const projectFilter =
+      projectParam && /^[0-9a-f-]{36}$/i.test(projectParam)
+        ? projectParam
+        : null;
+
     // Optional agent EXISTS filter — same pattern as
     // apps/web/app/api/runs/history/route.ts (Plan 16-02 addition).
     const conditions: SQL[] = [];
+    if (projectFilter) {
+      conditions.push(eq(schema.runs.projectId, projectFilter));
+    }
     if (agentFilter) {
       conditions.push(
         sql`EXISTS (

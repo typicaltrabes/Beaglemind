@@ -92,7 +92,7 @@ export default function RunHistoryPage() {
           {agentParam && (
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-3 py-1 text-xs text-amber-400">
-                Agent: {agentParam}
+                Agent: {agentParam.charAt(0).toUpperCase() + agentParam.slice(1)}
                 <button
                   type="button"
                   onClick={() => router.push('/runs')}

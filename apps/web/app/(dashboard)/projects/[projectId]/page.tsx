@@ -1,26 +1,29 @@
 'use client';
 
-import { use, useEffect, useState } from 'react';
+import { use, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useProjects, useRuns } from '@/lib/hooks/use-projects';
+import { useProjects } from '@/lib/hooks/use-projects';
+import { useRunHistory } from '@/lib/hooks/use-run-history';
 import { useStartRun } from '@/lib/hooks/use-run-actions';
 import { useUIStore } from '@/lib/stores/ui-store';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { PlayIcon, ClockIcon } from 'lucide-react';
-import Link from 'next/link';
+import { PlayIcon } from 'lucide-react';
+import { RunHistoryTable } from '@/components/runs/run-history-table';
+import { RunHistorySummary } from '@/components/runs/run-history-summary';
 
-const STATUS_STYLES: Record<string, string> = {
-  pending: 'bg-gray-600/20 text-gray-400',
-  planned: 'bg-yellow-600/20 text-yellow-400',
-  approved: 'bg-blue-600/20 text-blue-400',
-  executing: 'bg-green-600/20 text-green-400 animate-pulse',
-  completed: 'bg-green-600/20 text-green-400',
-  cancelled: 'bg-red-600/20 text-red-400',
-};
+const STATUSES = [
+  'pending',
+  'planned',
+  'approved',
+  'executing',
+  'completed',
+  'cancelled',
+] as const;
+
+const PAGE_SIZE = 50;
 
 export default function ProjectPage({
   params,
@@ -32,12 +35,62 @@ export default function ProjectPage({
   const [prompt, setPrompt] = useState('');
 
   const { data: projects } = useProjects();
-  const { data: runs, isLoading: runsLoading } = useRuns(projectId);
   const startRun = useStartRun();
 
   const project = projects?.find(
     (p: { id: string }) => p.id === projectId
   );
+
+  // Phase 18-03: project dashboard now mirrors /runs experience —
+  // KPI strip + search + status chips + table, scoped to this project.
+  const [searchInput, setSearchInput] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [selectedStatuses, setSelectedStatuses] = useState<Set<string>>(
+    new Set()
+  );
+  const [offset, setOffset] = useState(0);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchInput);
+      setOffset(0);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  const statusFilter = useMemo(() => {
+    if (selectedStatuses.size === 0) return undefined;
+    return Array.from(selectedStatuses).join(',');
+  }, [selectedStatuses]);
+
+  const { data, isLoading: runsLoading } = useRunHistory({
+    projectId,
+    status: statusFilter,
+    search: debouncedSearch || undefined,
+    limit: PAGE_SIZE,
+    offset,
+  });
+
+  const runs = data?.runs ?? [];
+  const total = data?.total ?? 0;
+
+  function toggleStatus(status: string) {
+    setSelectedStatuses((prev) => {
+      const next = new Set(prev);
+      if (next.has(status)) {
+        next.delete(status);
+      } else {
+        next.add(status);
+      }
+      return next;
+    });
+    setOffset(0);
+  }
+
+  function clearFilters() {
+    setSelectedStatuses(new Set());
+    setOffset(0);
+  }
 
   useEffect(() => {
     useUIStore.getState().setActiveProject(projectId);
@@ -63,9 +116,9 @@ export default function ProjectPage({
   }
 
   return (
-    <div className="mx-auto max-w-3xl p-6">
+    <div className="flex flex-col gap-6 p-6">
       {/* Project header */}
-      <div className="mb-6">
+      <div>
         <h1 className="text-2xl font-bold text-white">
           {project?.name ?? 'Project'}
         </h1>
@@ -74,15 +127,15 @@ export default function ProjectPage({
         )}
       </div>
 
-      {/* New Sprint section */}
-      <Card className="mb-8 border-white/10 bg-white/5 p-4">
+      {/* New Sprint composer */}
+      <Card className="border-white/10 bg-white/5 p-4">
         <h2 className="mb-3 text-sm font-medium text-gray-300">
           New Research Sprint
         </h2>
         <Textarea
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
-          placeholder="Describe what you want Mo to research..."
+          placeholder="Ask the team a question…"
           rows={3}
           className="mb-3 border-white/10 bg-white/5 text-white placeholder:text-gray-500"
         />
@@ -95,60 +148,63 @@ export default function ProjectPage({
         </Button>
       </Card>
 
-      {/* Run list */}
-      <div>
-        <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-gray-400">
-          Runs
-        </h2>
+      {/* KPI strip — project-scoped (Phase 18-03) */}
+      <RunHistorySummary
+        projectId={projectId}
+        scopeLabel={project?.name ?? undefined}
+      />
 
-        {runsLoading && (
-          <div className="flex flex-col gap-3">
-            <Skeleton className="h-20 w-full" />
-            <Skeleton className="h-20 w-full" />
-          </div>
+      {/* Search */}
+      <Input
+        placeholder="Search runs in this project by prompt…"
+        value={searchInput}
+        onChange={(e) => setSearchInput(e.target.value)}
+        className="max-w-md"
+      />
+
+      {/* Status filters */}
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          onClick={clearFilters}
+          className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+            selectedStatuses.size === 0
+              ? 'bg-white/10 text-foreground'
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          All
+        </button>
+        {STATUSES.map((status) => (
+          <button
+            key={status}
+            onClick={() => toggleStatus(status)}
+            className={`rounded-md px-3 py-1.5 text-xs font-medium capitalize transition-colors ${
+              selectedStatuses.has(status)
+                ? 'bg-white/10 text-foreground'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            {status}
+          </button>
+        ))}
+      </div>
+
+      {/* Run table */}
+      <RunHistoryTable runs={runs} isLoading={runsLoading} />
+
+      {/* Pagination */}
+      <div className="flex items-center justify-between text-sm text-muted-foreground">
+        <span>
+          Showing {Math.min(offset + runs.length, total)} of {total} runs
+        </span>
+        {offset + runs.length < total && (
+          <button
+            onClick={() => setOffset((prev) => prev + PAGE_SIZE)}
+            className="rounded-md border border-white/10 px-4 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-white/5"
+          >
+            Load more
+          </button>
         )}
-
-        {!runsLoading && (!runs || runs.length === 0) && (
-          <p className="py-8 text-center text-sm text-gray-500">
-            No runs yet. Start a sprint above.
-          </p>
-        )}
-
-        <div className="flex flex-col gap-3">
-          {runs?.map(
-            (run: {
-              id: string;
-              status: string;
-              prompt: string;
-              createdAt: string;
-            }) => (
-              <Link
-                key={run.id}
-                href={`/projects/${projectId}/runs/${run.id}`}
-                className="block"
-              >
-                <Card className="border-white/10 bg-white/5 p-4 transition-colors hover:border-white/20">
-                  <div className="mb-2 flex items-center gap-2">
-                    <Badge
-                      className={
-                        STATUS_STYLES[run.status] ?? STATUS_STYLES.pending
-                      }
-                    >
-                      {run.status}
-                    </Badge>
-                    <span className="flex items-center gap-1 text-xs text-gray-500">
-                      <ClockIcon className="size-3" />
-                      {new Date(run.createdAt).toLocaleString()}
-                    </span>
-                  </div>
-                  <p className="line-clamp-2 text-sm text-gray-300">
-                    {run.prompt}
-                  </p>
-                </Card>
-              </Link>
-            )
-          )}
-        </div>
       </div>
     </div>
   );

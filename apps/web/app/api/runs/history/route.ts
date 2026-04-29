@@ -49,9 +49,21 @@ export async function GET(request: Request) {
         ? agentParam.toLowerCase()
         : null;
 
+    // Phase 18-03: project filter. UUID-shaped project ids only; anything
+    // else is dropped silently to prevent ad-hoc SQL fragments from leaking.
+    const projectParam = url.searchParams.get('projectId');
+    const projectFilter =
+      projectParam && /^[0-9a-f-]{36}$/i.test(projectParam)
+        ? projectParam
+        : null;
+
     // Build WHERE conditions. Conditions can be eq(...), inArray(...),
     // or(...), or sql`...` fragments; all return Drizzle's SQL type.
     const conditions: SQL[] = [];
+
+    if (projectFilter) {
+      conditions.push(eq(schema.runs.projectId, projectFilter));
+    }
 
     // Status filter (validated against whitelist per T-07-05)
     if (statusParam) {

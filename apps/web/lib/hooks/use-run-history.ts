@@ -27,6 +27,8 @@ interface RunHistoryParams {
   search?: string;
   /** Phase 16-02: filter to runs that involved this agent. */
   agent?: string;
+  /** Phase 18-03: filter to runs in this project. */
+  projectId?: string;
   limit?: number;
   offset?: number;
 }
@@ -39,6 +41,7 @@ export function useRunHistory(params: RunHistoryParams = {}) {
       if (params.status) searchParams.set('status', params.status);
       if (params.search) searchParams.set('search', params.search);
       if (params.agent) searchParams.set('agent', params.agent);
+      if (params.projectId) searchParams.set('projectId', params.projectId);
       if (params.limit) searchParams.set('limit', String(params.limit));
       if (params.offset) searchParams.set('offset', String(params.offset));
 
