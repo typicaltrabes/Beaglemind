@@ -61,7 +61,10 @@ export function countDistinctAgents(
     const ev = events[seq];
     if (!ev || !ev.agentId) continue;
     const id = ev.agentId.toLowerCase();
-    if (id === 'user') continue;
+    // Phase 18-04 (H4): exclude `user` and `system` from "N agents" count.
+    // system events (state_transitions) inflated the number for users; the
+    // run header now reflects actual conversational agents only.
+    if (id === 'user' || id === 'system') continue;
     seen.add(id);
   }
   return seen.size;
