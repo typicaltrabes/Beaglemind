@@ -12,6 +12,7 @@ import {
   uploadAttachment,
   AttachmentUploadError,
 } from '@/lib/attachment-upload';
+import { resolveMime } from '@/lib/mime-from-extension';
 import { useRunStore } from '@/lib/stores/run-store';
 import { usePreferencesStore } from '@/lib/stores/preferences-store';
 import { useMode } from '@/lib/mode-context';
@@ -33,20 +34,20 @@ const MENTIONABLE_AGENTS = Object.entries(AGENT_CONFIG).filter(
 type PendingAttachment = {
   localId: string;
   file: File;
+  // Phase 17.1-05: canonical mime resolved at intake (resolveMime falls back
+  // to the filename extension when file.type is empty / octet-stream so
+  // Windows .md uploads stop being rejected). Stored here so downstream
+  // consumers don't need to re-derive it.
+  mimeType: string;
   status: AttachmentStatus;
   artifactId?: string;
   error?: string;
 };
 
-const ALLOWED_MIME = new Set([
-  'application/pdf',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'image/png',
-  'image/jpeg',
-  'image/webp',
-  'text/plain',
-  'text/markdown',
-]);
+// Phase 17.1-05: ALLOWED_MIMES is now sourced from `@/lib/mime-from-extension`
+// (single source of truth shared with the upload route). The local Set was
+// removed; gate at intake uses `resolveMime(file)` which returns null for
+// disallowed types AND for unknown extensions when file.type is unreliable.
 const MAX_SIZE_BYTES = 20 * 1024 * 1024;
 const MAX_FILES_PER_MESSAGE = 4;
 const ACCEPT_ATTR =
@@ -180,7 +181,13 @@ export function Composer({ runId }: ComposerProps) {
 
       const accepted: PendingAttachment[] = [];
       for (const file of incoming.slice(0, remaining)) {
-        if (!ALLOWED_MIME.has(file.type)) {
+        // Phase 17.1-05: gate via resolveMime — returns the canonical mime
+        // when allowed (preferring browser file.type, falling back to
+        // filename extension for empty / octet-stream cases) or null when
+        // disallowed. Persist the resolved value on PendingAttachment so the
+        // chip + send path don't have to re-derive it.
+        const resolvedMime = resolveMime(file);
+        if (!resolvedMime) {
           flashValidationError(`Unsupported file type: ${file.name}`);
           continue;
         }
@@ -189,7 +196,12 @@ export function Composer({ runId }: ComposerProps) {
           continue;
         }
         const localId = crypto.randomUUID();
-        accepted.push({ localId, file, status: 'uploading' });
+        accepted.push({
+          localId,
+          file,
+          mimeType: resolvedMime,
+          status: 'uploading',
+        });
 
         // Fire-and-forget upload; resolve into state via setAttachments below.
         // Each file uploads in parallel — a slow PDF doesn't gate a fast PNG.
