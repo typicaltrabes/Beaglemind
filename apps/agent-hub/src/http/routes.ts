@@ -30,6 +30,20 @@ const RunStartBody = z.object({
   runId: z.string().uuid(),
   tenantId: z.string().uuid(),
   prompt: z.string(),
+  // Phase 17.1-06 (DEFECT-17-B): split user-visible content from agent-visible
+  // input. When `agentPrompt` is provided, the hub uses it for the OpenClaw
+  // round-table input but persists the user event with `prompt` (the user-
+  // visible string — no attachment block, no extracted text dump). When
+  // omitted, the hub falls back to `prompt` for both, preserving backward
+  // compatibility for any caller that still uses the pre-17.1-06 contract.
+  agentPrompt: z.string().optional(),
+  // Phase 17.1-06: artifact UUIDs uploaded with this user message. When
+  // present, the persisted user event carries `content.attachmentIds` so the
+  // transcript renders chips (ArtifactCard for documents, inline thumbnail for
+  // images) instead of dumping extracted text into the bubble. Validated as
+  // UUIDs upstream by the web messages route; capped at 4 to bound prompt
+  // size. Omitted → existing { text } content shape, no chips, no regression.
+  attachmentIds: z.array(z.string().uuid()).max(4).optional(),
   targetAgent: z.string().default('jarvis'),
 });
 
@@ -130,17 +144,27 @@ export async function handleRunStart(
   // Persist the user prompt through the Hub's EventStore so the SequenceCounter
   // allocates a seq that won't collide with subsequent agent events. Awaited so
   // the event is visible in SSE replay before we return to the caller.
+  //
+  // Phase 17.1-06 (DEFECT-17-B): the persisted event content carries the user-
+  // visible text only (`parsed.prompt`) plus optional `attachmentIds` so the
+  // transcript can render chips. The agent-visible string (with attachment
+  // block + extracted text) flows separately into runRoundTable below.
   const userEvent = await router.persistAndPublish(parsed.tenantId, {
     type: 'agent_message',
     agentId: 'user',
     runId: parsed.runId,
     tenantId: parsed.tenantId,
-    content: { text: parsed.prompt },
+    content: parsed.attachmentIds?.length
+      ? { text: parsed.prompt, attachmentIds: parsed.attachmentIds }
+      : { text: parsed.prompt },
     metadata: {},
   });
 
-  // Run the round-table discussion in the background (don't block the HTTP response)
-  runRoundTable(parsed.runId, parsed.tenantId, parsed.prompt, router).catch((err) => {
+  // Run the round-table discussion in the background (don't block the HTTP response).
+  // Prefer `agentPrompt` (web-side prepended attachment block) when provided;
+  // fall back to `prompt` for backward compatibility with pre-17.1-06 callers.
+  const roundTableInput = parsed.agentPrompt ?? parsed.prompt;
+  runRoundTable(parsed.runId, parsed.tenantId, roundTableInput, router).catch((err) => {
     log.error({ error: err.message, runId: parsed.runId }, 'Round-table discussion failed');
   });
 
