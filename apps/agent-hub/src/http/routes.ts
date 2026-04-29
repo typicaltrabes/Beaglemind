@@ -16,6 +16,19 @@ const AGENT_BRIDGE_CONFIG: Record<string, { sshHost: string; sudoUser?: string }
   herman: { sshHost: 'lucas@46.225.56.122', sudoUser: 'herman' },
 };
 
+// Phase 17.1-03: agents whose underlying model accepts image bytes via the
+// OpenClaw CLI bridge. Mirrors the visionCapable flag in
+// apps/web/lib/agent-config.ts. Kept hardcoded here (rather than imported
+// from web) to avoid a cross-app dependency for one boolean — promote to
+// @beagle-console/shared if the list grows or a third consumer appears.
+//
+// NOTE per openclaw-flag-verification.md (outcome D, 2026-04-29): the
+// OpenClaw `agent` CLI does not yet support image input, so the bridge
+// log-and-skips bytes regardless of this gate. The gate stays in place
+// so when OpenClaw ships a vision flag, only the bridge body needs the
+// drop-bytes-vs-forward-bytes flip — Mo/Jarvis are already opted-in.
+const VISION_CAPABLE = new Set(['mo', 'jarvis']);
+
 const log = createChildLogger({ component: 'http-routes' });
 
 // T-03-07: Zod validation on all POST request bodies
@@ -24,6 +37,20 @@ const SendBody = z.object({
   content: z.string(),
   runId: z.string().uuid(),
   tenantId: z.string().uuid(),
+});
+
+// Phase 17.1-03: image bytes forwarded from the web app for vision-capable
+// agents (Mo, Jarvis). The hub gates by VISION_CAPABLE before passing to the
+// CLI bridge — non-vision agents see only the textual description that's
+// already baked into the prompt by Plan 17.1-02.
+//
+// Per PATTERNS Option A: defined inline rather than in
+// packages/shared/src/hub-events.ts to avoid cross-package coordination
+// for one optional field. Move to shared if a third consumer appears.
+const HubImageAttachment = z.object({
+  filename: z.string(),
+  mimeType: z.string(),
+  base64: z.string(),
 });
 
 const RunStartBody = z.object({
@@ -44,6 +71,11 @@ const RunStartBody = z.object({
   // UUIDs upstream by the web messages route; capped at 4 to bound prompt
   // size. Omitted → existing { text } content shape, no chips, no regression.
   attachmentIds: z.array(z.string().uuid()).max(4).optional(),
+  // Phase 17.1-03: image bytes for vision-capable agents only. Capped at 4
+  // (matches per-message attachment cap from Phase 17). Routed through the
+  // VISION_CAPABLE gate in runRoundTable; non-vision agents never see the
+  // bytes — they get the description floor from the prompt block.
+  imageAttachments: z.array(HubImageAttachment).max(4).optional(),
   targetAgent: z.string().default('jarvis'),
 });
 
@@ -163,8 +195,10 @@ export async function handleRunStart(
   // Run the round-table discussion in the background (don't block the HTTP response).
   // Prefer `agentPrompt` (web-side prepended attachment block) when provided;
   // fall back to `prompt` for backward compatibility with pre-17.1-06 callers.
+  // Phase 17.1-03: forward optional imageAttachments — runRoundTable applies
+  // the VISION_CAPABLE gate per-agent before handing bytes to the CLI bridge.
   const roundTableInput = parsed.agentPrompt ?? parsed.prompt;
-  runRoundTable(parsed.runId, parsed.tenantId, roundTableInput, router).catch((err) => {
+  runRoundTable(parsed.runId, parsed.tenantId, roundTableInput, router, parsed.imageAttachments).catch((err) => {
     log.error({ error: err.message, runId: parsed.runId }, 'Round-table discussion failed');
   });
 
@@ -181,6 +215,7 @@ async function runRoundTable(
   tenantId: string,
   userPrompt: string,
   router: MessageRouter,
+  imageAttachments?: Array<{ filename: string; mimeType: string; base64: string }>,
 ) {
   const agents = ['mo', 'jarvis', 'herman']; // Sam excluded — sentinel only
   const transcript: string[] = [];
@@ -212,8 +247,19 @@ async function runRoundTable(
 
     log.info({ runId, agentId, transcriptLength: fullPrompt.length }, 'Sending to agent with full transcript');
 
+    // Phase 17.1-03: only vision-capable agents (Mo, Jarvis) get image bytes.
+    // Non-vision agents see only the textual description in the prompt block
+    // built by Plan 17.1-02 (already baked into fullPrompt via the web app).
+    // Per outcome D in openclaw-flag-verification.md, the bridge currently
+    // logs-and-skips these bytes — the gate is in place for the day OpenClaw
+    // ships a vision flag.
+    const imagesForAgent =
+      imageAttachments && VISION_CAPABLE.has(agentId)
+        ? imageAttachments
+        : undefined;
+
     try {
-      const result = await sendToAgent(bridgeCfg, fullPrompt);
+      const result = await sendToAgent(bridgeCfg, fullPrompt, imagesForAgent);
       if (result && result.text) {
         // Publish agent response as an event (appears in UI immediately)
         await router.persistAndPublish(tenantId, {

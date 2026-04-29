@@ -15,6 +15,7 @@ export interface OpenClawBridgeConfig {
 export async function sendToAgent(
   cfg: OpenClawBridgeConfig,
   message: string,
+  imageAttachments?: Array<{ filename: string; mimeType: string; base64: string }>,
 ): Promise<{
   text: string;
   runId: string;
@@ -22,6 +23,28 @@ export async function sendToAgent(
   costUsd: number;
   model: string;
 } | null> {
+  // Phase 17.1-03 (outcome D from openclaw-flag-verification.md):
+  // OpenClaw's `agent` CLI does not yet support image input. Inspecting
+  // /usr/lib/node_modules/openclaw/dist/register.agent-DA0Frq4g.js confirms
+  // the available options are -m/--message, -t/--to, --session-id, --agent,
+  // --thinking, --verbose, --channel, --reply-to, --reply-channel,
+  // --reply-account, --local, --deliver, --json, --timeout — no image,
+  // attachment, or media flag.
+  //
+  // We accept the imageAttachments parameter for forward-compatibility (the
+  // VISION_CAPABLE gate in routes.ts already routes only Mo/Jarvis bytes
+  // here) and log-and-skip the bytes. Description-only path still works:
+  // the textual vision-API description from Plan 17.1-01 is already in the
+  // prompt block via Plan 17.1-02. UAT-17-1-02 (Mo/Jarvis quote pixel-level
+  // details) is deferred until OpenClaw ships a vision flag — at that
+  // point only this function body changes, no caller touch-up.
+  if (imageAttachments && imageAttachments.length > 0) {
+    log.warn(
+      { agentId: cfg.agentId, imageCount: imageAttachments.length },
+      'imageAttachments received but OpenClaw CLI does not support image input — dropping bytes (description-only path)',
+    );
+  }
+
   const escapedMessage = message.replace(/'/g, "'\\''");
   // Unique isolated session per agent per run — never overlaps with WhatsApp sessions
   const sessionId = `console:${cfg.agentId}:${cfg.runId}`;
@@ -29,7 +52,7 @@ export async function sendToAgent(
     ? `sudo -u ${cfg.sudoUser} openclaw agent --message '${escapedMessage}' --session-id '${sessionId}' --agent main --json 2>/dev/null`
     : `openclaw agent --message '${escapedMessage}' --session-id '${sessionId}' --agent main --json 2>/dev/null`;
   const cmd = `ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 ${cfg.sshHost} "timeout 120 ${openclawCmd}"`;
-  
+
   log.info({ agentId: cfg.agentId, messageLength: message.length }, 'Sending message to agent via CLI bridge');
 
   try {
