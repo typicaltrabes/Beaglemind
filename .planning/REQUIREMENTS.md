@@ -140,7 +140,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Vision Pass-Through + Phase 17 UAT Defect Fixes (Phase 17.1)
 
-- [ ] **UAT-17-1-01**: Uploading an image to a run automatically generates a written description via the Anthropic vision API; description is persisted to `artifacts.description`, visible in agent-hub logs as part of the prepended `--- USER ATTACHMENTS ---` block, and reaches every agent (Mo, Jarvis, Herman) in the round-table prompt.
+- [x] **UAT-17-1-01**: Uploading an image to a run automatically generates a written description via the Anthropic vision API; description is persisted to `artifacts.description`, visible in agent-hub logs as part of the prepended `--- USER ATTACHMENTS ---` block, and reaches every agent (Mo, Jarvis, Herman) in the round-table prompt.
 - [ ] **UAT-17-1-02**: Mo and Jarvis (vision-capable agents) reference specific visual details in their replies that go beyond what's in the description — proves image bytes reached them through the OpenClaw CLI bridge.
 - [ ] **UAT-17-1-03**: Herman (non-vision agent) references the description content in its reply even without seeing the image — proves the description fallback works for weaker agents and is sufficient for meaningful engagement.
 - [ ] **UAT-17-1-04** *(DEFECT-17-A fix)*: User attaches a `.md` file via paperclip OR drag-drop on Windows AND macOS — chip appears `ready`, upload succeeds, persisted `artifacts.mime_type === 'text/markdown'`, agents receive the markdown content. Fix: filename-extension fallback shared between composer and upload route.
@@ -273,7 +273,7 @@ Deferred to future release. Tracked but not in current roadmap.
 | UAT-17-01 | Phase 17 → 17.1 | Reopened (DEFECT-17-A — fixed in 17.1-05) |
 | UAT-17-02 | Phase 17 | Complete |
 | UAT-17-03 | Phase 17 → 17.1 | Pending (blocked on 17.1; satisfied by 17.1-02 + 17.1-06) |
-| UAT-17-1-01 | Phase 17.1 | Pending |
+| UAT-17-1-01 | Phase 17.1 | Complete |
 | UAT-17-1-02 | Phase 17.1 | Pending |
 | UAT-17-1-03 | Phase 17.1 | Pending |
 | UAT-17-1-04 | Phase 17.1 (DEFECT-17-A) | Pending |

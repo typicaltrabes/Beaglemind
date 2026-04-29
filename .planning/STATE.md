@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 17.1 expanded with DEFECT-17-A/B/C plans (17.1-05/06/07) — ready to execute
-last_updated: "2026-04-29T00:00:00.000Z"
-last_activity: 2026-04-29 -- Phase 17 UAT failed on 3 defects; rolled into Phase 17.1 (now 7 plans + deploy); ready to execute expanded 17.1
+stopped_at: Completed 17.1-01-PLAN.md
+last_updated: "2026-04-29T12:29:03.559Z"
+last_activity: 2026-04-29
 progress:
   total_phases: 17
   completed_phases: 10
   total_plans: 68
-  completed_plans: 46
-  percent: 68
+  completed_plans: 47
+  percent: 69
 ---
 
 # Project State
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-21)
 
 **Core value:** Users can observe multi-agent reasoning in real time, steer it at governance gates, and share the full replay externally.
-**Current focus:** Phase 17.1 — Vision Pass-Through + Phase 17 UAT Defect Fixes (expanded scope)
+**Current focus:** Phase 17.1 — vision-pass-through-all-agents-see-image-content
 
 ## Current Position
 
-Phase: 17.1 (Vision Pass-Through + Phase 17 UAT Defect Fixes) — READY TO EXECUTE
-Plan: 0 of 7 (+ deploy plan 17.1-04)
+Phase: 17.1 (vision-pass-through-all-agents-see-image-content) — EXECUTING
+Plan: 2 of 7
 Status: Ready to execute
-Last activity: 2026-04-29 -- Phase 17 UAT defects rolled into Phase 17.1; 3 new plans (17.1-05/06/07); deploy plan 17.1-04 updated to cover all 6 vision+defect UATs plus retest UAT-17-01 and UAT-17-03
+Last activity: 2026-04-29
 
 Progress: [█████████░] 95%
 
@@ -91,6 +91,7 @@ Progress: [█████████░] 95%
 | Phase 17-attachments P01 | 6min | 2 tasks | 10 files |
 | Phase 17-attachments P02 | 9min | 2 tasks | 14 files |
 | Phase 17-attachments P03 | 4min | 1 tasks | 4 files |
+| Phase 17.1 P01 | 5min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -182,6 +183,10 @@ Recent decisions affecting current work:
 - [Phase 17-attachments]: [Phase 17-03]: Strict 404 ownership path — rows.length !== attachmentIds.length triggers { error: 'attachment not found' } 404; blocks cross-run reuse (T-17-03-02) and agent-output impersonation (T-17-03-03)
 - [Phase 17-attachments]: [Phase 17-03]: Image base64 pass-through deferred — image attachments contribute textual placeholder '(image — included with this message)' for V1; OpenClaw CLI bridge image-block extension is a future-track effort
 - [Phase 17-attachments]: [Phase 17-03]: ZodError → 400 branch added to messages route catch block — pre-17-03 the route caught only generic errors and returned 500; new attachmentIds validation requires the explicit branch for usable error messages
+- [Phase 17.1]: [Phase 17.1-01]: vi.mock factory uses class FakeAnthropic (not vi.fn().mockImplementation) for SDK constructor calls — vitest 4 mock fns are not reliably constructable
+- [Phase 17.1]: [Phase 17.1-01]: extractImageDescription returns null on empty content array WITHOUT trying Sonnet fallback — call succeeded, model just chose silence; retry with stronger model unlikely to flip outcome
+- [Phase 17.1]: [Phase 17.1-01]: media_type cast to literal union 'image/png' | 'image/jpeg' | 'image/webp' — IMAGE_MIMES gate above proves the cast is sound; SDK Base64ImageSource.media_type uses strict union
+- [Phase 17.1]: [Phase 17.1-01]: lazy module-singleton vision client + warn-once on missing ANTHROPIC_API_KEY — mirrors litellm-client.ts pattern; _resetClientForTest exported for test isolation per resetRateLimiterForTest precedent
 
 ### Pending Todos
 
@@ -204,8 +209,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-04-28T13:31:03.852Z
-Stopped at: Completed 17-03-PLAN.md
+Last session: 2026-04-29T12:29:03.553Z
+Stopped at: Completed 17.1-01-PLAN.md
 Resume file: None
 
 **Planned Phase:** 11 (Run-view tabs: Writers' Room, Timeline, Boardroom, Canvas) — 5 plans — 2026-04-22T12:38:11.467Z
