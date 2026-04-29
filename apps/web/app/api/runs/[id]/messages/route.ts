@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { eq, asc, inArray, and } from 'drizzle-orm';
 import { z } from 'zod/v4';
+import { GetObjectCommand } from '@aws-sdk/client-s3';
+import { getMinioClient } from '@beagle-console/db';
 import { requireTenantContext, getTenantDb } from '@/lib/get-tenant';
 import { hubClient } from '@/lib/api/hub-client';
 import { buildAttachmentBlock } from '@/lib/attachment-block';
@@ -70,6 +72,13 @@ export async function POST(
     // request — silent skipping would let a sender bypass the cross-run
     // tampering check.
     let attachmentBlock = '';
+    // Phase 17.1-03: declared at the route scope so it's visible to the
+    // hubClient.startRun call below. Populated only when the attachmentIds
+    // branch resolves image rows under the 10 MB budget; otherwise stays
+    // undefined and the hub Zod treats it as omitted.
+    let imageAttachments:
+      | Array<{ filename: string; mimeType: string; base64: string }>
+      | undefined;
     if (attachmentIds.length > 0) {
       const rows = await tdb
         .select({
@@ -79,6 +88,7 @@ export async function POST(
           sizeBytes: schema.artifacts.sizeBytes,
           extractedText: schema.artifacts.extractedText,
           description: schema.artifacts.description, // Phase 17.1: vision-API description, fed to buildAttachmentBlock
+          minioKey: schema.artifacts.minioKey, // Phase 17.1-03: needed for vision base64 fetch
         })
         .from(schema.artifacts)
         .where(
@@ -104,6 +114,51 @@ export async function POST(
         .map((id) => byId.get(id))
         .filter((r): r is NonNullable<typeof r> => Boolean(r));
       attachmentBlock = buildAttachmentBlock(ordered);
+
+      // Phase 17.1-03: fetch image bytes from MinIO once and forward to the
+      // hub as imageAttachments. The hub gates by visionCapable per-agent —
+      // only Mo and Jarvis would receive the bytes; Herman and Sam see only
+      // the description already baked into attachmentBlock by Plan 17.1-02.
+      //
+      // NOTE per openclaw-flag-verification.md (outcome D, 2026-04-29): the
+      // OpenClaw `agent` CLI does not currently support image input flags,
+      // so the hub-side bridge logs-and-skips the bytes for now. We still
+      // fetch + forward them here so the wiring is in place the moment
+      // OpenClaw ships a vision flag — only the bridge body changes.
+      //
+      // Total-bytes budget (10 MB) prevents blowing up the OpenClaw command
+      // line on huge multi-image messages. Description still flows in the
+      // prompt block regardless.
+      const IMAGE_BYTES_BUDGET = 10 * 1024 * 1024;
+      const imageRows = ordered.filter((r) => r.mimeType.startsWith('image/'));
+      const totalImageBytes = imageRows.reduce(
+        (sum, r) => sum + r.sizeBytes,
+        0,
+      );
+
+      if (imageRows.length > 0 && totalImageBytes <= IMAGE_BYTES_BUDGET) {
+        const minio = getMinioClient();
+        imageAttachments = await Promise.all(
+          imageRows.map(async (r) => {
+            const obj = await minio.send(
+              new GetObjectCommand({
+                Bucket: `tenant-${tenantId}`,
+                Key: r.minioKey,
+              }),
+            );
+            const bytes = await obj.Body!.transformToByteArray();
+            return {
+              filename: r.filename,
+              mimeType: r.mimeType,
+              base64: Buffer.from(bytes).toString('base64'),
+            };
+          }),
+        );
+      } else if (totalImageBytes > IMAGE_BYTES_BUDGET) {
+        console.warn(
+          `Skipping image bytes — total ${totalImageBytes} exceeds 10 MB budget`,
+        );
+      }
     }
 
     // Update run to executing if it was completed (continue conversation)
@@ -129,6 +184,7 @@ export async function POST(
       prompt: content,
       agentPrompt: attachmentBlock + content,
       attachmentIds: attachmentIds.length > 0 ? attachmentIds : undefined,
+      imageAttachments, // Phase 17.1-03: undefined when no images / over budget — hub Zod treats it as omitted
     });
 
     return NextResponse.json({ ok: true });

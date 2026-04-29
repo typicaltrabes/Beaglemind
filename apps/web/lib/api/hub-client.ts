@@ -31,6 +31,15 @@ export const hubClient = {
     // the transcript. Capped at 4 hub-side; same cap upstream in the messages
     // route. Empty array or omitted → no chips, existing event shape.
     attachmentIds?: string[];
+    /** Phase 17.1-03: image bytes for vision-capable agents. The hub
+     *  validates with HubImageAttachment Zod (max 4) and gates by
+     *  visionCapable per-agent before forwarding to the CLI bridge. Pure
+     *  pass-through — undefined when no images / over the 10 MB budget. */
+    imageAttachments?: Array<{
+      filename: string;
+      mimeType: string;
+      base64: string;
+    }>;
     targetAgent?: string;
   }) =>
     hubPost<{ ok: true; runId: string }>('/runs/start', data),
