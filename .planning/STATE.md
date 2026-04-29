@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 17.1-03-PLAN.md
-last_updated: "2026-04-29T13:22:16.503Z"
+stopped_at: Completed 17.1-07-PLAN.md
+last_updated: "2026-04-29T13:33:52.748Z"
 last_activity: 2026-04-29
 progress:
   total_phases: 17
   completed_phases: 10
   total_plans: 68
-  completed_plans: 51
-  percent: 75
+  completed_plans: 52
+  percent: 76
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 17.1 (vision-pass-through-all-agents-see-image-content) — EXECUTING
-Plan: 6 of 7
+Plan: 7 of 7
 Status: Ready to execute
 Last activity: 2026-04-29
 
@@ -96,6 +96,7 @@ Progress: [█████████░] 95%
 | Phase 17.1 P02 | 2min | 2 tasks | 3 files |
 | Phase 17.1 P06 | 12min | 5 tasks | 12 files |
 | Phase 17.1 P03 | 7min | 3 tasks | 5 files |
+| Phase 17.1 P07 | 5min | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -206,6 +207,10 @@ Recent decisions affecting current work:
 - [Phase 17.1]: [Phase 17.1-03]: OpenClaw agent CLI verified to have NO image flag (outcome D, register.agent-DA0Frq4g.js source-of-truth grep). Plan ships entire vision-pass-through pipeline anyway (visionCapable + MinIO fetch + hub Zod + VISION_CAPABLE gate); bridge log-and-skips bytes. UAT-17-1-02 deferred until OpenClaw ships a flag.
 - [Phase 17.1]: [Phase 17.1-03]: VISION_CAPABLE Set + HubImageAttachment Zod hardcoded inline in apps/agent-hub/src/http/routes.ts (PATTERNS Options A+B) — single consumer, cross-package import deferred to @beagle-console/shared until a third reader appears.
 - [Phase 17.1]: [Phase 17.1-03]: Belt-and-suspenders 10 MB total-bytes budget (web-side) PLUS hub Zod max(4) per-message — different failure modes (shed-load on huge benign messages vs. malformed-payload defense) so both stay.
+- [Phase 17.1]: [Phase 17.1-07]: EventStore.list(tenantId, runId, opts?) reads prior events DESC + LIMIT, reverses to ASC for chronological prompt block construction
+- [Phase 17.1]: [Phase 17.1-07]: agent_failure surfacing reuses agent_message event type with metadata.errorKind='agent_failure' — no new MessageType, keeps SSE/chip/scene-grouping code paths unchanged
+- [Phase 17.1]: [Phase 17.1-07]: currentUserSequence threaded down from handleRunStart as the filter key for excluding the current turn from PRIOR CONVERSATION — race-free integer match, not fragile content-string comparison
+- [Phase 17.1]: [Phase 17.1-07]: HISTORY_EVENT_LIMIT=30 + HISTORY_CHAR_BUDGET=80000 belt-and-suspenders cap; drop-oldest-first via while-loop trim AFTER DB query .limit(30); empty try/catch wrapper around eventStore.list (T-17-1-07-04 graceful degradation)
 
 ### Pending Todos
 
@@ -228,8 +233,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-04-29T13:22:16.497Z
-Stopped at: Completed 17.1-03-PLAN.md
+Last session: 2026-04-29T13:33:40.878Z
+Stopped at: Completed 17.1-07-PLAN.md
 Resume file: None
 
 **Planned Phase:** 11 (Run-view tabs: Writers' Room, Timeline, Boardroom, Canvas) — 5 plans — 2026-04-22T12:38:11.467Z
