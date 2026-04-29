@@ -163,7 +163,12 @@ export default function ReplayPage({
   // ---------- Success state ----------
 
   return (
-    <div className="flex h-full flex-col">
+    // Phase 18-02 followup: root layout uses min-h-screen (not h-screen),
+    // so percentage heights (h-full) don't propagate to the Virtuoso
+    // scroller. We use flex-1 + min-h-0 chain instead so the transcript
+    // can claim the remaining vertical space without depending on an
+    // explicit parent height.
+    <div className="flex min-h-0 flex-1 flex-col">
       {/* TLDR banner */}
       {state.tldr && (
         <div className="shrink-0 border-b border-white/5 px-4 py-2">
@@ -174,9 +179,7 @@ export default function ReplayPage({
         </div>
       )}
 
-      {/* Read-only transcript — min-h-0 lets the Virtuoso scroller's
-          h-full inside ReplayMessageList resolve to a real pixel height
-          inside this flex column (Phase 18-02 followup). */}
+      {/* Read-only transcript */}
       <div className="min-h-0 flex-1 overflow-hidden px-4">
         <ReplayMessageList events={state.events} />
       </div>
