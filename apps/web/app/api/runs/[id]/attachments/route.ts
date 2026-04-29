@@ -8,6 +8,7 @@ import {
   extractAttachment,
   extractImageDescription,
 } from '@/lib/extract-attachment';
+import { resolveMime } from '@/lib/mime-from-extension';
 import { rateLimitOk } from '@/lib/attachment-upload-rate-limit';
 
 export const runtime = 'nodejs';
@@ -21,7 +22,9 @@ export const runtime = 'nodejs';
  *  1. Auth-scope via requireTenantContext() — tenantId is session-derived,
  *     never request-derived (T-17-02-01 mitigation).
  *  2. Per-user 10/min rate limit (T-17-02-05).
- *  3. Validate file presence + mime against ALLOWED_MIME + size <= 20 MB.
+ *  3. Validate file presence + mime via resolveMime (Phase 17.1-05: filename
+ *     extension fallback when browser/OS reports empty / octet-stream) + size
+ *     <= 20 MB.
  *  4. Upload bytes to MinIO bucket `tenant-${tenantId}` at
  *     `runs/${runId}/uploads/${uuid}.${ext}` via PutObjectCommand.
  *  5. Run synchronous text extraction (PDF/DOCX/TXT/MD) — null for images
@@ -32,15 +35,11 @@ export const runtime = 'nodejs';
  *     contract Plan 17-01's uploadAttachment helper consumes.
  */
 
-const ALLOWED_MIME = new Set([
-  'application/pdf',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'image/png',
-  'image/jpeg',
-  'image/webp',
-  'text/plain',
-  'text/markdown',
-]);
+// Phase 17.1-05: ALLOWED mime gating now lives in `@/lib/mime-from-extension`
+// (single source of truth shared with the composer). The local Set was
+// removed; gate uses `resolveMime(file)` which falls back to the filename
+// extension when file.type is empty / application/octet-stream — fixes
+// DEFECT-17-A (Windows .md uploads rejected because the OS reports no mime).
 const MAX_SIZE_BYTES = 20 * 1024 * 1024;
 
 const RunIdParam = z.object({ id: z.string().uuid() });
@@ -71,7 +70,14 @@ export async function POST(
         { status: 400 },
       );
     }
-    if (!ALLOWED_MIME.has(file.type)) {
+    // Phase 17.1-05: resolveMime returns the canonical mime when allowed
+    // (preferring file.type, falling back to the filename extension when the
+    // browser/OS reports empty or application/octet-stream) or null when
+    // disallowed. Use the resolved value for downstream MinIO ContentType,
+    // extraction routing, AND the persisted artifact row — never raw
+    // file.type, which can be empty for valid .md uploads on Windows.
+    const resolvedMime = resolveMime(file);
+    if (!resolvedMime) {
       return NextResponse.json(
         { error: 'unsupported type' },
         { status: 400 },
@@ -95,12 +101,14 @@ export async function POST(
     const minioKey = `runs/${runId}/uploads/${randomUUID()}.${ext}`;
 
     // Upload first — if this fails we never insert the artifact row.
+    // ContentType uses resolvedMime (Phase 17.1-05) so MinIO records the
+    // canonical mime even when the browser sent file.type=''.
     await getMinioClient().send(
       new PutObjectCommand({
         Bucket: `tenant-${tenantId}`,
         Key: minioKey,
         Body: buffer,
-        ContentType: file.type,
+        ContentType: resolvedMime,
       }),
     );
 
@@ -109,9 +117,15 @@ export async function POST(
     // given file. Promise.all keeps total latency = max(extract, vision) not
     // sum. Both helpers swallow their own errors and resolve to null on
     // failure, so Promise.all cannot reject.
+    //
+    // Phase 17.1-05: pass resolvedMime (not file.type) so the extraction
+    // routing inside both helpers picks the right branch even when the
+    // browser/OS reported no mime — otherwise a .md upload on Windows would
+    // resolve mime via extension only to fall through extractAttachment's
+    // mime switch and skip the markdown path.
     const [extractedText, description] = await Promise.all([
-      extractAttachment(buffer, file.type),
-      extractImageDescription(buffer, file.type),
+      extractAttachment(buffer, resolvedMime),
+      extractImageDescription(buffer, resolvedMime),
     ]);
 
     const rows = await tdb
@@ -119,7 +133,10 @@ export async function POST(
       .values({
         runId,
         filename: file.name,
-        mimeType: file.type,
+        // Phase 17.1-05: persist the canonical mime, never raw file.type.
+        // Downstream attachment-block + extractAttachment branches key on
+        // mime_type and would mis-route on an empty value.
+        mimeType: resolvedMime,
         sizeBytes: file.size,
         minioKey,
         agentId: 'user',
