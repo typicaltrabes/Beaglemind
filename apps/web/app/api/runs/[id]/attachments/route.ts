@@ -4,7 +4,10 @@ import { randomUUID } from 'node:crypto';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { getMinioClient } from '@beagle-console/db';
 import { requireTenantContext, getTenantDb } from '@/lib/get-tenant';
-import { extractAttachment } from '@/lib/extract-attachment';
+import {
+  extractAttachment,
+  extractImageDescription,
+} from '@/lib/extract-attachment';
 import { rateLimitOk } from '@/lib/attachment-upload-rate-limit';
 
 export const runtime = 'nodejs';
@@ -101,8 +104,15 @@ export async function POST(
       }),
     );
 
-    // Synchronous extraction (≤20 MB; inline is fine for V1 per CONTEXT).
-    const extractedText = await extractAttachment(buffer, file.type);
+    // Phase 17.1: text extraction and image description run in parallel —
+    // they're independent and only one will produce a non-null result for any
+    // given file. Promise.all keeps total latency = max(extract, vision) not
+    // sum. Both helpers swallow their own errors and resolve to null on
+    // failure, so Promise.all cannot reject.
+    const [extractedText, description] = await Promise.all([
+      extractAttachment(buffer, file.type),
+      extractImageDescription(buffer, file.type),
+    ]);
 
     const rows = await tdb
       .insert(schema.artifacts)
@@ -114,6 +124,7 @@ export async function POST(
         minioKey,
         agentId: 'user',
         extractedText,
+        description,
       })
       .returning();
     const row = rows[0];
