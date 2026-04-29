@@ -47,11 +47,16 @@ export async function POST(request: Request) {
     .returning();
 
   const shareLink = rows[0]!;
-  // Phase 18-02: prefer NEXT_PUBLIC_APP_URL when set, else derive from the
-  // incoming request origin. Previous version returned `undefined/replay/...`
-  // when the env var wasn't set, which it isn't on prod.
+  // Phase 18-02: build the public URL by preferring NEXT_PUBLIC_APP_URL,
+  // then X-Forwarded-* headers from the Caddy proxy (in prod
+  // request.url reads as https://0.0.0.0:3000 — the container's bind
+  // address, not the public host), then falling back to request.url.
+  const forwardedHost = request.headers.get('x-forwarded-host');
+  const forwardedProto =
+    request.headers.get('x-forwarded-proto') ?? 'https';
   const origin =
-    process.env.NEXT_PUBLIC_APP_URL ?? new URL(request.url).origin;
+    process.env.NEXT_PUBLIC_APP_URL ??
+    (forwardedHost ? `${forwardedProto}://${forwardedHost}` : new URL(request.url).origin);
   const url = `${origin}/replay/${token}`;
 
   return Response.json(
