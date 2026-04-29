@@ -111,16 +111,28 @@ export async function GET(
     )
     .orderBy(asc(schema.events.sequenceNumber));
 
-  // 7. Strip Studio-only metadata fields from each event (T-08-05)
+  // 7. Strip Studio-only metadata fields from each event (T-08-05) and
+  //    expose `timestamp` (the event-shaped field name AgentMessage etc
+  //    expect — DB column is `createdAt`). Phase 18-02 followup: replay
+  //    timestamps were rendering as `NaN:NaN` in the recipient view because
+  //    the formatter was reading `event.timestamp` which didn't exist.
   const sanitizedEvents = events.map((event) => {
-    if (event.metadata && typeof event.metadata === 'object') {
-      const meta = { ...(event.metadata as Record<string, unknown>) };
+    const meta =
+      event.metadata && typeof event.metadata === 'object'
+        ? { ...(event.metadata as Record<string, unknown>) }
+        : event.metadata;
+    if (meta && typeof meta === 'object') {
       for (const key of STRIP_METADATA_KEYS) {
-        delete meta[key];
+        delete (meta as Record<string, unknown>)[key];
       }
-      return { ...event, metadata: meta };
     }
-    return event;
+    return {
+      ...event,
+      metadata: meta,
+      timestamp: event.createdAt instanceof Date
+        ? event.createdAt.toISOString()
+        : event.createdAt,
+    };
   });
 
   // 8. Log replay view -- fire-and-forget (D-10, T-08-09)
