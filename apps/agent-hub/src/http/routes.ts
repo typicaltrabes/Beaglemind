@@ -2,6 +2,7 @@ import { z } from 'zod/v4';
 import { randomUUID } from 'node:crypto';
 import type { AgentRegistry } from '../connections/agent-registry';
 import type { MessageRouter } from '../handlers/message-router';
+import type { EventStore } from '../events/event-store';
 import type { OpenClawOutbound } from '@beagle-console/shared';
 import { createChildLogger } from '../logger';
 import { sendToAgent, type OpenClawBridgeConfig } from '../connections/openclaw-cli-bridge';
@@ -167,6 +168,7 @@ export async function handleRunStart(
   registry: AgentRegistry,
   router: MessageRouter,
   setActiveRun: (runId: string, tenantId: string) => void,
+  eventStore: EventStore,
 ): Promise<{ ok: true; runId: string; userSequence: number }> {
   const parsed = RunStartBody.parse(body);
 
@@ -197,8 +199,21 @@ export async function handleRunStart(
   // fall back to `prompt` for backward compatibility with pre-17.1-06 callers.
   // Phase 17.1-03: forward optional imageAttachments — runRoundTable applies
   // the VISION_CAPABLE gate per-agent before handing bytes to the CLI bridge.
+  // Phase 17.1-07 (DEFECT-17-C): runRoundTable also pulls prior conversation
+  // history from `eventStore` BEFORE the per-agent loop, so follow-up messages
+  // on a `completed` run get a context-aware fan-out. The just-persisted user
+  // event's sequenceNumber is excluded from PRIOR CONVERSATION (it's already
+  // represented by `User: ${userPrompt}` in the prompt body).
   const roundTableInput = parsed.agentPrompt ?? parsed.prompt;
-  runRoundTable(parsed.runId, parsed.tenantId, roundTableInput, router, parsed.imageAttachments).catch((err) => {
+  runRoundTable(
+    parsed.runId,
+    parsed.tenantId,
+    roundTableInput,
+    router,
+    eventStore,
+    userEvent.sequenceNumber,
+    parsed.imageAttachments,
+  ).catch((err) => {
     log.error({ error: err.message, runId: parsed.runId }, 'Round-table discussion failed');
   });
 
@@ -206,19 +221,77 @@ export async function handleRunStart(
   return { ok: true, runId: parsed.runId, userSequence: userEvent.sequenceNumber };
 }
 
+// Phase 17.1-07 (DEFECT-17-C): hard caps for the PRIOR CONVERSATION block.
+// 30 events OR 80K chars — whichever hits first. Drop oldest first to keep
+// the most-recent context.
+const HISTORY_EVENT_LIMIT = 30;
+const HISTORY_CHAR_BUDGET = 80_000;
+
 /**
  * Sequential round-table: each agent sees the full conversation so far.
  * Mo responds first, then Jarvis (seeing Mo's response), then Herman (seeing both).
+ *
+ * Phase 17.1-07: prior conversation events for the run are fetched from the
+ * EventStore BEFORE the per-agent loop and injected as a `--- PRIOR CONVERSATION ---`
+ * block in each agent's prompt — so follow-up messages on a `completed` run
+ * land with full context. The just-persisted user event (whose sequenceNumber
+ * is `currentUserSequence`) is excluded from the block; it's already present
+ * as `User: ${userPrompt}` later in the prompt.
  */
-async function runRoundTable(
+export async function runRoundTable(
   runId: string,
   tenantId: string,
   userPrompt: string,
   router: MessageRouter,
+  eventStore: EventStore,
+  currentUserSequence: number,
   imageAttachments?: Array<{ filename: string; mimeType: string; base64: string }>,
 ) {
   const agents = ['mo', 'jarvis', 'herman']; // Sam excluded — sentinel only
   const transcript: string[] = [];
+
+  // Phase 17.1-07: fetch prior conversation history. Wrapped in try/catch —
+  // if eventStore.list throws (DB blip, schema missing), proceed with empty
+  // history (graceful degradation; agents respond context-blind, but they DO
+  // respond — better than silent failure per the threat register T-17-1-07-04).
+  let historyBlock = '';
+  try {
+    const priorEvents = await eventStore.list(tenantId, runId, { limit: HISTORY_EVENT_LIMIT });
+    // Only conversation-bearing events go in the block. The just-persisted
+    // user event for THIS round is excluded — it's already represented as
+    // `User: ${userPrompt}` later in the prompt body.
+    const conversationEvents = priorEvents.filter(
+      (e) => e.type === 'agent_message' && e.sequenceNumber !== currentUserSequence,
+    );
+
+    if (conversationEvents.length > 0) {
+      const lines = conversationEvents.map((e) => {
+        const speaker =
+          e.agentId === 'user'
+            ? 'User'
+            : e.agentId.charAt(0).toUpperCase() + e.agentId.slice(1);
+        const text = (e.content as { text?: string }).text ?? '';
+        return `${speaker}: ${text}`;
+      });
+      // Trim oldest entries until under the char budget.
+      while (lines.join('\n\n').length > HISTORY_CHAR_BUDGET && lines.length > 0) {
+        lines.shift();
+      }
+      if (lines.length > 0) {
+        historyBlock = `--- PRIOR CONVERSATION ---\n\n${lines.join('\n\n')}\n\n--- END PRIOR CONVERSATION ---\n\n`;
+      }
+    }
+    log.info(
+      { runId, priorEventCount: priorEvents.length, includedInBlock: historyBlock.length > 0 ? conversationEvents.length : 0 },
+      'Prior conversation history loaded',
+    );
+  } catch (err: any) {
+    log.error(
+      { error: err.message, runId, tenantId },
+      'Failed to load prior conversation history (continuing with empty block)',
+    );
+    historyBlock = '';
+  }
 
   for (const agentId of agents) {
     const agentBridge = AGENT_BRIDGE_CONFIG[agentId];
@@ -238,11 +311,13 @@ async function runRoundTable(
     const groupContext = `[SYSTEM] You are on the Beagle Agent Console — a multi-agent discussion platform. This is NOT WhatsApp. This is NOT a 1:1 chat. You are in a GROUP DISCUSSION with other BeagleMind agents (Mo, Jarvis, Herman). The user can see everything all agents say. Respond directly to the topic — do not explain the platform architecture or how messaging works. Just answer the question and engage with what other agents said.`;
 
     if (transcript.length === 0) {
-      // First agent — gets the user prompt with group context
-      fullPrompt = `${groupContext}\n\nUser: ${userPrompt}\n\n${displayName}, you're first to respond.`;
+      // First agent — gets the user prompt with group context (and prior
+      // history, if any, between the system context and the new turn).
+      fullPrompt = `${groupContext}\n\n${historyBlock}User: ${userPrompt}\n\n${displayName}, you're first to respond.`;
     } else {
-      // Subsequent agents — see the full discussion so far
-      fullPrompt = `${groupContext}\n\n--- GROUP DISCUSSION ---\n\nUser: ${userPrompt}\n\n${transcript.join('\n\n')}\n\n--- YOUR TURN ---\n\n${displayName}, respond to the discussion above. Reference other agents by name when you agree or disagree.`;
+      // Subsequent agents — see the prior history (if any), the new user prompt,
+      // and the in-progress group discussion from this round.
+      fullPrompt = `${groupContext}\n\n${historyBlock}--- GROUP DISCUSSION ---\n\nUser: ${userPrompt}\n\n${transcript.join('\n\n')}\n\n--- YOUR TURN ---\n\n${displayName}, respond to the discussion above. Reference other agents by name when you agree or disagree.`;
     }
 
     log.info({ runId, agentId, transcriptLength: fullPrompt.length }, 'Sending to agent with full transcript');
@@ -278,6 +353,30 @@ async function runRoundTable(
       }
     } catch (err: any) {
       log.error({ error: err.message, runId, agentId }, 'Agent failed in round-table, continuing');
+
+      // Phase 17.1-07 (DEFECT-17-C): surface the failure in the transcript as
+      // a one-line marker so the user sees who failed instead of silence.
+      // We emit a normal `agent_message` (NOT a new event type) so SSE replay
+      // / chip rendering / scene grouping all keep working unchanged. The
+      // `metadata.errorKind: 'agent_failure'` flag lets future UI bits (or
+      // the sentinel) distinguish a real reply from a failure marker.
+      try {
+        await router.persistAndPublish(tenantId, {
+          type: 'agent_message',
+          agentId,
+          runId,
+          tenantId,
+          content: {
+            text: `(${displayName} failed to respond — see logs for details)`,
+          },
+          metadata: { errorKind: 'agent_failure', errorMessage: err.message },
+        });
+      } catch (publishErr: any) {
+        log.error(
+          { error: publishErr.message, runId, agentId },
+          'Failed to publish agent_failure marker event',
+        );
+      }
     }
   }
 

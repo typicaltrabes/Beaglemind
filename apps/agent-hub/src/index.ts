@@ -107,7 +107,7 @@ const server = createServer(async (req: IncomingMessage, res: ServerResponse) =>
   if (req.method === 'POST' && url.pathname === '/runs/start') {
     try {
       const body = await readJsonBody(req);
-      const result = await handleRunStart(body, registry, messageRouter, setActiveRun);
+      const result = await handleRunStart(body, registry, messageRouter, setActiveRun, eventStore);
       sendJson(res, 200, result);
     } catch (err: any) {
       logger.error({ err, path: '/runs/start' }, 'Error handling /runs/start');

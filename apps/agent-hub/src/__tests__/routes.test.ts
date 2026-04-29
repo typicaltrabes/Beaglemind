@@ -82,6 +82,10 @@ describe('handleRunStart — Phase 17.1-06 agentPrompt split', () => {
   it('agentPrompt OMITTED — runRoundTable receives the same string as the persisted user event (backward-compatible)', async () => {
     const router = buildRouterMock();
     const setActiveRun = vi.fn();
+    // Phase 17.1-07: eventStore.list is invoked by runRoundTable before the
+    // per-agent loop. Empty list = no PRIOR CONVERSATION block, preserves the
+    // pre-17.1-07 prompt shape for these backward-compat assertions.
+    const eventStore = { list: vi.fn(async () => []) } as any;
 
     const userText = 'What is the cap rate on this deal?';
 
@@ -97,6 +101,7 @@ describe('handleRunStart — Phase 17.1-06 agentPrompt split', () => {
       // router — only persistAndPublish is touched
       { persistAndPublish: router.persistAndPublish } as any,
       setActiveRun,
+      eventStore,
     );
 
     expect(result).toEqual({ ok: true, runId: RUN_ID, userSequence: 1 });
@@ -129,6 +134,7 @@ describe('handleRunStart — Phase 17.1-06 agentPrompt split', () => {
   it('agentPrompt PROVIDED — persisted user event keeps `prompt` (clean), runRoundTable receives `agentPrompt` (with attachment block)', async () => {
     const router = buildRouterMock();
     const setActiveRun = vi.fn();
+    const eventStore = { list: vi.fn(async () => []) } as any;
 
     const userText = 'Pull the cap rate out of this deck.';
     const agentText =
@@ -151,6 +157,7 @@ describe('handleRunStart — Phase 17.1-06 agentPrompt split', () => {
       {} as any,
       { persistAndPublish: router.persistAndPublish } as any,
       setActiveRun,
+      eventStore,
     );
 
     // The persisted user event holds the user-visible text only — NOT the
