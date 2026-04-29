@@ -78,6 +78,7 @@ export async function POST(
           mimeType: schema.artifacts.mimeType,
           sizeBytes: schema.artifacts.sizeBytes,
           extractedText: schema.artifacts.extractedText,
+          description: schema.artifacts.description, // Phase 17.1: vision-API description, fed to buildAttachmentBlock
         })
         .from(schema.artifacts)
         .where(
