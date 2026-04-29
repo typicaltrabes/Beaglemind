@@ -344,12 +344,14 @@ export function ReplayMessageList({ events: eventArray }: ReplayMessageListProps
   // ---------- Virtualized list ----------
 
   return (
+    // Phase 18-02 followup: replay layout is min-h-screen (not h-screen),
+    // so percentage heights collapse to 0. Virtuoso fills the parent via
+    // flex grow + minHeight 0 instead of height: 100%.
     <Virtuoso
       data={renderItems}
       itemContent={renderItem}
       overscan={200}
-      className="h-full"
-      style={{ height: '100%' }}
+      style={{ flex: '1 1 0%', minHeight: 0, height: 'auto' }}
     />
   );
 }
