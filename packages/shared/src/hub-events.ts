@@ -10,6 +10,12 @@ export const MessageType = z.enum([
   'system',
   'tldr_update',
   'sentinel_flag',
+  // Phase 19-03 (UX-19-05): per-agent presence indicators. v1 emits only
+  // _start and _end around each bridge call; _typing is reserved for a
+  // future streaming-bridge that knows when a token-stream begins.
+  'presence_thinking_start',
+  'presence_thinking_end',
+  'presence_typing',
 ]);
 
 // Scene metadata convention (set by Mo on events):
