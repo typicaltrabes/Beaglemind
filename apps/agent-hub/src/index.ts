@@ -25,6 +25,8 @@ const redisUrl = new URL(config.redisUrl);
 const idleScheduler = new BullMQIdleTimeoutScheduler({
   host: redisUrl.hostname,
   port: Number(redisUrl.port || 6379),
+  username: redisUrl.username || undefined,
+  password: redisUrl.password ? decodeURIComponent(redisUrl.password) : undefined,
   maxRetriesPerRequest: null,
 });
 
