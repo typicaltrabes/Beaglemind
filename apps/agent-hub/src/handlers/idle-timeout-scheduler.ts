@@ -11,7 +11,7 @@
  * jobId (returns 0), so the first call for a run + every subsequent
  * reschedule both go through the same code path.
  *
- * Why a custom jobId (`${tenantId}:${runId}`):
+ * Why a custom jobId (`${tenantId}__${runId}`):
  *   - jobId-deduped: even if the worker is horizontally scaled, only one
  *     instance can pick up the job (T-19-02-02 in the threat register).
  *   - Tenant-isolated: tenantId is a UUID, no collision possible across
@@ -30,7 +30,9 @@ export class BullMQIdleTimeoutScheduler implements IdleTimeoutScheduler {
   }
 
   async schedule(tenantId: string, runId: string, idleTimeoutMinutes: number): Promise<void> {
-    const jobId = `${tenantId}:${runId}`;
+    // BullMQ rejects custom jobIds containing `:` ("Custom Id cannot contain :").
+    // Use `__` as separator. Both halves are UUIDs so collision is impossible.
+    const jobId = `${tenantId}__${runId}`;
     // BullMQ doesn't support "update delay" on a delayed job — remove + add.
     // .remove tolerates a missing jobId (returns 0); .catch silences the
     // edge case where Redis returns an unexpected error so a single failed

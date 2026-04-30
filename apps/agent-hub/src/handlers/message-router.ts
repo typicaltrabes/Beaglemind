@@ -153,7 +153,7 @@ export class MessageRouter {
    *    logs but does not break the publish.
    * 2. Reschedule the BullMQ `idle-timeout` watcher (best-effort): reads
    *    `runs.idle_timeout_minutes` (defaults to 7 if missing) and asks the
-   *    scheduler to re-add a delayed job at jobId `${tenantId}:${runId}`.
+   *    scheduler to re-add a delayed job at jobId `${tenantId}__${runId}`.
    *    Failure logs but does not break the publish.
    *
    * If `idleScheduler` is undefined (e.g. unit tests with no Redis available)

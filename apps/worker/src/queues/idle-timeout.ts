@@ -9,7 +9,7 @@
  * Wiring:
  * - The agent-hub schedules a delayed job via BullMQ on every event publish
  *   (see apps/agent-hub/src/handlers/idle-timeout-scheduler.ts). The jobId is
- *   `${tenantId}:${runId}` so that re-scheduling collapses the prior pending
+ *   `${tenantId}__${runId}` so that re-scheduling collapses the prior pending
  *   job into the new one (BullMQ's delete-then-add idiom).
  * - When the delay elapses, this worker's processor (`processIdleTimeout`)
  *   reads the run's current status; if still `executing` it flips to
