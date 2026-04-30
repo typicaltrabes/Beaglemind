@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { eq, asc, inArray, and } from 'drizzle-orm';
+import { eq, asc, inArray, and, sql } from 'drizzle-orm';
 import { z } from 'zod/v4';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
 import { getMinioClient } from '@beagle-console/db';
@@ -63,6 +63,81 @@ export async function POST(
 
     const body = await request.json();
     const { content, attachmentIds } = SendMessageBody.parse(body);
+
+    // Phase 19-05: detect round-in-flight state. Read currentRound from the
+    // tenant runs row. NULL = idle (post-rounds, watcher pending) → fall
+    // through to existing path which triggers a fresh round-table. Non-null
+    // = a round is currently running → queue the new message into the
+    // events table marked metadata.queuedForNextRound=true and SKIP the
+    // hubClient.startRun call. The next round's runRoundTable iteration
+    // calls consumeQueuedMessages and prepends the queued text into the
+    // GROUP DISCUSSION block.
+    const runRows = await tdb
+      .select({
+        currentRound: schema.runs.currentRound,
+        status: schema.runs.status,
+      })
+      .from(schema.runs)
+      .where(eq(schema.runs.id, runId))
+      .limit(1);
+    const inFlight =
+      runRows[0]?.currentRound !== null && runRows[0]?.currentRound !== undefined;
+
+    if (inFlight) {
+      // Compute next sequence_number via MAX+1. The hub's SequenceCounter is
+      // the only other writer for this runId — there is a small race window
+      // where both compute the same MAX. The unique index events_run_seq_idx
+      // is the ultimate guard; we retry once on collision and surface as 500
+      // afterward (per the plan's threat model: rare; UAT will catch and
+      // motivate moving to a hub-side enqueue endpoint).
+      async function nextSeq(): Promise<number> {
+        const rows = (await tdb.execute(sql`
+          SELECT COALESCE(MAX(sequence_number), 0)::int + 1 AS next_seq
+          FROM ${schema.events}
+          WHERE run_id = ${runId}
+        `)) as unknown as Array<{ next_seq: number }>;
+        return rows[0]?.next_seq ?? 1;
+      }
+
+      const eventContent: Record<string, unknown> =
+        attachmentIds.length > 0
+          ? { text: content, attachmentIds }
+          : { text: content };
+
+      let attempts = 0;
+      let lastErr: unknown = null;
+      while (attempts < 2) {
+        try {
+          await tdb.insert(schema.events).values({
+            runId,
+            sequenceNumber: await nextSeq(),
+            type: 'agent_message',
+            agentId: 'user',
+            content: eventContent,
+            metadata: { queuedForNextRound: true },
+          });
+          lastErr = null;
+          break;
+        } catch (err) {
+          lastErr = err;
+          attempts++;
+        }
+      }
+      if (lastErr) {
+        // Both attempts failed (likely a real DB problem, not just a one-off
+        // sequence collision). Surface as 500 — the user can retry.
+        console.error(
+          'POST /api/runs/[id]/messages queue-insert failed after retry:',
+          lastErr,
+        );
+        return NextResponse.json(
+          { error: 'Failed to queue message' },
+          { status: 500 },
+        );
+      }
+
+      return NextResponse.json({ ok: true, queued: true });
+    }
 
     // Phase 17-03: when attachmentIds is non-empty, fetch the artifact rows
     // scoped to (this runId, agentId='user') so callers can't reference

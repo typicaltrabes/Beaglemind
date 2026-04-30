@@ -66,10 +66,12 @@ vi.mock('@/lib/get-tenant', () => ({
   }),
 }));
 
-const mockStartRun = vi.fn(async () => ({ ok: true }));
+const mockStartRun = vi.fn(async (_args: Record<string, unknown>) => ({
+  ok: true as const,
+}));
 vi.mock('@/lib/api/hub-client', () => ({
   hubClient: {
-    startRun: (...args: unknown[]) => mockStartRun(...(args as [any])),
+    startRun: (args: Record<string, unknown>) => mockStartRun(args),
   },
 }));
 
