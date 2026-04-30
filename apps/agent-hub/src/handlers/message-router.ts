@@ -1,4 +1,6 @@
 import { OpenClawInbound, type HubEventEnvelope } from '@beagle-console/shared';
+import { eq } from 'drizzle-orm';
+import { db, createTenantSchema } from '@beagle-console/db';
 import type { EventStore, PersistInput } from '../events/event-store';
 import type { RedisPublisher } from '../bridge/redis-publisher';
 import type { Logger } from 'pino';
@@ -55,14 +57,31 @@ export function mapOpenClawToEvent(
 }
 
 /**
+ * Phase 19-02: thin scheduler abstraction so MessageRouter doesn't take a
+ * hard dep on bullmq (and tests don't need a Redis-backed Queue). The
+ * production wiring is `BullMQIdleTimeoutScheduler` in
+ * `apps/agent-hub/src/handlers/idle-timeout-scheduler.ts`.
+ */
+export interface IdleTimeoutScheduler {
+  schedule(tenantId: string, runId: string, idleTimeoutMinutes: number): Promise<void>;
+}
+
+/**
  * Orchestrates the full message pipeline:
  * parse -> map -> persist (D-08) -> publish to Redis
+ *
+ * Phase 19-02: every persistAndPublish (and handleAgentMessage that flows
+ * through it via the bridge) ALSO touches `runs.last_event_at = NOW()` and
+ * reschedules the idle-timeout watcher. Both side-effects are best-effort —
+ * a DB or Redis failure on either logs and continues so the publish itself
+ * is never rolled back.
  */
 export class MessageRouter {
   constructor(
     private readonly eventStore: EventStore,
     private readonly publisher: RedisPublisher,
     private readonly log: { debug: Function; warn: Function; error: Function },
+    private readonly idleScheduler?: IdleTimeoutScheduler,
   ) {}
 
   /**
@@ -94,6 +113,10 @@ export class MessageRouter {
     // Step 4: Publish to Redis (only after successful persistence)
     await this.publisher.publish(persisted);
 
+    // Step 5: Phase 19-02 — touch last_event_at + reschedule idle-timeout
+    // watcher. Best-effort; failures don't propagate.
+    await this.touchLastEventAtAndReschedule(tenantId, runId);
+
     this.log.debug(
       { agentId, runId, sequenceNumber: persisted.sequenceNumber, type: persisted.type },
       'Message routed through pipeline',
@@ -109,6 +132,10 @@ export class MessageRouter {
     const persisted = await this.eventStore.persist(tenantId, event);
     await this.publisher.publish(persisted);
 
+    // Phase 19-02: every event publish keeps the run alive — touch
+    // last_event_at and reschedule the idle-timeout watcher. Best-effort.
+    await this.touchLastEventAtAndReschedule(tenantId, event.runId);
+
     // D-08: Trigger push notifications for governance events
     // Wrapped in try/catch so push failures never break the event pipeline
     this.triggerPushNotification(persisted).catch((err) => {
@@ -116,6 +143,71 @@ export class MessageRouter {
     });
 
     return persisted;
+  }
+
+  /**
+   * Phase 19-02: post-publish bookkeeping for the silence-driven lifecycle.
+   *
+   * 1. Touch `runs.last_event_at = NOW()` (best-effort): used by debugging /
+   *    future cancel-old-runs sweeps. Also update `runs.updated_at`. Failure
+   *    logs but does not break the publish.
+   * 2. Reschedule the BullMQ `idle-timeout` watcher (best-effort): reads
+   *    `runs.idle_timeout_minutes` (defaults to 7 if missing) and asks the
+   *    scheduler to re-add a delayed job at jobId `${tenantId}:${runId}`.
+   *    Failure logs but does not break the publish.
+   *
+   * If `idleScheduler` is undefined (e.g. unit tests with no Redis available)
+   * the reschedule step is silently skipped — the last_event_at touch still
+   * runs because it doesn't need Redis.
+   */
+  private async touchLastEventAtAndReschedule(
+    tenantId: string,
+    runId: string,
+  ): Promise<void> {
+    // 1. Touch last_event_at
+    let idleMin = 7;
+    try {
+      const { runs: runsTable } = createTenantSchema(tenantId);
+      await db
+        .update(runsTable)
+        .set({ lastEventAt: new Date(), updatedAt: new Date() })
+        .where(eq(runsTable.id, runId));
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      this.log.error(
+        { err: message, runId },
+        'Failed to update last_event_at (continuing)',
+      );
+    }
+
+    // 2. Reschedule idle-timeout watcher (only if scheduler is wired)
+    if (!this.idleScheduler) return;
+
+    try {
+      const { runs: runsTable } = createTenantSchema(tenantId);
+      const cfg = await db
+        .select({ idleTimeoutMinutes: runsTable.idleTimeoutMinutes })
+        .from(runsTable)
+        .where(eq(runsTable.id, runId))
+        .limit(1);
+      idleMin = cfg[0]?.idleTimeoutMinutes ?? 7;
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      this.log.error(
+        { err: message, runId },
+        'Failed to read idle_timeout_minutes; using default 7 (continuing)',
+      );
+    }
+
+    try {
+      await this.idleScheduler.schedule(tenantId, runId, idleMin);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      this.log.error(
+        { err: message, runId },
+        'Failed to reschedule idle-timeout watcher (continuing)',
+      );
+    }
   }
 
   /**

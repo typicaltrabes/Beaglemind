@@ -11,6 +11,7 @@
     "@anthropic-ai/sdk": "^0.91.1",
     "@beagle-console/db": "workspace:*",
     "@beagle-console/shared": "workspace:*",
+    "bullmq": "5.75.2",
     "drizzle-orm": "0.45.2",
     "ioredis": "^5.10.1",
     "pino": "^10.3.1",

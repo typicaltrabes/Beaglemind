@@ -7,6 +7,7 @@ import { EventStore } from './events/event-store';
 import { redisPub, closeRedis } from './bridge/redis-client';
 import { RedisPublisher } from './bridge/redis-publisher';
 import { MessageRouter } from './handlers/message-router';
+import { BullMQIdleTimeoutScheduler } from './handlers/idle-timeout-scheduler';
 import { handleSend, handleRunStart, handleRunStop, handleRunApprove, handleQuestionAnswer } from './http/routes';
 import { db } from '@beagle-console/db';
 
@@ -15,7 +16,19 @@ import { db } from '@beagle-console/db';
 const sequenceCounter = new SequenceCounter();
 const eventStore = new EventStore(db, sequenceCounter);
 const redisPublisher = new RedisPublisher(redisPub);
-const messageRouter = new MessageRouter(eventStore, redisPublisher, logger);
+
+// Phase 19-02: idle-timeout watcher scheduler. MessageRouter calls this on
+// every event publish to reschedule the BullMQ delayed job that flips the
+// run to `completed` after `idle_timeout_minutes` of silence. BullMQ requires
+// `maxRetriesPerRequest: null` on the underlying ioredis connection.
+const redisUrl = new URL(config.redisUrl);
+const idleScheduler = new BullMQIdleTimeoutScheduler({
+  host: redisUrl.hostname,
+  port: Number(redisUrl.port || 6379),
+  maxRetriesPerRequest: null,
+});
+
+const messageRouter = new MessageRouter(eventStore, redisPublisher, logger, idleScheduler);
 
 // --- Active run context (single active run at a time) ---
 
@@ -173,6 +186,10 @@ function shutdown(signal: string) {
   registry.closeAll();
   closeRedis().catch((err) => {
     logger.error({ err }, 'Error closing Redis');
+  });
+  // Phase 19-02: close the BullMQ idle-timeout scheduler queue connection
+  idleScheduler.close().catch((err) => {
+    logger.error({ err }, 'Error closing idle-timeout scheduler');
   });
   server.close(() => {
     logger.info('HTTP server closed');
