@@ -1,0 +1,36 @@
+/* Beagle Console design tokens — pulled from apps/web/app/globals.css */
+:root {
+  --bg: #0f1115;
+  --panel: #161922;
+  --panel-2: #1c2030;
+  --panel-3: #232838;
+  --border: #2a2f42;
+  --border-soft: #20243259;
+  --text: #e6e8ef;
+  --text-dim: #9ba1b3;
+  --text-muted: #6b7185;
+
+  /* Agent identity */
+  --mo: #f7b733;       /* orange */
+  --jarvis: #4db6ac;   /* teal */
+  --herman: #c86bff;   /* purple */
+  --you: #6ea8fe;      /* blue */
+  --system: #6b7185;   /* gray */
+  --failure: #ef6b6b;  /* red — failure-bubble */
+
+  /* Event-type accents (subtle — agent color does the heavy lifting) */
+  --evt-message: 1;
+  --evt-state: 0.55;
+  --evt-tool: 0.7;
+
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 14px;
+
+  --font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, SF Mono, Monaco, monospace;
+}
+
+* { box-sizing: border-box; }
+html, body { background: var(--bg); color: var(--text); margin: 0; font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+button { font-family: inherit; cursor: pointer; }

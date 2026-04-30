@@ -53,3 +53,26 @@ These were surfaced by the 2026-04-29 UX walkthrough but pushed out of Phase 18 
 ### D-10 — Settings org + member management
 - Currently no UI to invite teammates, see org members, set roles
 - Better Auth Organization plugin already supports this — needs UI
+
+### D-11 — Timeline tab redesign (desktop)
+- Surfaced 2026-04-30 Playwright walkthrough of UAT-17.1 round-3 run
+- Current state: single horizontal track of 12px dots + Play/scrubber/1×/2×/4×. Issues:
+  - Bottom ~380px of tab is dead space (no detail panel synced to scrubber)
+  - Dots overlap silently when events cluster (10 events, only ~7 visible)
+  - No time axis ticks, no agent legend, no labels
+  - Color encodes both agent identity and event type — collision
+  - Play/scrubber is video-player UI on data that's actually a structured event log
+- Direction (decided): Option A swim-lane layout for desktop
+  - One row per agent (Mo / Jarvis / Herman / You / system) with name on left
+  - Time axis along the top with mm:ss tick marks
+  - Dots become labeled pills with truncated message preview
+  - Bottom half of tab = selected-event detail panel (sender, full text, cost, latency, attachments)
+  - Drop Play/scrubber + 1×/2×/4× — solving a problem the data doesn't have
+- Mobile is explicitly out of scope — wireframe-only for now
+- Sketch lives in: .planning/sketches/ (TBD by /gsd-sketch run)
+
+### D-12 — Sticky sidebar on long run scroll
+- When scrolling through a long run's transcript, the left sidebar (Agents list + Projects + Run History / Shared Links / Questions footer nav) scrolls away
+- Should be `position: sticky` or `position: fixed` so agent presence + project nav are always reachable
+- Affects /runs, /runs/[id], /projects/[id] — anywhere the main content can exceed viewport height
+- Likely a one-line fix in the sidebar wrapper component but verify on mobile (sidebar is drawer on mobile, must not double-fix)
