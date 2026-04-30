@@ -41,6 +41,13 @@ interface RunActions {
   appendEvents: (events: HubEventEnvelope[]) => void;
   updateQuestion: (questionId: string, answer: string) => void;
   reset: () => void;
+  // Phase 19: hydrate the store status from the API row on run-page mount.
+  // Runs are now created directly with status='executing' (no `pending →
+  // executing` state_transition event ever fires), so without this the store
+  // stays at the INITIAL_STATE 'pending' default until idle-timeout triggers
+  // the executing→completed transition. The LiveIndicator (which matches
+  // status === 'executing' exactly) needs the store hydrated to render.
+  syncStatusFromApi: (status: RunStatus) => void;
 }
 
 const INITIAL_STATE: RunState = {
@@ -332,4 +339,15 @@ export const useRunStore = create<RunState & RunActions>()((set, get) => ({
   },
 
   reset: () => set(INITIAL_STATE),
+
+  // Phase 19: see RunActions.syncStatusFromApi for the why.
+  // Only writes if the store status is 'pending' (the INITIAL_STATE default)
+  // — once any SSE event has progressed the store, we trust the live stream
+  // over a possibly-stale API value.
+  syncStatusFromApi: (status: RunStatus) => {
+    const current = get().status;
+    if (current === 'pending' && status !== 'pending') {
+      set({ status });
+    }
+  },
 }));

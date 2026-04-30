@@ -3,6 +3,7 @@
 import { use, useEffect, useState } from 'react';
 import { useRunStream } from '@/lib/hooks/use-sse';
 import { useUIStore } from '@/lib/stores/ui-store';
+import { useRunStore } from '@/lib/stores/run-store';
 import { useStopRun } from '@/lib/hooks/use-run-actions';
 import { useRun } from '@/lib/hooks/use-run';
 import { useMode } from '@/lib/mode-context';
@@ -51,6 +52,26 @@ export default function RunPage({
       useUIStore.getState().setActiveRun(null);
     };
   }, [projectId, runId]);
+
+  // Phase 19: hydrate run-store status from the API once the run row loads.
+  // Runs are now created directly with status='executing' (no pending →
+  // executing state_transition ever fires), so the store would otherwise
+  // stay at 'pending' until the idle-timeout watcher emits the
+  // executing → completed transition. The LiveIndicator + run-metadata-row
+  // status pill both read from the store, so they need this hydration to
+  // render the correct lifecycle state on page load.
+  useEffect(() => {
+    if (
+      run?.status === 'pending' ||
+      run?.status === 'planned' ||
+      run?.status === 'approved' ||
+      run?.status === 'executing' ||
+      run?.status === 'completed' ||
+      run?.status === 'cancelled'
+    ) {
+      useRunStore.getState().syncStatusFromApi(run.status);
+    }
+  }, [run?.status]);
 
   function handleStop() {
     stopRun.mutate(runId);
