@@ -77,20 +77,23 @@ These were surfaced by the 2026-04-29 UX walkthrough but pushed out of Phase 18 
 - Affects /runs, /runs/[id], /projects/[id] — anywhere the main content can exceed viewport height
 - Likely a one-line fix in the sidebar wrapper component but verify on mobile (sidebar is drawer on mobile, must not double-fix)
 
-### D-13 — Multi-round round-table (agents keep conversing)
+### D-13 — Free-flowing agent conversations (Option B — reactive continuation)
 - Surfaced 2026-04-30: in the Console, agents answer once each and the run hard-stops at `executing → completed`. In WhatsApp, the same agents have rich back-and-forth conversations — that's where Lucas gets the best outcomes.
 - Root cause: `apps/agent-hub/src/http/routes.ts:242-442` — `runRoundTable` loops `['mo', 'jarvis', 'herman']` exactly once, then unconditionally writes `status: 'completed'` at line 413. No continuation logic.
 - The `state_transition` notification is a symptom, not a cause. The hard stop is the for-loop exiting.
-- Direction (recommended): **Option A — multi-round with stop conditions**
-  - Wrap the existing per-agent loop in an outer round loop, max N rounds (default 3)
-  - Stop conditions: (a) 2+ agents produce "no new substance" responses, (b) cost cap hit ($2/run default), (c) explicit "I'm done" from an agent
-  - Emit `state_transition` events between rounds (`round-1 → round-2`) so the redesigned timeline (D-11) shows depth
-  - PRIOR CONVERSATION block already implemented (lines 254-295) — accumulates naturally per round
-- **Spike prerequisite:** the "no new substance" detector is the hard part. False positives kill conversations early; false negatives let them run forever. Spike options:
-  - Embedding-similarity vs. prior turn (cosine > 0.85 → repeat)
-  - Regex/heuristic on hedge phrases ("I agree", "concur", "as Mo said")
-  - Cheap LLM classifier (but Lucas's no-Haiku rule means Sonnet — adds latency + cost per turn)
-- Alternative directions:
-  - Option B — reactive continuation (ask each agent if they want to respond → most natural but expensive)
-  - Option C — user-controlled "Continue" button (cheapest, manual lever)
-- This compounds with D-11: a redesigned multi-round timeline with swim lanes naturally shows the deeper conversation, which is the feature that makes this change visible.
+- **Decision (2026-04-30):** Option B — reactive continuation. Cost is explicitly NOT a constraint at this stage; the priority is proving the model works, and the WhatsApp behavior (continuous flowing conversation) is the proven-good UX. Console must provide the substrate that allows it.
+- **Division of responsibility:**
+  - **Console side (this phase):** allow free-flowing conversation — no cost caps, no round caps, no consensus detector. Just keep cycling until agents stop volunteering.
+  - **Agent side (separate work):** each agent's SOUL.md / persona must carry the workflow structure — when to push for resolution, when to add a new angle, when to defer to another agent, when to declare "I'm done." That governance lives in the persona, not the orchestrator.
+- **Implementation outline:**
+  - In-band continuation token. Each agent's prompt instructs them to end their response with either `[CONTINUE]` (I have more to say if others respond) or `[DONE]` (I've said my piece on this thread).
+  - After each agent's turn, the orchestrator strips the token from the visible message but uses it to drive the next-turn decision.
+  - Round structure: cycle through `mo → jarvis → herman` repeatedly. Stop only when all three agents in a single full round emit `[DONE]`.
+  - Safety: hard cap at ~20 rounds purely to prevent infinite loops on a token-detection bug — not a cost cap.
+  - Emit `state_transition` events between rounds (`round-1 → round-2`) so the redesigned timeline (D-11) renders conversation depth.
+  - PRIOR CONVERSATION block (lines 254-295) already accumulates naturally per round.
+- **Open questions before planning:**
+  - Should `[CONTINUE]` / `[DONE]` be positional (last line) or anywhere in the response? Positional is more brittle; anywhere risks accidental triggers in the body text.
+  - Does the user get to see "Mo is thinking" indicators between rounds? Live presence would make the wait feel intentional.
+  - When the user types a new message mid-conversation, does it interrupt the round-cycle or queue until current round finishes?
+- **Compounds with D-11:** the redesigned multi-round timeline with swim lanes naturally shows the deeper conversation. That visualization is what makes this change visible to the user.
