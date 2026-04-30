@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 19-05-PLAN.md
-last_updated: "2026-04-30T14:32:13.972Z"
+status: deployed
+stopped_at: Phase 19 (free-flowing-conversation) shipped end-to-end. Plans 19-01..19-06 complete. Live at console.beaglemind.ai with multi-round flow, presence indicators, LiveIndicator, Continue button, mid-round queueing, and BullMQ idle-timeout watcher. 5 hot-fixes applied during deploy UAT. STATE.md backfilled to reflect actual phase progress.
+last_updated: "2026-04-30T17:25:00.000Z"
 last_activity: 2026-04-30
 progress:
   total_phases: 19
-  completed_phases: 10
+  completed_phases: 18
   total_plans: 82
-  completed_plans: 57
-  percent: 70
+  completed_plans: 81
+  percent: 99
 ---
 
 # Project State
@@ -21,16 +21,30 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-21)
 
 **Core value:** Users can observe multi-agent reasoning in real time, steer it at governance gates, and share the full replay externally.
-**Current focus:** Phase 19 — free-flowing-conversation (multi-round substrate)
+**Current focus:** Phase 19 — free-flowing-conversation (multi-round substrate) — DEPLOYED 2026-04-30
 
 ## Current Position
 
-Phase: 19 (free-flowing-conversation) — EXECUTING
-Plan: 6 of 6 ✓ — moving to Plan 19-02 (idle-timeout watcher)
-Status: Ready to execute
+Phase: 19 (free-flowing-conversation) — SHIPPED
+Plan: 6 of 6 ✓
+Status: Live at https://console.beaglemind.ai (deployed SHA 8e2dff6)
 Last activity: 2026-04-30
 
-Progress: [███████░░░] 70%
+Progress: [█████████░] 99%
+
+## Phase 19 outcomes (2026-04-30 deploy)
+
+- ✅ Multi-round runRoundTable (default N=3), inter-round state_transition events, 1500ms inter-round pause
+- ✅ BullMQ `idle-timeout` queue + worker — sole writer of `executing → completed` after 7 min silence
+- ✅ Per-agent `presence_thinking_start/end` events, inline AgentPresenceIndicator UI
+- ✅ `continueOnly: true` Zod field; ContinueButton + /api/runs/[id]/continue endpoint
+- ✅ Brand-orange pulsing LiveIndicator on run-detail header + run-history rows
+- ✅ Mid-round message queueing via `metadata.queuedForNextRound`; concatenation at next round-start
+- ✅ 5 columns added to tenant runs table (round_count, idle_timeout_minutes, inter_round_pause_ms, last_event_at, current_round)
+
+UAT verified live via Playwright: 3 rounds × 3 agents = 9 replies, 9 presence pairs, 2 inter-round transitions, agents referencing each other across rounds, run stayed executing until manually stopped, BullMQ delayed jobs successfully queued at jobId `${tenantId}__${runId}`.
+
+5 hot-fixes applied during deploy (worker Dockerfile tsx runtime, Redis URL auth forwarding, run-store round-N filter, run-store API hydration, BullMQ jobId `:` → `__`). All in `.planning/phases/19-free-flowing-conversation/19-06-SUMMARY.md`.
 
 ## Performance Metrics
 
