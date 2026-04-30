@@ -77,27 +77,30 @@ These were surfaced by the 2026-04-29 UX walkthrough but pushed out of Phase 18 
 - Affects /runs, /runs/[id], /projects/[id] — anywhere the main content can exceed viewport height
 - Likely a one-line fix in the sidebar wrapper component but verify on mobile (sidebar is drawer on mobile, must not double-fix)
 
-### D-13 — Free-flowing agent conversations (Option B — reactive continuation)
+### D-13 — Console substrate for free-flowing conversation (console-only)
 - Surfaced 2026-04-30: in the Console, agents answer once each and the run hard-stops at `executing → completed`. In WhatsApp, the same agents have rich back-and-forth conversations — that's where Lucas gets the best outcomes.
 - Root cause: `apps/agent-hub/src/http/routes.ts:242-442` — `runRoundTable` loops `['mo', 'jarvis', 'herman']` exactly once, then unconditionally writes `status: 'completed'` at line 413. No continuation logic.
-- The `state_transition` notification is a symptom, not a cause. The hard stop is the for-loop exiting.
-- **Decision (2026-04-30):** Option B — reactive continuation. Cost is explicitly NOT a constraint at this stage; the priority is proving the model works, and the WhatsApp behavior (continuous flowing conversation) is the proven-good UX. Console must provide the substrate that allows it.
-- **Division of responsibility:**
-  - **Console side (this phase):** allow free-flowing conversation — no cost caps, no round caps, no consensus detector. Just keep cycling until agents stop volunteering.
-  - **Agent side (separate work):** each agent's SOUL.md / persona must carry the workflow structure — when to push for resolution, when to add a new angle, when to defer to another agent, when to declare "I'm done." That governance lives in the persona, not the orchestrator.
-- **Implementation outline:**
-  - In-band continuation token. Each agent's prompt instructs them to end their response with either `[CONTINUE]` (I have more to say if others respond) or `[DONE]` (I've said my piece on this thread).
-  - After each agent's turn, the orchestrator strips the token from the visible message but uses it to drive the next-turn decision.
-  - Round structure: cycle through `mo → jarvis → herman` repeatedly. Stop only when all three agents in a single full round emit `[DONE]`.
-  - Safety: hard cap at ~20 rounds purely to prevent infinite loops on a token-detection bug — not a cost cap.
-  - Emit `state_transition` events between rounds (`round-1 → round-2`) so the redesigned timeline (D-11) renders conversation depth.
-  - PRIOR CONVERSATION block (lines 254-295) already accumulates naturally per round.
-- **Live presence indicators (decided 2026-04-30):** mirror WhatsApp UX. Show "Mo is thinking…" / "Jarvis is typing…" during each agent's response generation, between rounds, in the transcript view. The wait must read as the conversation continuing, not as nothing happening. Presence must be per-agent and broadcast over the same SSE channel as the transcript events.
-- **Idle-timeout completion (decided 2026-04-30):** runs do NOT auto-complete when agents finish a round. Instead, the run stays in `executing` until **5–10 minutes of total silence** (no new user message, no new agent message). When the timer fires → emit `state_transition: executing → completed`. Default to 7 min; make configurable.
-  - Implication: kill the unconditional `status: 'completed'` write at `routes.ts:413`. That logic moves into a background watcher (BullMQ delayed job, or a Postgres-poll heartbeat) keyed on run id.
-  - Each new event (agent turn, user message, agent typing-indicator) resets the timer to 7 min from now.
-  - User typing a follow-up into a still-`executing` run just keeps the conversation alive — no new round-table boot needed.
-  - "Run is live" must look visually distinct from "completed" in the UI so Lucas knows he can keep talking.
-- **User interjection during round-cycle:** queue the user message and inject at the start of the next round (don't interrupt mid-agent). The injected user input becomes part of the next agent's `--- GROUP DISCUSSION ---` block, so they see what was said and can react. (TBD whether the user can force-interrupt — leave for execution-time refinement.)
-- **Compounds with D-11:** the redesigned multi-round timeline with swim lanes naturally shows the deeper conversation. That visualization is what makes this change visible to the user.
-- **Compounds with D-12:** sticky sidebar matters more here — long flowing conversations mean lots of scroll, agent presence dots in the sidebar must stay visible the whole time so Lucas can see who's about to speak.
+
+#### SCOPE BOUNDARY (decided 2026-04-30, hard line)
+**This phase is console-only.** No agent-side changes. Lucas + Henrik will decide separately how agents naturally regulate their own cadence (when to stop talking, when to push, etc.). The console's job is to provide a chat substrate that doesn't impose any protocol or limit on the agents — same as WhatsApp gives them.
+
+Anything that requires editing Mo / Jarvis / Herman SOUL.md, adding tokens to agent prompts (`[CONTINUE]`/`[DONE]`), or asking agents to follow a console-specific protocol = OUT OF SCOPE. Earlier drafts of this entry proposed those — they were misscoped and have been removed.
+
+#### Console-only changes
+
+1. **Drop the auto-complete write.** Remove the unconditional `status: 'completed'` at `routes.ts:413`. Runs stay `executing` until the idle-timeout watcher fires.
+2. **Multi-round auto-cycle.** Change the round-table from one pass to N passes (default N=3, configurable per project). Each round = `mo → jarvis → herman`, all seeing the full accumulating transcript via the existing PRIOR CONVERSATION block (lines 254-295). After N auto-rounds, the run stays open but stops auto-cycling.
+3. **"Continue conversation" affordance.** A button in the run-detail UI that triggers another N rounds without needing a new user prompt. Lets Lucas drive cadence on top of auto-cycling.
+4. **Idle-timeout watcher.** Background job (BullMQ delayed job preferred over Postgres poll) keyed on run id. After 7 min (configurable) of total silence — no user message, no agent event — emit `state_transition: executing → completed`. Every new event resets the timer.
+5. **Live presence indicators.** "Mo is thinking…" / "Jarvis is typing…" per-agent, broadcast over the same SSE channel as transcript events. Mirrors WhatsApp UX so waits read as intentional. Indicators show during a turn's generation and between auto-rounds.
+6. **User mid-conversation message handling.** Queue the message, inject at start of next round inside `--- GROUP DISCUSSION ---`. Never interrupt a mid-agent turn.
+7. **Visual distinction for live runs.** UI must clearly show "live / still going" vs. "completed" so Lucas knows when he can keep typing without re-booting a fresh run.
+
+#### Compounds with
+- **D-11** (timeline redesign): multi-round conversations are exactly what the swim-lane design is meant to surface. Without D-13, D-11 has nothing rich to display.
+- **D-12** (sticky sidebar): long flowing conversations mean lots of scroll; agent presence dots must stay visible the entire time so Lucas can see who's about to speak.
+
+#### Open implementation questions
+- Round count default: 3 too low? 5 too noisy? Validate by trying it once shipped.
+- "Continue" button placement: footer next to composer, or floating action button?
+- Should the auto-cycle pause briefly between rounds (1-2s) so the user can read each round's output before the next starts firing?
