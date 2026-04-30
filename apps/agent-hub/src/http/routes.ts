@@ -8,7 +8,7 @@ import { createChildLogger } from '../logger';
 import { sendToAgent, type OpenClawBridgeConfig } from '../connections/openclaw-cli-bridge';
 import { sendToAgentWithVision } from '../connections/anthropic-vision-bridge';
 import { db, createTenantSchema } from '@beagle-console/db';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 
 // Agent SSH bridge config — which host to SSH into and optional sudo user
 const AGENT_BRIDGE_CONFIG: Record<string, { sshHost: string; sudoUser?: string }> = {
@@ -331,6 +331,63 @@ async function loadRunConfig(tenantId: string, runId: string): Promise<{
   }
 }
 
+/**
+ * Phase 19-05: pull any user messages that were posted during the prior round
+ * and marked `metadata.queuedForNextRound = true`. Returns the concatenated
+ * text under a single `User:` prefix, or empty string if nothing queued.
+ * Atomically clears the flag on consumed rows via jsonb_set so the same
+ * messages are not re-injected on subsequent rounds.
+ *
+ * Tenant isolation: all reads + the UPDATE are scoped by `runId` (which
+ * itself lives only inside the tenant schema via createTenantSchema).
+ */
+async function consumeQueuedMessages(
+  eventStore: EventStore,
+  tenantId: string,
+  runId: string,
+): Promise<string> {
+  const events = await eventStore.list(tenantId, runId, { limit: 100 });
+  const queued = events.filter(
+    (e) =>
+      e.type === 'agent_message' &&
+      e.agentId === 'user' &&
+      (e.metadata as Record<string, unknown> | undefined)?.queuedForNextRound === true,
+  );
+  if (queued.length === 0) return '';
+
+  // Already ASC by sequenceNumber from EventStore.list — concatenate in
+  // send-order under a single `User:` prefix.
+  const texts = queued
+    .map((e) => (e.content as { text?: string }).text ?? '')
+    .filter(Boolean);
+  if (texts.length === 0) return '';
+  const combined = texts.length === 1 ? texts[0] : texts.join('\n\n');
+
+  // Clear the flag on consumed rows. Wrapped in try/catch — if the UPDATE
+  // fails (DB blip, schema drift), we log and continue: the worst case is
+  // the same messages re-prepend on the next round (UAT will catch it),
+  // which is preferable to aborting the whole round-table.
+  try {
+    const { events: eventsTable } = createTenantSchema(tenantId);
+    await db.execute(sql`
+      UPDATE ${eventsTable}
+      SET metadata = jsonb_set(
+        jsonb_set(metadata, '{queuedForNextRound}', 'false'::jsonb),
+        '{consumedAt}', to_jsonb(now()::text)
+      )
+      WHERE run_id = ${runId}
+        AND metadata->>'queuedForNextRound' = 'true'
+    `);
+  } catch (err: any) {
+    log.error(
+      { error: err.message, runId },
+      'Failed to clear queuedForNextRound flag (non-blocking)',
+    );
+  }
+
+  return `User: ${combined}`;
+}
+
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /**
@@ -386,9 +443,19 @@ export async function runRoundTable(
     const priorEvents = await eventStore.list(tenantId, runId, { limit: HISTORY_EVENT_LIMIT });
     // Only conversation-bearing events go in the block. The just-persisted
     // user event for THIS round is excluded — it's already represented as
-    // `User: ${userPrompt}` later in the prompt body.
+    // `User: ${userPrompt}` later in the prompt body. Phase 19-05: also
+    // exclude events with metadata.queuedForNextRound=true — those are
+    // queued for the NEXT round's consumeQueuedMessages call, so listing
+    // them here would either (a) leak future input into round 1 or (b)
+    // double-list them once consumeQueuedMessages prepends them. The flag
+    // is cleared post-consumption, so consumed-and-cleared events (with
+    // metadata.queuedForNextRound=false + consumedAt set) DO show up here
+    // as normal user turns from prior rounds.
     const conversationEvents = priorEvents.filter(
-      (e) => e.type === 'agent_message' && e.sequenceNumber !== currentUserSequence,
+      (e) =>
+        e.type === 'agent_message' &&
+        e.sequenceNumber !== currentUserSequence &&
+        (e.metadata as Record<string, unknown> | undefined)?.queuedForNextRound !== true,
     );
 
     if (conversationEvents.length > 0) {
@@ -439,6 +506,25 @@ export async function runRoundTable(
         { error: err.message, runId, round },
         'Failed to update current_round (continuing)',
       );
+    }
+
+    // Phase 19-05: at the start of round 2+, pull any user messages that were
+    // posted DURING the prior round (marked metadata.queuedForNextRound=true)
+    // and prepend them as a single `User: ...` block onto the in-run
+    // transcript. Round 1 is skipped because the user's initial prompt IS the
+    // round-1 input — queued messages by definition target round 2+.
+    if (round > 1) {
+      const queuedBlock = await consumeQueuedMessages(eventStore, tenantId, runId);
+      if (queuedBlock) {
+        // Append to transcript so the chronological flow holds: prior round's
+        // mo→jarvis→herman replies, THEN the new user input, THEN this
+        // round's responses build on top.
+        transcript.push(queuedBlock);
+        log.info(
+          { runId, round, queuedLength: queuedBlock.length },
+          'Consumed queued user messages into GROUP DISCUSSION',
+        );
+      }
     }
 
     let allFailedThisRound = true;
@@ -641,6 +727,25 @@ export async function runRoundTable(
       }
       await sleep(interRoundPauseMs);
     }
+  }
+
+  // Phase 19-05: clear runs.current_round at exit so the messages route can
+  // distinguish "round in flight" (current_round IS NOT NULL → queue the new
+  // user message) from "post-rounds idle, watcher pending" (current_round
+  // IS NULL → trigger a fresh round-table). Best-effort: a failed write
+  // doesn't abort the run lifecycle (the idle-timeout watcher still owns
+  // status transitions).
+  try {
+    const { runs: runsTable } = createTenantSchema(tenantId);
+    await db
+      .update(runsTable)
+      .set({ currentRound: null, updatedAt: new Date() })
+      .where(eq(runsTable.id, runId));
+  } catch (err: any) {
+    log.error(
+      { error: err.message, runId },
+      'Failed to clear current_round on round-table exit (continuing)',
+    );
   }
 
   log.info(
