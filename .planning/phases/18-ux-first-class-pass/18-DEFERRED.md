@@ -92,8 +92,12 @@ These were surfaced by the 2026-04-29 UX walkthrough but pushed out of Phase 18 
   - Safety: hard cap at ~20 rounds purely to prevent infinite loops on a token-detection bug — not a cost cap.
   - Emit `state_transition` events between rounds (`round-1 → round-2`) so the redesigned timeline (D-11) renders conversation depth.
   - PRIOR CONVERSATION block (lines 254-295) already accumulates naturally per round.
-- **Open questions before planning:**
-  - Should `[CONTINUE]` / `[DONE]` be positional (last line) or anywhere in the response? Positional is more brittle; anywhere risks accidental triggers in the body text.
-  - Does the user get to see "Mo is thinking" indicators between rounds? Live presence would make the wait feel intentional.
-  - When the user types a new message mid-conversation, does it interrupt the round-cycle or queue until current round finishes?
+- **Live presence indicators (decided 2026-04-30):** mirror WhatsApp UX. Show "Mo is thinking…" / "Jarvis is typing…" during each agent's response generation, between rounds, in the transcript view. The wait must read as the conversation continuing, not as nothing happening. Presence must be per-agent and broadcast over the same SSE channel as the transcript events.
+- **Idle-timeout completion (decided 2026-04-30):** runs do NOT auto-complete when agents finish a round. Instead, the run stays in `executing` until **5–10 minutes of total silence** (no new user message, no new agent message). When the timer fires → emit `state_transition: executing → completed`. Default to 7 min; make configurable.
+  - Implication: kill the unconditional `status: 'completed'` write at `routes.ts:413`. That logic moves into a background watcher (BullMQ delayed job, or a Postgres-poll heartbeat) keyed on run id.
+  - Each new event (agent turn, user message, agent typing-indicator) resets the timer to 7 min from now.
+  - User typing a follow-up into a still-`executing` run just keeps the conversation alive — no new round-table boot needed.
+  - "Run is live" must look visually distinct from "completed" in the UI so Lucas knows he can keep talking.
+- **User interjection during round-cycle:** queue the user message and inject at the start of the next round (don't interrupt mid-agent). The injected user input becomes part of the next agent's `--- GROUP DISCUSSION ---` block, so they see what was said and can react. (TBD whether the user can force-interrupt — leave for execution-time refinement.)
 - **Compounds with D-11:** the redesigned multi-round timeline with swim lanes naturally shows the deeper conversation. That visualization is what makes this change visible to the user.
+- **Compounds with D-12:** sticky sidebar matters more here — long flowing conversations mean lots of scroll, agent presence dots in the sidebar must stay visible the whole time so Lucas can see who's about to speak.
