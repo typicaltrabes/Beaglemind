@@ -24,6 +24,16 @@ export function createTenantSchema(tenantId: string) {
     status: text('status').notNull().default('pending'),
     prompt: text('prompt'),
     title: varchar('title', { length: 80 }),
+    // Phase 19: per-run configuration snapshot. Read at round-start; changing
+    // project defaults later does NOT retroactively change in-flight runs.
+    roundCount: integer('round_count').notNull().default(3),
+    idleTimeoutMinutes: integer('idle_timeout_minutes').notNull().default(7),
+    interRoundPauseMs: integer('inter_round_pause_ms').notNull().default(1500),
+    // Phase 19: silence-driven lifecycle bookkeeping. last_event_at is touched
+    // on every event publish (see Plan 19-02 watcher); current_round is bumped
+    // by runRoundTable's outer loop and useful for UI debugging.
+    lastEventAt: timestamp('last_event_at', { withTimezone: true }),
+    currentRound: integer('current_round'),
     createdBy: text('created_by').notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
