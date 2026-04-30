@@ -18,6 +18,25 @@ export function useApproveRun() {
 }
 
 /**
+ * Phase 19-04 (UX-19-03): trigger another N rounds of round-table discussion
+ * against the existing transcript without a new user message. Driven by the
+ * Continue conversation button in the run-detail page header. Posts to
+ * /api/runs/[id]/continue which proxies to hub /runs/start with
+ * continueOnly=true.
+ */
+export function useContinueRun() {
+  return useMutation({
+    mutationFn: async (runId: string) => {
+      const res = await fetch(`/api/runs/${runId}/continue`, {
+        method: 'POST',
+      });
+      if (!res.ok) throw new Error('Failed to continue conversation');
+      return res.json();
+    },
+  });
+}
+
+/**
  * Stop a running sprint. Transitions to cancelled.
  */
 export function useStopRun() {

@@ -24,8 +24,7 @@ import { useRunStore } from '@/lib/stores/run-store';
 // JSDOM/happy-dom does not provide fetch by default; install a vi.fn we can
 // inspect per-test.
 const fetchMock = vi.fn();
-// @ts-expect-error — happy-dom global typing accepts assignment fine at runtime
-global.fetch = fetchMock;
+global.fetch = fetchMock as unknown as typeof fetch;
 
 function wrap(node: React.ReactNode) {
   const qc = new QueryClient({
