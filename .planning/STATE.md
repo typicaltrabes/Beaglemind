@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Phase 18 — 18-01 ✓, 18-02 ✓, 18-03 ✓, 18-04 ✓, 18-05 partial (H5+H8 ✓; H6+M2 deferred), 18-06 deferred, 18-07 ✓. 5/7 plans landed in ~3h. Lucas leaving for airport.
-last_updated: "2026-04-29T19:55:00.000Z"
-last_activity: 2026-04-29
+status: verifying
+stopped_at: Completed Phase 19 Plan 01 — multi-round substrate + auto-complete removed (3 tasks, 2 commits, 36 tests green)
+last_updated: "2026-04-30T13:57:59.161Z"
+last_activity: 2026-04-30
 progress:
-  total_phases: 18
-  completed_phases: 11
-  total_plans: 75
-  completed_plans: 60
-  percent: 80
+  total_phases: 19
+  completed_phases: 10
+  total_plans: 82
+  completed_plans: 53
+  percent: 65
 ---
 
 # Project State
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-21)
 
 **Core value:** Users can observe multi-agent reasoning in real time, steer it at governance gates, and share the full replay externally.
-**Current focus:** Phase 17.1 — vision-pass-through-all-agents-see-image-content
+**Current focus:** Phase 19 — free-flowing-conversation (multi-round substrate)
 
 ## Current Position
 
-Phase: 17.1 (vision-pass-through-all-agents-see-image-content) — EXECUTING
-Plan: 7 of 7
-Status: Ready to execute
-Last activity: 2026-04-29
+Phase: 19 (free-flowing-conversation) — EXECUTING
+Plan: 1 of 6 ✓ — moving to Plan 19-02 (idle-timeout watcher)
+Status: Plan 19-01 complete (multi-round runRoundTable + auto-complete write removed); 36 tests green; ready for Plan 19-02
+Last activity: 2026-04-30
 
 Progress: [█████████░] 95%
 
@@ -97,6 +97,7 @@ Progress: [█████████░] 95%
 | Phase 17.1 P06 | 12min | 5 tasks | 12 files |
 | Phase 17.1 P03 | 7min | 3 tasks | 5 files |
 | Phase 17.1 P07 | 5min | 3 tasks | 6 files |
+| Phase 19-free-flowing-conversation P01 | 35min | 3 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -211,6 +212,8 @@ Recent decisions affecting current work:
 - [Phase 17.1]: [Phase 17.1-07]: agent_failure surfacing reuses agent_message event type with metadata.errorKind='agent_failure' — no new MessageType, keeps SSE/chip/scene-grouping code paths unchanged
 - [Phase 17.1]: [Phase 17.1-07]: currentUserSequence threaded down from handleRunStart as the filter key for excluding the current turn from PRIOR CONVERSATION — race-free integer match, not fragile content-string comparison
 - [Phase 17.1]: [Phase 17.1-07]: HISTORY_EVENT_LIMIT=30 + HISTORY_CHAR_BUDGET=80000 belt-and-suspenders cap; drop-oldest-first via while-loop trim AFTER DB query .limit(30); empty try/catch wrapper around eventStore.list (T-17-1-07-04 graceful degradation)
+- Phase 19 Plan 01: per-run config snapshot via 5 new columns on runs table (not project-scoped) — changing project defaults later won't retroactively affect in-flight runs
+- Phase 19 Plan 01: auto-complete write removed from runRoundTable; Plan 19-02 idle-timeout watcher will be sole writer of status='completed'
 
 ### Pending Todos
 
@@ -233,8 +236,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-04-29T13:33:40.878Z
-Stopped at: Completed 17.1-07-PLAN.md
+Last session: 2026-04-30T13:57:59.158Z
+Stopped at: Completed Phase 19 Plan 01 — multi-round substrate + auto-complete removed (3 tasks, 2 commits, 36 tests green)
 Resume file: None
 
 **Planned Phase:** 11 (Run-view tabs: Writers' Room, Timeline, Boardroom, Canvas) — 5 plans — 2026-04-22T12:38:11.467Z
