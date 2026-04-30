@@ -41,6 +41,12 @@ export const hubClient = {
       base64: string;
     }>;
     targetAgent?: string;
+    /** Phase 19-04 (UX-19-03): when true, the hub re-enters runRoundTable
+     *  for another N rounds without persisting a new user event and
+     *  without injecting a `User: <prompt>` line into the first agent's
+     *  prompt. Driven by the Continue conversation button on the run-
+     *  detail page — see app/api/runs/[id]/continue/route.ts. */
+    continueOnly?: boolean;
   }) =>
     hubPost<{ ok: true; runId: string }>('/runs/start', data),
 

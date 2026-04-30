@@ -79,6 +79,12 @@ const RunStartBody = z.object({
   // bytes — they get the description floor from the prompt block.
   imageAttachments: z.array(HubImageAttachment).max(4).optional(),
   targetAgent: z.string().default('jarvis'),
+  // Phase 19-04 (UX-19-03): when true, the hub re-enters the round-table
+  // for another N rounds WITHOUT persisting a new user event and WITHOUT
+  // injecting a `User: <prompt>` line into the first agent's prompt.
+  // Used by the Continue conversation button on the run-detail page —
+  // see apps/web/app/api/runs/[id]/continue/route.ts.
+  continueOnly: z.boolean().default(false),
 });
 
 const RunStopBody = z.object({
@@ -170,30 +176,44 @@ export async function handleRunStart(
   router: MessageRouter,
   setActiveRun: (runId: string, tenantId: string) => void,
   eventStore: EventStore,
-): Promise<{ ok: true; runId: string; userSequence: number }> {
+): Promise<{ ok: true; runId: string; userSequence: number | null }> {
   const parsed = RunStartBody.parse(body);
 
   // Set active run context on the Hub
   setActiveRun(parsed.runId, parsed.tenantId);
 
-  // Persist the user prompt through the Hub's EventStore so the SequenceCounter
-  // allocates a seq that won't collide with subsequent agent events. Awaited so
-  // the event is visible in SSE replay before we return to the caller.
-  //
-  // Phase 17.1-06 (DEFECT-17-B): the persisted event content carries the user-
-  // visible text only (`parsed.prompt`) plus optional `attachmentIds` so the
-  // transcript can render chips. The agent-visible string (with attachment
-  // block + extracted text) flows separately into runRoundTable below.
-  const userEvent = await router.persistAndPublish(parsed.tenantId, {
-    type: 'agent_message',
-    agentId: 'user',
-    runId: parsed.runId,
-    tenantId: parsed.tenantId,
-    content: parsed.attachmentIds?.length
-      ? { text: parsed.prompt, attachmentIds: parsed.attachmentIds }
-      : { text: parsed.prompt },
-    metadata: {},
-  });
+  // Phase 19-04 (UX-19-03): when continueOnly=true, skip the user-event
+  // persist (Continue means "no new user input — keep cycling"). We pass
+  // -1 as the sentinel currentUserSequence into runRoundTable so the
+  // PRIOR CONVERSATION filter (which excludes `sequenceNumber === currentUserSequence`)
+  // becomes a no-op — every prior event flows into the agent's context.
+  let userSequence: number | null = null;
+  if (!parsed.continueOnly) {
+    // Persist the user prompt through the Hub's EventStore so the SequenceCounter
+    // allocates a seq that won't collide with subsequent agent events. Awaited so
+    // the event is visible in SSE replay before we return to the caller.
+    //
+    // Phase 17.1-06 (DEFECT-17-B): the persisted event content carries the user-
+    // visible text only (`parsed.prompt`) plus optional `attachmentIds` so the
+    // transcript can render chips. The agent-visible string (with attachment
+    // block + extracted text) flows separately into runRoundTable below.
+    const userEvent = await router.persistAndPublish(parsed.tenantId, {
+      type: 'agent_message',
+      agentId: 'user',
+      runId: parsed.runId,
+      tenantId: parsed.tenantId,
+      content: parsed.attachmentIds?.length
+        ? { text: parsed.prompt, attachmentIds: parsed.attachmentIds }
+        : { text: parsed.prompt },
+      metadata: {},
+    });
+    userSequence = userEvent.sequenceNumber;
+  } else {
+    log.info(
+      { runId: parsed.runId },
+      'continueOnly=true; skipping user-event persist',
+    );
+  }
 
   // Run the round-table discussion in the background (don't block the HTTP response).
   // Prefer `agentPrompt` (web-side prepended attachment block) when provided;
@@ -212,14 +232,15 @@ export async function handleRunStart(
     roundTableInput,
     router,
     eventStore,
-    userEvent.sequenceNumber,
+    userSequence ?? -1,
     parsed.imageAttachments,
+    parsed.continueOnly,
   ).catch((err) => {
     log.error({ error: err.message, runId: parsed.runId }, 'Round-table discussion failed');
   });
 
-  log.info({ runId: parsed.runId, userSequence: userEvent.sequenceNumber }, 'Round-table discussion started');
-  return { ok: true, runId: parsed.runId, userSequence: userEvent.sequenceNumber };
+  log.info({ runId: parsed.runId, userSequence, continueOnly: parsed.continueOnly }, 'Round-table discussion started');
+  return { ok: true, runId: parsed.runId, userSequence };
 }
 
 // Phase 17.1-07 (DEFECT-17-C): hard caps for the PRIOR CONVERSATION block.
@@ -342,6 +363,14 @@ export async function runRoundTable(
   eventStore: EventStore,
   currentUserSequence: number,
   imageAttachments?: Array<{ filename: string; mimeType: string; base64: string }>,
+  // Phase 19-04 (UX-19-03): when true, the round-1 first-agent prompt
+  // suppresses the `User: ${userPrompt}` line and instead nudges the
+  // agent to "please continue the discussion above". Subsequent agents
+  // in the same round (transcript.length > 0) also drop the empty
+  // `User: ` line from the GROUP DISCUSSION header for cleanliness.
+  // Driven by the Continue conversation button — see
+  // apps/web/components/transcript/continue-button.tsx.
+  continueOnly: boolean = false,
 ) {
   const agents = ['mo', 'jarvis', 'herman']; // Sam excluded — sentinel only
   const { roundCount, interRoundPauseMs } = await loadRunConfig(tenantId, runId);
@@ -435,12 +464,26 @@ export async function runRoundTable(
         // Round 1, first agent — gets the user prompt with group context
         // (and prior history, if any, between the system context and the
         // new turn).
-        fullPrompt = `${groupContext}\n\n${historyBlock}User: ${userPrompt}\n\n${displayName}, you're first to respond.`;
+        //
+        // Phase 19-04 (UX-19-03): under continueOnly the agent sees prior
+        // history + a "please continue" nudge — no fresh `User:` line, since
+        // the user did not enter new input.
+        if (continueOnly) {
+          fullPrompt = `${groupContext}\n\n${historyBlock}${displayName}, please continue the discussion above.`;
+        } else {
+          fullPrompt = `${groupContext}\n\n${historyBlock}User: ${userPrompt}\n\n${displayName}, you're first to respond.`;
+        }
       } else {
         // Subsequent agents (within or across rounds) — see prior history
         // (if any), the new user prompt, and the in-progress group discussion
         // accumulating across the run so far.
-        fullPrompt = `${groupContext}\n\n${historyBlock}--- GROUP DISCUSSION ---\n\nUser: ${userPrompt}\n\n${transcript.join('\n\n')}\n\n--- YOUR TURN ---\n\n${displayName}, respond to the discussion above. Reference other agents by name when you agree or disagree.`;
+        //
+        // Phase 19-04 (UX-19-03): under continueOnly suppress the empty
+        // `User: ` line from the GROUP DISCUSSION header — there's no new
+        // user input, the prior history block + accumulating transcript
+        // give the agent enough context.
+        const userLine = continueOnly ? '' : `User: ${userPrompt}\n\n`;
+        fullPrompt = `${groupContext}\n\n${historyBlock}--- GROUP DISCUSSION ---\n\n${userLine}${transcript.join('\n\n')}\n\n--- YOUR TURN ---\n\n${displayName}, respond to the discussion above. Reference other agents by name when you agree or disagree.`;
       }
 
       log.info(
