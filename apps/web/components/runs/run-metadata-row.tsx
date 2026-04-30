@@ -9,6 +9,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { RunIdChip } from './run-id-chip';
+import { LiveIndicator } from './live-indicator';
 import { useRunStore } from '@/lib/stores/run-store';
 import { useRun } from '@/lib/hooks/use-run';
 import {
@@ -148,14 +149,21 @@ export function RunMetadataRow({
             instead of overflowing horizontally. flex-wrap handles tablet,
             tabular-nums keeps numbers aligned. */}
         <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1 text-[11px] tabular-nums text-muted-foreground">
-          <Badge
-            className={cn(
-              'px-2 py-0.5 text-[11px]',
-              STATUS_PILL[status] ?? STATUS_PILL.pending,
-            )}
-          >
-            {status}
-          </Badge>
+          {/* Phase 19-04 (UX-19-07): swap the static green executing pill
+              for a pulsing brand-orange Live indicator when status ===
+              'executing'. Cancelled / completed / pending render unchanged. */}
+          {status === 'executing' ? (
+            <LiveIndicator />
+          ) : (
+            <Badge
+              className={cn(
+                'px-2 py-0.5 text-[11px]',
+                STATUS_PILL[status] ?? STATUS_PILL.pending,
+              )}
+            >
+              {status}
+            </Badge>
+          )}
           <span aria-hidden="true">·</span>
           <RunIdChip runId={runId} className="text-[11px]" />
           <span aria-hidden="true">·</span>

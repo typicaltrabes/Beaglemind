@@ -8,6 +8,7 @@ import { useRun } from '@/lib/hooks/use-run';
 import { useMode } from '@/lib/mode-context';
 import { SlidersHorizontal } from 'lucide-react';
 import { Composer } from '@/components/transcript/composer';
+import { ContinueButton } from '@/components/transcript/continue-button';
 import { RunViewTabs } from '@/components/run-views/run-view-tabs';
 import { ProcessDrawer } from '@/components/studio/process-drawer';
 import { MobileDrawerWrapper } from '@/components/studio/process-drawer-mobile';
@@ -74,6 +75,12 @@ export default function RunPage({
           onShare={() => setShareOpen(true)}
           isStopPending={stopRun.isPending}
         />
+        {/* Phase 19-04 (UX-19-03): Continue conversation button. Auto-hides
+            when status !== 'executing' so the wrapper div stays in the tree
+            and the layout doesn't shift between rounds. */}
+        <div className="px-4 pb-2">
+          <ContinueButton runId={runId} status={run?.status ?? 'pending'} />
+        </div>
         {isStudio && (
           <div className="px-4 pb-2">
             <InterruptButton runId={runId} />

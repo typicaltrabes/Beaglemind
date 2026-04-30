@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { ChevronRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { RunCostBadge } from './run-cost-badge';
+import { LiveIndicator } from './live-indicator';
 import type { RunHistoryItem } from '@/lib/hooks/use-run-history';
 
 interface RunHistoryTableProps {
@@ -125,13 +126,20 @@ export function RunHistoryTable({ runs, isLoading }: RunHistoryTableProps) {
                   {truncate(run.title ?? run.prompt, 80)}
                 </td>
                 <td className="px-3 py-3">
-                  <Badge
-                    className={
-                      STATUS_VARIANT[run.status] ?? STATUS_VARIANT.pending
-                    }
-                  >
-                    {run.status}
-                  </Badge>
+                  {/* Phase 19-04 (UX-19-07): pulsing brand-orange Live
+                      indicator on executing rows; static pill for every
+                      other status (completed/cancelled/pending). */}
+                  {run.status === 'executing' ? (
+                    <LiveIndicator />
+                  ) : (
+                    <Badge
+                      className={
+                        STATUS_VARIANT[run.status] ?? STATUS_VARIANT.pending
+                      }
+                    >
+                      {run.status}
+                    </Badge>
+                  )}
                 </td>
                 <td className="px-3 py-3 text-right">
                   <RunCostBadge
