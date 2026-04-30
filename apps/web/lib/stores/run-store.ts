@@ -162,8 +162,16 @@ function processEvent(
   const newOrder = [...eventOrder, event.sequenceNumber];
   let newStatus = status;
 
+  // Phase 19: state_transition events now include inter-round markers
+  // (from='round-1', to='round-2') alongside lifecycle transitions
+  // (to='completed' / 'cancelled'). Only update status when `to` is an
+  // actual RunStatus value — ignore round-N values.
   if (event.type === 'state_transition' && typeof event.content.to === 'string') {
-    newStatus = event.content.to as RunStatus;
+    const to = event.content.to;
+    if (to === 'pending' || to === 'planned' || to === 'approved' ||
+        to === 'executing' || to === 'completed' || to === 'cancelled') {
+      newStatus = to as RunStatus;
+    }
   }
 
   return {

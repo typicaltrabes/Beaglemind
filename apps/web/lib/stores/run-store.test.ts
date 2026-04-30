@@ -130,3 +130,58 @@ describe('run-store: presence tracking (Plan 19-03)', () => {
     expect(useRunStore.getState().thinkingAgent).toBeNull();
   });
 });
+
+describe('run-store: state_transition status filter (Plan 19-01 inter-round markers)', () => {
+  beforeEach(() => {
+    seq = 0;
+    useRunStore.getState().initRun(RUN_ID);
+    useRunStore.setState({ status: 'executing' });
+  });
+
+  it('does NOT clobber status when state_transition.to is a round marker', () => {
+    useRunStore
+      .getState()
+      .appendEvent(
+        buildEnvelope('state_transition', 'system', { from: 'round-1', to: 'round-2' }),
+      );
+    expect(useRunStore.getState().status).toBe('executing');
+
+    useRunStore
+      .getState()
+      .appendEvent(
+        buildEnvelope('state_transition', 'system', { from: 'round-2', to: 'round-3' }),
+      );
+    expect(useRunStore.getState().status).toBe('executing');
+  });
+
+  it('updates status when state_transition.to is a real RunStatus (completed)', () => {
+    useRunStore
+      .getState()
+      .appendEvent(
+        buildEnvelope('state_transition', 'system', {
+          from: 'executing',
+          to: 'completed',
+          triggeredBy: 'idle-timeout',
+        }),
+      );
+    expect(useRunStore.getState().status).toBe('completed');
+  });
+
+  it('updates status when state_transition.to is cancelled', () => {
+    useRunStore
+      .getState()
+      .appendEvent(
+        buildEnvelope('state_transition', 'system', { from: 'executing', to: 'cancelled' }),
+      );
+    expect(useRunStore.getState().status).toBe('cancelled');
+  });
+
+  it('ignores state_transition with arbitrary non-status `to` strings', () => {
+    useRunStore
+      .getState()
+      .appendEvent(
+        buildEnvelope('state_transition', 'system', { from: 'whatever', to: 'something-else' }),
+      );
+    expect(useRunStore.getState().status).toBe('executing');
+  });
+});
