@@ -22,14 +22,25 @@ vi.mock('../connections/openclaw-cli-bridge', () => ({
   sendToAgent: vi.fn(async () => null),
 }));
 
-// Mock the @beagle-console/db package — runRoundTable's tail calls
-// db.update(...).set(...).where(...) to mark the run completed. We don't need
-// that to actually fire, just to not throw.
+// Mock the @beagle-console/db package — runRoundTable calls
+// db.update(...).set(...).where(...) for currentRound bookkeeping AND
+// db.select(...).from().where().limit() at the top via loadRunConfig.
+// Phase 19: provide a chain returning roundCount=1 so these legacy tests
+// run a single pass; multi-round behavior is in routes-multi-round.test.ts.
 vi.mock('@beagle-console/db', () => ({
   db: {
     update: vi.fn(() => ({
       set: vi.fn(() => ({
         where: vi.fn(async () => undefined),
+      })),
+    })),
+    select: vi.fn(() => ({
+      from: vi.fn(() => ({
+        where: vi.fn(() => ({
+          limit: vi.fn(async () => [
+            { roundCount: 1, idleTimeoutMinutes: 7, interRoundPauseMs: 0 },
+          ]),
+        })),
       })),
     })),
   },

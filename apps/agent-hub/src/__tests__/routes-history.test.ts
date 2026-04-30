@@ -21,11 +21,25 @@ vi.mock('../connections/openclaw-cli-bridge', () => ({
   sendToAgent: vi.fn(async () => null),
 }));
 
+// Phase 19: runRoundTable now calls db.select(...).from().where().limit() at
+// the top of the function (loadRunConfig). For these single-pass legacy
+// tests we mock the chain to return roundCount=1 so the assertions about
+// "called 3 times" (one round) still hold. Multi-round behavior has its
+// own dedicated tests in routes-multi-round.test.ts.
 vi.mock('@beagle-console/db', () => ({
   db: {
     update: vi.fn(() => ({
       set: vi.fn(() => ({
         where: vi.fn(async () => undefined),
+      })),
+    })),
+    select: vi.fn(() => ({
+      from: vi.fn(() => ({
+        where: vi.fn(() => ({
+          limit: vi.fn(async () => [
+            { roundCount: 1, idleTimeoutMinutes: 7, interRoundPauseMs: 0 },
+          ]),
+        })),
       })),
     })),
   },

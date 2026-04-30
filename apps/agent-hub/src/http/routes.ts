@@ -229,6 +229,47 @@ const HISTORY_EVENT_LIMIT = 30;
 const HISTORY_CHAR_BUDGET = 80_000;
 
 /**
+ * Phase 19: read per-run configuration snapshot from the tenant's runs row.
+ * Per CONTEXT.md Claude's Discretion: per-run snapshot (not project-scoped),
+ * so changing project defaults later does NOT retroactively affect in-flight
+ * runs. Falls back to defaults (3, 7, 1500) if the row is missing or the
+ * columns are NULL on legacy data — covers the gap between migration apply
+ * and the next runs.update that populates them.
+ */
+async function loadRunConfig(tenantId: string, runId: string): Promise<{
+  roundCount: number;
+  idleTimeoutMinutes: number;
+  interRoundPauseMs: number;
+}> {
+  try {
+    const { runs: runsTable } = createTenantSchema(tenantId);
+    const rows = await db
+      .select({
+        roundCount: runsTable.roundCount,
+        idleTimeoutMinutes: runsTable.idleTimeoutMinutes,
+        interRoundPauseMs: runsTable.interRoundPauseMs,
+      })
+      .from(runsTable)
+      .where(eq(runsTable.id, runId))
+      .limit(1);
+    const row = rows[0];
+    return {
+      roundCount: row?.roundCount ?? 3,
+      idleTimeoutMinutes: row?.idleTimeoutMinutes ?? 7,
+      interRoundPauseMs: row?.interRoundPauseMs ?? 1500,
+    };
+  } catch (err: any) {
+    log.error(
+      { error: err.message, runId, tenantId },
+      'loadRunConfig failed; using defaults',
+    );
+    return { roundCount: 3, idleTimeoutMinutes: 7, interRoundPauseMs: 1500 };
+  }
+}
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/**
  * Sequential round-table: each agent sees the full conversation so far.
  * Mo responds first, then Jarvis (seeing Mo's response), then Herman (seeing both).
  *
@@ -238,6 +279,17 @@ const HISTORY_CHAR_BUDGET = 80_000;
  * land with full context. The just-persisted user event (whose sequenceNumber
  * is `currentUserSequence`) is excluded from the block; it's already present
  * as `User: ${userPrompt}` later in the prompt.
+ *
+ * Phase 19: wraps the per-agent loop in an outer N-rounds loop (default N=3).
+ * Each round: mo -> jarvis -> herman, all seeing the accumulating in-run
+ * transcript. Between rounds k and k+1, emits a `state_transition` event with
+ * `content.from='round-k', content.to='round-(k+1)'` and sleeps
+ * `interRoundPauseMs` (default 1500ms). The vision pass-through fires on
+ * round 1 ONLY — rounds 2+ are text-only because the user's image is
+ * associated with the initial prompt only (single-image-per-prompt semantics
+ * from Phase 17). The unconditional `status: 'completed'` write that lived
+ * here pre-Phase-19 is REMOVED — the run stays `executing` indefinitely;
+ * Plan 19-02's idle-timeout watcher is the sole writer of `completed`.
  */
 export async function runRoundTable(
   runId: string,
@@ -249,12 +301,14 @@ export async function runRoundTable(
   imageAttachments?: Array<{ filename: string; mimeType: string; base64: string }>,
 ) {
   const agents = ['mo', 'jarvis', 'herman']; // Sam excluded — sentinel only
-  const transcript: string[] = [];
+  const { roundCount, interRoundPauseMs } = await loadRunConfig(tenantId, runId);
 
   // Phase 17.1-07: fetch prior conversation history. Wrapped in try/catch —
   // if eventStore.list throws (DB blip, schema missing), proceed with empty
   // history (graceful degradation; agents respond context-blind, but they DO
   // respond — better than silent failure per the threat register T-17-1-07-04).
+  // Loaded ONCE before the rounds loop because prior-event history doesn't
+  // change between rounds; the IN-RUN transcript accumulates separately below.
   let historyBlock = '';
   try {
     const priorEvents = await eventStore.list(tenantId, runId, { limit: HISTORY_EVENT_LIMIT });
@@ -294,151 +348,208 @@ export async function runRoundTable(
     historyBlock = '';
   }
 
-  for (const agentId of agents) {
-    const agentBridge = AGENT_BRIDGE_CONFIG[agentId];
-    if (!agentBridge) continue;
+  // Phase 19: accumulating IN-RUN transcript: every reply from every round
+  // goes here and feeds the GROUP DISCUSSION block of subsequent agents
+  // (within the round AND across rounds).
+  const transcript: string[] = [];
 
-    const bridgeCfg: OpenClawBridgeConfig = {
-      agentId,
-      sshHost: agentBridge.sshHost,
-      runId,
-      sudoUser: agentBridge.sudoUser,
-    };
-
-    // Build the prompt with explicit group discussion context
-    const displayName = agentId.charAt(0).toUpperCase() + agentId.slice(1);
-    let fullPrompt: string;
-
-    const groupContext = `[SYSTEM] You are on the Beagle Agent Console — a multi-agent discussion platform. This is NOT WhatsApp. This is NOT a 1:1 chat. You are in a GROUP DISCUSSION with other BeagleMind agents (Mo, Jarvis, Herman). The user can see everything all agents say. Respond directly to the topic — do not explain the platform architecture or how messaging works. Just answer the question and engage with what other agents said.`;
-
-    if (transcript.length === 0) {
-      // First agent — gets the user prompt with group context (and prior
-      // history, if any, between the system context and the new turn).
-      fullPrompt = `${groupContext}\n\n${historyBlock}User: ${userPrompt}\n\n${displayName}, you're first to respond.`;
-    } else {
-      // Subsequent agents — see the prior history (if any), the new user prompt,
-      // and the in-progress group discussion from this round.
-      fullPrompt = `${groupContext}\n\n${historyBlock}--- GROUP DISCUSSION ---\n\nUser: ${userPrompt}\n\n${transcript.join('\n\n')}\n\n--- YOUR TURN ---\n\n${displayName}, respond to the discussion above. Reference other agents by name when you agree or disagree.`;
+  for (let round = 1; round <= roundCount; round++) {
+    // Phase 19: bookkeeping for UI + the watcher (Plan 19-02 reads
+    // current_round). Best-effort — a failed write must not abort the round.
+    try {
+      const { runs: runsTable } = createTenantSchema(tenantId);
+      await db
+        .update(runsTable)
+        .set({ currentRound: round, updatedAt: new Date() })
+        .where(eq(runsTable.id, runId));
+    } catch (err: any) {
+      log.error(
+        { error: err.message, runId, round },
+        'Failed to update current_round (continuing)',
+      );
     }
 
-    log.info({ runId, agentId, transcriptLength: fullPrompt.length }, 'Sending to agent with full transcript');
+    let allFailedThisRound = true;
 
-    // Vision dispatch (Phase 17.1-09): when the user attached images AND this
-    // agent is vision-capable, bypass the text-only OpenClaw CLI bridge and
-    // call Anthropic Messages API directly with the image as a content block.
-    // SOUL.md is loaded as the system prompt so persona/voice carry through.
-    // Falls back to the CLI bridge if the vision path fails (no API key,
-    // persona unloadable, Anthropic error) so a vision-bridge outage never
-    // produces total silence.
-    const useVision =
-      imageAttachments && imageAttachments.length > 0 && VISION_CAPABLE.has(agentId);
+    for (const agentId of agents) {
+      const agentBridge = AGENT_BRIDGE_CONFIG[agentId];
+      if (!agentBridge) continue;
 
-    let agentFailureReason: string | null = null;
-    try {
-      let result: Awaited<ReturnType<typeof sendToAgent>> = null;
-      if (useVision) {
-        result = await sendToAgentWithVision(
-          { agentId, runId },
-          fullPrompt,
-          imageAttachments!,
-        );
+      const bridgeCfg: OpenClawBridgeConfig = {
+        agentId,
+        sshHost: agentBridge.sshHost,
+        runId,
+        sudoUser: agentBridge.sudoUser,
+      };
+
+      // Build the prompt with explicit group discussion context
+      const displayName = agentId.charAt(0).toUpperCase() + agentId.slice(1);
+      let fullPrompt: string;
+
+      const groupContext = `[SYSTEM] You are on the Beagle Agent Console — a multi-agent discussion platform. This is NOT WhatsApp. This is NOT a 1:1 chat. You are in a GROUP DISCUSSION with other BeagleMind agents (Mo, Jarvis, Herman). The user can see everything all agents say. Respond directly to the topic — do not explain the platform architecture or how messaging works. Just answer the question and engage with what other agents said.`;
+
+      if (transcript.length === 0) {
+        // Round 1, first agent — gets the user prompt with group context
+        // (and prior history, if any, between the system context and the
+        // new turn).
+        fullPrompt = `${groupContext}\n\n${historyBlock}User: ${userPrompt}\n\n${displayName}, you're first to respond.`;
+      } else {
+        // Subsequent agents (within or across rounds) — see prior history
+        // (if any), the new user prompt, and the in-progress group discussion
+        // accumulating across the run so far.
+        fullPrompt = `${groupContext}\n\n${historyBlock}--- GROUP DISCUSSION ---\n\nUser: ${userPrompt}\n\n${transcript.join('\n\n')}\n\n--- YOUR TURN ---\n\n${displayName}, respond to the discussion above. Reference other agents by name when you agree or disagree.`;
+      }
+
+      log.info(
+        { runId, agentId, round, transcriptLength: fullPrompt.length },
+        'Sending to agent with full transcript',
+      );
+
+      // Vision dispatch (Phase 17.1-09): when the user attached images AND
+      // this agent is vision-capable, bypass the text-only OpenClaw CLI
+      // bridge and call Anthropic Messages API directly with the image as a
+      // content block. SOUL.md is loaded as the system prompt so persona /
+      // voice carry through. Falls back to the CLI bridge if the vision path
+      // fails so a vision-bridge outage never produces total silence.
+      //
+      // Phase 19: vision pass-through fires on ROUND 1 ONLY. Rounds 2+ are
+      // text-only because the user's image is associated with the initial
+      // prompt only (single-image-per-prompt semantics from Phase 17). The
+      // round-1 vision turn already produced a textual reply that lives in
+      // the GROUP DISCUSSION block, so rounds 2+ inherit context as text.
+      const useVision =
+        round === 1 &&
+        imageAttachments &&
+        imageAttachments.length > 0 &&
+        VISION_CAPABLE.has(agentId);
+
+      let agentFailureReason: string | null = null;
+      try {
+        let result: Awaited<ReturnType<typeof sendToAgent>> = null;
+        if (useVision) {
+          result = await sendToAgentWithVision(
+            { agentId, runId },
+            fullPrompt,
+            imageAttachments!,
+          );
+          if (!result) {
+            log.warn(
+              { runId, agentId, round },
+              'Vision bridge returned null — falling back to text-only CLI bridge',
+            );
+          }
+        }
         if (!result) {
-          log.warn(
-            { runId, agentId },
-            'Vision bridge returned null — falling back to text-only CLI bridge',
+          result = await sendToAgent(bridgeCfg, fullPrompt);
+        }
+        if (result && result.text) {
+          await router.persistAndPublish(tenantId, {
+            type: 'agent_message',
+            agentId,
+            runId,
+            tenantId,
+            content: { text: result.text },
+            metadata: {
+              durationMs: result.durationMs,
+              costUsd: result.costUsd,
+              model: result.model,
+              round,
+            },
+          });
+
+          transcript.push(`${displayName}: ${result.text}`);
+          allFailedThisRound = false;
+
+          log.info(
+            { runId, agentId, round, responseLength: result.text.length },
+            'Agent responded in round-table',
+          );
+        } else {
+          // sendToAgent returns null on CLI bridge errors (non-zero exit,
+          // parse failure, non-ok status). Phase 17.1 gap-fix: surface this
+          // as a failure-bubble in the transcript so the user isn't met
+          // with silence.
+          agentFailureReason = result === null ? 'cli-bridge-null' : 'empty-text';
+        }
+      } catch (err: any) {
+        log.error(
+          { error: err.message, runId, agentId, round },
+          'Agent threw in round-table, continuing',
+        );
+        agentFailureReason = err.message || 'unknown-throw';
+      }
+
+      if (agentFailureReason) {
+        // Phase 17.1-07 (DEFECT-17-C): surface the failure in the transcript
+        // as a one-line marker so the user sees who failed instead of
+        // silence. We emit a normal `agent_message` (NOT a new event type)
+        // so SSE replay / chip rendering / scene grouping all keep working
+        // unchanged. The `metadata.errorKind: 'agent_failure'` flag lets
+        // future UI bits (or the sentinel) distinguish a real reply from a
+        // failure marker. Phase 19: the round still counts toward N (per
+        // CONTEXT.md decisions: "the round still counts toward N, the loop
+        // continues, but log a warning"). No early-stop.
+        try {
+          await router.persistAndPublish(tenantId, {
+            type: 'agent_message',
+            agentId,
+            runId,
+            tenantId,
+            content: {
+              text: `(${displayName} failed to respond — see logs for details)`,
+            },
+            metadata: {
+              errorKind: 'agent_failure',
+              errorMessage: agentFailureReason,
+              round,
+            },
+          });
+        } catch (publishErr: any) {
+          log.error(
+            { error: publishErr.message, runId, agentId, round },
+            'Failed to publish agent_failure marker event',
           );
         }
       }
-      if (!result) {
-        result = await sendToAgent(bridgeCfg, fullPrompt);
-      }
-      if (result && result.text) {
-        await router.persistAndPublish(tenantId, {
-          type: 'agent_message',
-          agentId,
-          runId,
-          tenantId,
-          content: { text: result.text },
-          metadata: { durationMs: result.durationMs, costUsd: result.costUsd, model: result.model },
-        });
-
-        transcript.push(`${displayName}: ${result.text}`);
-
-        log.info({ runId, agentId, responseLength: result.text.length }, 'Agent responded in round-table');
-      } else {
-        // sendToAgent returns null on CLI bridge errors (non-zero exit, parse
-        // failure, non-ok status). Phase 17.1 gap-fix: surface this as a
-        // failure-bubble in the transcript so the user isn't met with silence.
-        agentFailureReason = result === null ? 'cli-bridge-null' : 'empty-text';
-      }
-    } catch (err: any) {
-      log.error({ error: err.message, runId, agentId }, 'Agent threw in round-table, continuing');
-      agentFailureReason = err.message || 'unknown-throw';
     }
 
-    if (agentFailureReason) {
-      // Phase 17.1-07 (DEFECT-17-C): surface the failure in the transcript as
-      // a one-line marker so the user sees who failed instead of silence.
-      // We emit a normal `agent_message` (NOT a new event type) so SSE replay
-      // / chip rendering / scene grouping all keep working unchanged. The
-      // `metadata.errorKind: 'agent_failure'` flag lets future UI bits (or
-      // the sentinel) distinguish a real reply from a failure marker.
+    if (allFailedThisRound) {
+      log.warn(
+        { runId, round },
+        'All agents failed in round; continuing to next round (no early-stop per CONTEXT.md)',
+      );
+    }
+
+    // Phase 19: inter-round transition. Emit state_transition + sleep — but
+    // only if there's a NEXT round. Last round needs no transition event.
+    if (round < roundCount) {
       try {
         await router.persistAndPublish(tenantId, {
-          type: 'agent_message',
-          agentId,
+          type: 'state_transition',
+          agentId: 'system',
           runId,
           tenantId,
-          content: {
-            text: `(${displayName} failed to respond — see logs for details)`,
-          },
-          metadata: { errorKind: 'agent_failure', errorMessage: agentFailureReason },
+          content: { from: `round-${round}`, to: `round-${round + 1}` },
+          metadata: {},
         });
-      } catch (publishErr: any) {
+      } catch (err: any) {
         log.error(
-          { error: publishErr.message, runId, agentId },
-          'Failed to publish agent_failure marker event',
+          { error: err.message, runId, round },
+          'Failed to publish round transition (continuing)',
         );
       }
+      await sleep(interRoundPauseMs);
     }
   }
 
-  // UAT-14-02: mark the run completed in the DB so Run History stops showing
-  // the amber `executing` chip indefinitely. Best-effort — if the write fails
-  // the agent responses are already persisted, so the run is logically done.
-  try {
-    const { runs: runsTable } = createTenantSchema(tenantId);
-    await db
-      .update(runsTable)
-      .set({ status: 'completed', updatedAt: new Date() })
-      .where(eq(runsTable.id, runId));
-  } catch (err: any) {
-    log.error(
-      { error: err.message, runId, tenantId },
-      'Failed to mark run completed (continuing)',
-    );
-  }
-
-  // UAT-14-02: emit state_transition so live UIs flip the chip without a reload.
-  // Independent try/catch from the DB write — the DB row is the source of truth;
-  // a failed publish must not roll back the status update.
-  try {
-    await router.persistAndPublish(tenantId, {
-      type: 'state_transition',
-      agentId: 'system',
-      runId,
-      tenantId,
-      content: { from: 'executing', to: 'completed' },
-      metadata: {},
-    });
-  } catch (err: any) {
-    log.error(
-      { error: err.message, runId, tenantId },
-      'Failed to publish completed state_transition (continuing)',
-    );
-  }
-
-  log.info({ runId, agentCount: agents.length }, 'Round-table discussion complete');
+  log.info(
+    { runId, agentCount: agents.length, roundCount },
+    'Round-table discussion complete; run stays executing until idle-timeout',
+  );
+  // Phase 19: DO NOT mark the run completed here. Plan 19-02's idle-timeout
+  // watcher is the sole writer of `status: 'completed'`. The previous
+  // unconditional write (old routes.ts:413) is REMOVED on purpose —
+  // silence-driven lifecycle per UX-19-01.
 }
 
 /**
