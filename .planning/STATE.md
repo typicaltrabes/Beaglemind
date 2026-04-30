@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 19-03-PLAN.md
-last_updated: "2026-04-30T14:08:46.150Z"
+stopped_at: Completed 19-02-PLAN.md
+last_updated: "2026-04-30T14:10:34.077Z"
 last_activity: 2026-04-30
 progress:
   total_phases: 19
   completed_phases: 10
   total_plans: 82
-  completed_plans: 54
-  percent: 66
+  completed_plans: 55
+  percent: 67
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 19 (free-flowing-conversation) — EXECUTING
-Plan: 2 of 6 ✓ — moving to Plan 19-02 (idle-timeout watcher)
+Plan: 3 of 6 ✓ — moving to Plan 19-02 (idle-timeout watcher)
 Status: Ready to execute
 Last activity: 2026-04-30
 
-Progress: [███████░░░] 66%
+Progress: [███████░░░] 67%
 
 ## Performance Metrics
 
@@ -99,6 +99,7 @@ Progress: [███████░░░] 66%
 | Phase 17.1 P07 | 5min | 3 tasks | 6 files |
 | Phase 19-free-flowing-conversation P01 | 35min | 3 tasks | 7 files |
 | Phase 19 P03 | 8 | 3 tasks | 9 files |
+| Phase 19 P02 | 25min | 3 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -218,6 +219,9 @@ Recent decisions affecting current work:
 - Phase 19-03: Presence events flow through MessageRouter.persistAndPublish (not a side channel) so they get sequenceNumbers, reach SSE consumers, and reschedule the idle-timeout watcher uniformly
 - Phase 19-03: Run-store short-circuits presence events at the top of appendEvent — they drive ONLY the thinkingAgent slice (events/eventOrder stay clean, no SSE replay pollution)
 - Phase 19-03: Indicator clears on either matching _end OR the agent's actual reply (defense in depth); last-writer-wins on overlapping _start to prevent stuck indicators
+- 19-02: Channel format verified as run:tenantId:runId (matches RedisPublisher)
+- 19-02: Worker is sole writer of runs.status=completed and sole emitter of executing→completed state_transition
+- 19-02: BullMQ remove-then-add idiom for reschedule (jobId=tenantId:runId for dedup)
 
 ### Pending Todos
 
@@ -240,8 +244,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-04-30T14:08:46.147Z
-Stopped at: Completed 19-03-PLAN.md
+Last session: 2026-04-30T14:10:34.074Z
+Stopped at: Completed 19-02-PLAN.md
 Resume file: None
 
 **Planned Phase:** 11 (Run-view tabs: Writers' Room, Timeline, Boardroom, Canvas) — 5 plans — 2026-04-22T12:38:11.467Z
