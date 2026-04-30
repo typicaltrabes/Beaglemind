@@ -8,6 +8,7 @@ import { SceneDivider } from './scene-divider';
 import { CollapseFold } from './collapse-fold';
 import { renderEvent } from './render-event';
 import { WritersRoomSkeleton } from './loading-skeleton';
+import { AgentPresenceIndicator } from './agent-presence-indicator';
 
 // ---------- Render-item discriminated union ----------
 
@@ -26,6 +27,11 @@ interface MessageListProps {
 export function MessageList({ runId }: MessageListProps) {
   const events = useRunStore((s) => s.events);
   const scenes = useRunStore((s) => s.scenes);
+  // Phase 19-03 (UX-19-05): drive the inline `Mo is thinking…` indicator
+  // off the live presence slice. Renders below the Virtuoso list as a
+  // footer so the indicator stays pinned at the bottom and scrolls with
+  // the rest of the content rather than floating outside the list.
+  const thinkingAgent = useRunStore((s) => s.thinkingAgent);
 
   // Track whether user is at the bottom (for auto-scroll)
   const [isAtBottom, setIsAtBottom] = useState(true);
@@ -110,6 +116,16 @@ export function MessageList({ runId }: MessageListProps) {
       overscan={200}
       className="h-full"
       style={{ height: '100%' }}
+      components={{
+        // Phase 19-03 (UX-19-05): render the presence indicator as the
+        // virtual list's footer so it sits below the last event and the
+        // followOutput auto-scroll keeps it visible while a thinking_start
+        // is active. Returns null when no agent is thinking (no DOM cost).
+        Footer: () =>
+          thinkingAgent ? (
+            <AgentPresenceIndicator agentId={thinkingAgent} />
+          ) : null,
+      }}
     />
   );
 }

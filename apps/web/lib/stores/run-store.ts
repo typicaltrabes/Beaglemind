@@ -25,6 +25,14 @@ interface RunState {
   scenes: Scene[];
   currentSceneId: string | null;
   tldrSummary: string | null;
+
+  // Phase 19-03 (UX-19-05): per-agent presence indicator. Set by
+  // `presence_thinking_start`, cleared by either the matching
+  // `presence_thinking_end` OR an `agent_message` from the same agent
+  // (whichever first). Last-writer-wins on overlapping `_start` events.
+  // Reset to null on initRun. Presence events do NOT enter the events
+  // map / eventOrder array — they're a UI-only slice.
+  thinkingAgent: string | null;
 }
 
 interface RunActions {
@@ -48,6 +56,8 @@ const INITIAL_STATE: RunState = {
   scenes: [],
   currentSceneId: null,
   tldrSummary: null,
+  // Phase 19-03 (UX-19-05): no agent thinking by default.
+  thinkingAgent: null,
 };
 
 function deriveState(events: Record<number, HubEventEnvelope>, eventOrder: number[]) {
@@ -172,11 +182,52 @@ export const useRunStore = create<RunState & RunActions>()((set, get) => ({
 
   appendEvent: (event: HubEventEnvelope) => {
     const state = get();
+
+    // Phase 19-03 (UX-19-05): presence events drive the thinkingAgent slice
+    // ONLY — they do not enter the events map / eventOrder array, because
+    // (a) the SSE replay would re-fire them on reconnect, and (b) the
+    // transcript rendering doesn't need them as items (the live slice does).
+    if (event.type === 'presence_thinking_start') {
+      set({ thinkingAgent: event.agentId });
+      return;
+    }
+    if (event.type === 'presence_thinking_end') {
+      // Only clear if this end matches the currently-thinking agent. Avoids
+      // races where end-A arrives after start-B (last-writer-wins on starts).
+      if (state.thinkingAgent === event.agentId) {
+        set({ thinkingAgent: null });
+      }
+      return;
+    }
+    // presence_typing reserved for a future streaming bridge — same UI-only
+    // semantics. v1: ignored (no slice change, no event-array entry).
+    if (event.type === 'presence_typing') {
+      return;
+    }
+
+    // Phase 19-03: defense in depth — when an agent's actual reply lands
+    // before the explicit `_end` arrives (or the `_end` is dropped),
+    // clear the indicator early. The matching `_end` will be a no-op.
+    let nextThinkingAgent = state.thinkingAgent;
+    if (
+      event.type === 'agent_message' &&
+      state.thinkingAgent === event.agentId
+    ) {
+      nextThinkingAgent = null;
+    }
+
     const result = processEvent(state.events, state.eventOrder, state.lastSequence, state.status, event);
-    if (!result) return; // Dedup -- already seen
+    if (!result) {
+      // Dedup -- already seen. Still apply the thinkingAgent reset if the
+      // event would have otherwise triggered one (idempotent UI clear).
+      if (nextThinkingAgent !== state.thinkingAgent) {
+        set({ thinkingAgent: nextThinkingAgent });
+      }
+      return;
+    }
 
     const derived = deriveState(result.events, result.eventOrder);
-    set({ ...result, ...derived });
+    set({ ...result, ...derived, thinkingAgent: nextThinkingAgent });
   },
 
   appendEvents: (events: HubEventEnvelope[]) => {
@@ -185,9 +236,41 @@ export const useRunStore = create<RunState & RunActions>()((set, get) => ({
     let currentOrder = state.eventOrder;
     let currentLastSeq = state.lastSequence;
     let currentStatus = state.status;
+    let currentThinkingAgent = state.thinkingAgent;
     let changed = false;
+    let presenceChanged = false;
 
     for (const event of events) {
+      // Phase 19-03 (UX-19-05): presence events update the thinkingAgent
+      // slice only — same semantics as appendEvent above. They do not
+      // contribute to events / eventOrder. SSE replay on reconnect emits
+      // them in order, so the final thinkingAgent state matches the live
+      // hub state once replay completes.
+      if (event.type === 'presence_thinking_start') {
+        currentThinkingAgent = event.agentId;
+        presenceChanged = true;
+        continue;
+      }
+      if (event.type === 'presence_thinking_end') {
+        if (currentThinkingAgent === event.agentId) {
+          currentThinkingAgent = null;
+          presenceChanged = true;
+        }
+        continue;
+      }
+      if (event.type === 'presence_typing') {
+        continue;
+      }
+
+      // Phase 19-03: matching agent_message clears the indicator early.
+      if (
+        event.type === 'agent_message' &&
+        currentThinkingAgent === event.agentId
+      ) {
+        currentThinkingAgent = null;
+        presenceChanged = true;
+      }
+
       const result = processEvent(currentEvents, currentOrder, currentLastSeq, currentStatus, event);
       if (!result) continue;
       currentEvents = result.events;
@@ -197,7 +280,13 @@ export const useRunStore = create<RunState & RunActions>()((set, get) => ({
       changed = true;
     }
 
-    if (!changed) return;
+    if (!changed && !presenceChanged) return;
+
+    if (!changed) {
+      // Only the presence slice changed.
+      set({ thinkingAgent: currentThinkingAgent });
+      return;
+    }
 
     const derived = deriveState(currentEvents, currentOrder);
     set({
@@ -205,6 +294,7 @@ export const useRunStore = create<RunState & RunActions>()((set, get) => ({
       eventOrder: currentOrder,
       lastSequence: currentLastSeq,
       status: currentStatus,
+      thinkingAgent: currentThinkingAgent,
       ...derived,
     });
   },
