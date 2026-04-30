@@ -17,7 +17,7 @@ export interface OpenClawBridgeConfig {
 // once attachment blocks pushed the prompt past trivial size.
 const REMOTE_SCRIPT = `set -eu
 MSG=$(cat)
-exec timeout 120 \${OC_SUDO_USER:+sudo -u $OC_SUDO_USER} openclaw agent --message "$MSG" --session-id "$OC_SESSION_ID" --agent main --json`;
+exec timeout 240 \${OC_SUDO_USER:+sudo -u $OC_SUDO_USER} openclaw agent --message "$MSG" --session-id "$OC_SESSION_ID" --agent main --json`;
 
 function buildRemoteCommand(sudoUser: string, sessionId: string): string {
   // sudoUser is one of 'mo'|'sam'|'herman'|'' — known safe identifiers.
@@ -63,9 +63,9 @@ export async function sendToAgent(
     let stdout = '';
     let stderr = '';
     const killer = setTimeout(() => {
-      log.error({ agentId: cfg.agentId }, 'CLI bridge hard-timeout (130s) — killing ssh');
+      log.error({ agentId: cfg.agentId }, 'CLI bridge hard-timeout (250s) — killing ssh');
       proc.kill('SIGKILL');
-    }, 130_000);
+    }, 250_000);
 
     proc.stdout.on('data', (chunk) => {
       stdout += chunk.toString();
