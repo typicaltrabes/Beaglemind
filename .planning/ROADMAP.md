@@ -364,3 +364,43 @@ Plans:
 - Agent role tooltips (D-08)
 - Light theme proper QA pass (D-09)
 - Settings org + member management (D-10)
+- Timeline tab swim-lane redesign (D-11) — sketch 001 selected
+- Sticky sidebar on long-run scroll (D-12)
+
+
+
+### Phase 19: Free-flowing Conversation Substrate (INSERTED 2026-04-30, console-only)
+
+**Goal:** Transform the run experience from a single mo→jarvis→herman pass that hard-stops at `executing → completed` into a WhatsApp-parity substrate where conversations cycle multiple rounds, runs stay live until silence, the user sees per-agent presence indicators, and follow-up messages slot naturally into the next round. Console-only — agent-side cadence governance (when agents themselves stop talking) is explicitly out of scope and will be decided separately by Lucas + Henrik.
+
+**Why first:** Promoted to top priority over remaining Phase 18 items (D-11 timeline redesign, D-12 sticky sidebar, Studio mobile bug, Executive Summary export). Lucas's primary lever for proving Console can replace WhatsApp is the conversation richness that emerges from multi-round flow. The Timeline redesign (D-11) and sticky sidebar (D-12) only have rich content to display once Phase 19 is shipped.
+
+**Requirements:** UX-19-01..07 (added inline below)
+- UX-19-01: Run lifecycle is silence-driven, not pass-driven (no auto-complete after a single round)
+- UX-19-02: Round-table loops at least N=3 times by default, configurable per project
+- UX-19-03: User can manually trigger more rounds without typing a new prompt ("Continue conversation" affordance)
+- UX-19-04: Idle-timeout watcher completes a run after 7 minutes (configurable) of total silence — no user message and no agent event
+- UX-19-05: Each agent's thinking/typing state is broadcast over SSE and rendered in the transcript view between turns
+- UX-19-06: User messages sent during an active round-cycle are queued and injected into the next round's GROUP DISCUSSION block, never interrupting a mid-agent turn
+- UX-19-07: Live runs are visually distinct from completed runs so the user knows when continued typing extends the existing conversation vs. requires a new run
+
+**Depends on:** Phase 17.1 (vision pass-through), Phase 18 (UX first-class pass — partial)
+
+**Out of scope (NOT this phase):**
+- Any change to Mo / Jarvis / Herman SOUL.md or persona prompts
+- Any agent-side signal protocol (`[CONTINUE]`/`[DONE]`, tool calls, structured outputs)
+- Cost caps, round caps, or substance-detection heuristics on the console side — agents decide their own cadence
+- Mobile-specific UX polish for any of the above (desktop only for this phase; mobile inherits whatever lands)
+
+**Success Criteria** (what must be TRUE):
+1. After a user prompt, three rounds of `mo → jarvis → herman` execute automatically with the full transcript accumulating between rounds, before the run goes idle
+2. The "Run transitioned executing → completed" state_transition event does NOT fire at the end of round N; it fires only after the idle-timeout watcher detects 7 minutes of silence
+3. User can click a "Continue conversation" button and another N rounds execute against the existing transcript, without a new user message
+4. While Mo (or Jarvis or Herman) is generating a response, the run-detail UI shows a per-agent presence indicator ("Mo is thinking…") that disappears when their reply is published
+5. User message sent during an in-flight round is queued and injected at the start of the next round; the agent currently mid-turn is not interrupted
+6. A still-active run shows a visually distinct "live" state (vs. the green "completed" pill) in both the run-detail header and the run-history list
+7. End-to-end: starting from one user prompt and zero further input, a run cycles 3 rounds, stays live for 7 minutes, then auto-completes — total observable behavior matches WhatsApp's "agents talked for a while, then went quiet" rhythm
+
+**UI hint:** yes (presence indicators + Continue button + live-vs-completed distinction)
+
+**Plans:** TBD by `/gsd-plan-phase`
