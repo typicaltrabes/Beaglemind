@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: verifying
-stopped_at: Completed Phase 19 Plan 01 — multi-round substrate + auto-complete removed (3 tasks, 2 commits, 36 tests green)
-last_updated: "2026-04-30T13:57:59.161Z"
+status: executing
+stopped_at: Completed 19-03-PLAN.md
+last_updated: "2026-04-30T14:08:46.150Z"
 last_activity: 2026-04-30
 progress:
   total_phases: 19
   completed_phases: 10
   total_plans: 82
-  completed_plans: 53
-  percent: 65
+  completed_plans: 54
+  percent: 66
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 19 (free-flowing-conversation) — EXECUTING
-Plan: 1 of 6 ✓ — moving to Plan 19-02 (idle-timeout watcher)
-Status: Plan 19-01 complete (multi-round runRoundTable + auto-complete write removed); 36 tests green; ready for Plan 19-02
+Plan: 2 of 6 ✓ — moving to Plan 19-02 (idle-timeout watcher)
+Status: Ready to execute
 Last activity: 2026-04-30
 
-Progress: [█████████░] 95%
+Progress: [███████░░░] 66%
 
 ## Performance Metrics
 
@@ -98,6 +98,7 @@ Progress: [█████████░] 95%
 | Phase 17.1 P03 | 7min | 3 tasks | 5 files |
 | Phase 17.1 P07 | 5min | 3 tasks | 6 files |
 | Phase 19-free-flowing-conversation P01 | 35min | 3 tasks | 7 files |
+| Phase 19 P03 | 8 | 3 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -214,6 +215,9 @@ Recent decisions affecting current work:
 - [Phase 17.1]: [Phase 17.1-07]: HISTORY_EVENT_LIMIT=30 + HISTORY_CHAR_BUDGET=80000 belt-and-suspenders cap; drop-oldest-first via while-loop trim AFTER DB query .limit(30); empty try/catch wrapper around eventStore.list (T-17-1-07-04 graceful degradation)
 - Phase 19 Plan 01: per-run config snapshot via 5 new columns on runs table (not project-scoped) — changing project defaults later won't retroactively affect in-flight runs
 - Phase 19 Plan 01: auto-complete write removed from runRoundTable; Plan 19-02 idle-timeout watcher will be sole writer of status='completed'
+- Phase 19-03: Presence events flow through MessageRouter.persistAndPublish (not a side channel) so they get sequenceNumbers, reach SSE consumers, and reschedule the idle-timeout watcher uniformly
+- Phase 19-03: Run-store short-circuits presence events at the top of appendEvent — they drive ONLY the thinkingAgent slice (events/eventOrder stay clean, no SSE replay pollution)
+- Phase 19-03: Indicator clears on either matching _end OR the agent's actual reply (defense in depth); last-writer-wins on overlapping _start to prevent stuck indicators
 
 ### Pending Todos
 
@@ -236,8 +240,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-04-30T13:57:59.158Z
-Stopped at: Completed Phase 19 Plan 01 — multi-round substrate + auto-complete removed (3 tasks, 2 commits, 36 tests green)
+Last session: 2026-04-30T14:08:46.147Z
+Stopped at: Completed 19-03-PLAN.md
 Resume file: None
 
 **Planned Phase:** 11 (Run-view tabs: Writers' Room, Timeline, Boardroom, Canvas) — 5 plans — 2026-04-22T12:38:11.467Z
