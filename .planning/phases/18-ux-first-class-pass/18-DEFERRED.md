@@ -76,3 +76,21 @@ These were surfaced by the 2026-04-29 UX walkthrough but pushed out of Phase 18 
 - Should be `position: sticky` or `position: fixed` so agent presence + project nav are always reachable
 - Affects /runs, /runs/[id], /projects/[id] — anywhere the main content can exceed viewport height
 - Likely a one-line fix in the sidebar wrapper component but verify on mobile (sidebar is drawer on mobile, must not double-fix)
+
+### D-13 — Multi-round round-table (agents keep conversing)
+- Surfaced 2026-04-30: in the Console, agents answer once each and the run hard-stops at `executing → completed`. In WhatsApp, the same agents have rich back-and-forth conversations — that's where Lucas gets the best outcomes.
+- Root cause: `apps/agent-hub/src/http/routes.ts:242-442` — `runRoundTable` loops `['mo', 'jarvis', 'herman']` exactly once, then unconditionally writes `status: 'completed'` at line 413. No continuation logic.
+- The `state_transition` notification is a symptom, not a cause. The hard stop is the for-loop exiting.
+- Direction (recommended): **Option A — multi-round with stop conditions**
+  - Wrap the existing per-agent loop in an outer round loop, max N rounds (default 3)
+  - Stop conditions: (a) 2+ agents produce "no new substance" responses, (b) cost cap hit ($2/run default), (c) explicit "I'm done" from an agent
+  - Emit `state_transition` events between rounds (`round-1 → round-2`) so the redesigned timeline (D-11) shows depth
+  - PRIOR CONVERSATION block already implemented (lines 254-295) — accumulates naturally per round
+- **Spike prerequisite:** the "no new substance" detector is the hard part. False positives kill conversations early; false negatives let them run forever. Spike options:
+  - Embedding-similarity vs. prior turn (cosine > 0.85 → repeat)
+  - Regex/heuristic on hedge phrases ("I agree", "concur", "as Mo said")
+  - Cheap LLM classifier (but Lucas's no-Haiku rule means Sonnet — adds latency + cost per turn)
+- Alternative directions:
+  - Option B — reactive continuation (ask each agent if they want to respond → most natural but expensive)
+  - Option C — user-controlled "Continue" button (cheapest, manual lever)
+- This compounds with D-11: a redesigned multi-round timeline with swim lanes naturally shows the deeper conversation, which is the feature that makes this change visible.
