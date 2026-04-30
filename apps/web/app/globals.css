@@ -136,3 +136,17 @@
     @apply font-sans;
   }
 }
+
+/* Phase 19-03 (UX-19-05): presence indicator dot pulse.
+   Each dot fades from low to full opacity on a 1.4s loop with a 0.2s stagger,
+   producing the familiar `…` typing-indicator rhythm without external deps. */
+@keyframes presence-dot-pulse {
+  0%, 60%, 100% { opacity: 0.2; }
+  30% { opacity: 1; }
+}
+.presence-dot {
+  animation: presence-dot-pulse 1.4s infinite ease-in-out;
+}
+.presence-dot-1 { animation-delay: 0s; }
+.presence-dot-2 { animation-delay: 0.2s; }
+.presence-dot-3 { animation-delay: 0.4s; }

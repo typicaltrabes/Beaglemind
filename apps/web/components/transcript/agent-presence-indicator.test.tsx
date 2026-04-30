@@ -8,6 +8,10 @@
  * is active for the named agent. Must be visually distinct from a real
  * agent_message bubble (italic muted text + 3 staggered animated dots), and
  * announce politely to screen readers.
+ *
+ * NOTE: this test file uses plain Chai matchers (not jest-dom) to avoid the
+ * type-augmentation wiring that the rest of apps/web has chosen to skip
+ * (see user-message-attachments.test.tsx for prior art).
  */
 
 import { describe, it, expect } from 'vitest';
@@ -17,22 +21,24 @@ import { AgentPresenceIndicator } from './agent-presence-indicator';
 describe('AgentPresenceIndicator', () => {
   it('renders capitalized agent name + thinking text', () => {
     render(<AgentPresenceIndicator agentId="mo" />);
-    expect(screen.getByText(/Mo is thinking/i)).toBeInTheDocument();
+    // getByText throws if no match — assertion is the lookup itself.
+    const node = screen.getByText(/Mo is thinking/i);
+    expect(node).toBeTruthy();
   });
 
   it('renders three animated dots with staggered delay classes', () => {
     const { container } = render(<AgentPresenceIndicator agentId="jarvis" />);
     const dots = container.querySelectorAll('.presence-dot');
-    expect(dots).toHaveLength(3);
-    expect(dots[0]).toHaveClass('presence-dot-1');
-    expect(dots[1]).toHaveClass('presence-dot-2');
-    expect(dots[2]).toHaveClass('presence-dot-3');
+    expect(dots.length).toBe(3);
+    expect(dots[0]?.classList.contains('presence-dot-1')).toBe(true);
+    expect(dots[1]?.classList.contains('presence-dot-2')).toBe(true);
+    expect(dots[2]?.classList.contains('presence-dot-3')).toBe(true);
   });
 
   it('has role=status + aria-live=polite for screen readers', () => {
     render(<AgentPresenceIndicator agentId="herman" />);
     const region = screen.getByRole('status');
-    expect(region).toHaveAttribute('aria-live', 'polite');
+    expect(region.getAttribute('aria-live')).toBe('polite');
   });
 
   it('returns null when agentId is empty', () => {
