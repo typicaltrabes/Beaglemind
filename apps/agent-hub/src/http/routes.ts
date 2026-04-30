@@ -236,6 +236,49 @@ const HISTORY_CHAR_BUDGET = 80_000;
  * columns are NULL on legacy data — covers the gap between migration apply
  * and the next runs.update that populates them.
  */
+/**
+ * Phase 19-03 (UX-19-05): emit a per-agent presence indicator event.
+ *
+ * Called immediately before each bridge call (`phase: 'start'`) and immediately
+ * after the bridge call returns or throws (`phase: 'end'`, fired from the
+ * try/finally below). Wrapped in its own try/catch so a failed publish never
+ * blocks the actual agent invocation — presence is best-effort.
+ *
+ * Both events flow through MessageRouter.persistAndPublish, which means they:
+ *   (a) get a sequenceNumber + timestamp (so SSE replay sees them ordered),
+ *   (b) reach SSE consumers via Redis pub/sub, and
+ *   (c) reschedule the idle-timeout watcher (Plan 19-02) — typing counts as activity.
+ *
+ * The run-store on the web side (Plan 19-03 Task 3) drives the inline
+ * `Mo is thinking…` indicator off the live `presence_thinking_start` events
+ * and clears on either the matching `_end` OR the agent's actual reply.
+ */
+async function emitPresence(
+  router: MessageRouter,
+  tenantId: string,
+  runId: string,
+  agentId: string,
+  phase: 'start' | 'end',
+): Promise<void> {
+  const type =
+    phase === 'start' ? 'presence_thinking_start' : 'presence_thinking_end';
+  try {
+    await router.persistAndPublish(tenantId, {
+      type,
+      agentId,
+      runId,
+      tenantId,
+      content: { event: type },
+      metadata: {},
+    });
+  } catch (err: any) {
+    log.error(
+      { error: err.message, runId, agentId, phase },
+      'Failed to emit presence event (continuing)',
+    );
+  }
+}
+
 async function loadRunConfig(tenantId: string, runId: string): Promise<{
   roundCount: number;
   idleTimeoutMinutes: number;
@@ -423,93 +466,108 @@ export async function runRoundTable(
         imageAttachments.length > 0 &&
         VISION_CAPABLE.has(agentId);
 
-      let agentFailureReason: string | null = null;
+      // Phase 19-03 (UX-19-05): wrap the per-agent bridge call with
+      // presence_thinking_start (before) + presence_thinking_end (after).
+      // try/finally guarantees _end fires even if the bridge throws
+      // synchronously. Both emissions are best-effort (emitPresence has its
+      // own try/catch) so a Redis hiccup never blocks the agent invocation.
+      await emitPresence(router, tenantId, runId, agentId, 'start');
       try {
-        let result: Awaited<ReturnType<typeof sendToAgent>> = null;
-        if (useVision) {
-          result = await sendToAgentWithVision(
-            { agentId, runId },
-            fullPrompt,
-            imageAttachments!,
-          );
+        let agentFailureReason: string | null = null;
+        try {
+          let result: Awaited<ReturnType<typeof sendToAgent>> = null;
+          if (useVision) {
+            result = await sendToAgentWithVision(
+              { agentId, runId },
+              fullPrompt,
+              imageAttachments!,
+            );
+            if (!result) {
+              log.warn(
+                { runId, agentId, round },
+                'Vision bridge returned null — falling back to text-only CLI bridge',
+              );
+            }
+          }
           if (!result) {
-            log.warn(
-              { runId, agentId, round },
-              'Vision bridge returned null — falling back to text-only CLI bridge',
+            result = await sendToAgent(bridgeCfg, fullPrompt);
+          }
+          if (result && result.text) {
+            await router.persistAndPublish(tenantId, {
+              type: 'agent_message',
+              agentId,
+              runId,
+              tenantId,
+              content: { text: result.text },
+              metadata: {
+                durationMs: result.durationMs,
+                costUsd: result.costUsd,
+                model: result.model,
+                round,
+              },
+            });
+
+            transcript.push(`${displayName}: ${result.text}`);
+            allFailedThisRound = false;
+
+            log.info(
+              { runId, agentId, round, responseLength: result.text.length },
+              'Agent responded in round-table',
+            );
+          } else {
+            // sendToAgent returns null on CLI bridge errors (non-zero exit,
+            // parse failure, non-ok status). Phase 17.1 gap-fix: surface this
+            // as a failure-bubble in the transcript so the user isn't met
+            // with silence.
+            agentFailureReason = result === null ? 'cli-bridge-null' : 'empty-text';
+          }
+        } catch (err: any) {
+          log.error(
+            { error: err.message, runId, agentId, round },
+            'Agent threw in round-table, continuing',
+          );
+          agentFailureReason = err.message || 'unknown-throw';
+        }
+
+        if (agentFailureReason) {
+          // Phase 17.1-07 (DEFECT-17-C): surface the failure in the transcript
+          // as a one-line marker so the user sees who failed instead of
+          // silence. We emit a normal `agent_message` (NOT a new event type)
+          // so SSE replay / chip rendering / scene grouping all keep working
+          // unchanged. The `metadata.errorKind: 'agent_failure'` flag lets
+          // future UI bits (or the sentinel) distinguish a real reply from a
+          // failure marker. Phase 19: the round still counts toward N (per
+          // CONTEXT.md decisions: "the round still counts toward N, the loop
+          // continues, but log a warning"). No early-stop.
+          try {
+            await router.persistAndPublish(tenantId, {
+              type: 'agent_message',
+              agentId,
+              runId,
+              tenantId,
+              content: {
+                text: `(${displayName} failed to respond — see logs for details)`,
+              },
+              metadata: {
+                errorKind: 'agent_failure',
+                errorMessage: agentFailureReason,
+                round,
+              },
+            });
+          } catch (publishErr: any) {
+            log.error(
+              { error: publishErr.message, runId, agentId, round },
+              'Failed to publish agent_failure marker event',
             );
           }
         }
-        if (!result) {
-          result = await sendToAgent(bridgeCfg, fullPrompt);
-        }
-        if (result && result.text) {
-          await router.persistAndPublish(tenantId, {
-            type: 'agent_message',
-            agentId,
-            runId,
-            tenantId,
-            content: { text: result.text },
-            metadata: {
-              durationMs: result.durationMs,
-              costUsd: result.costUsd,
-              model: result.model,
-              round,
-            },
-          });
-
-          transcript.push(`${displayName}: ${result.text}`);
-          allFailedThisRound = false;
-
-          log.info(
-            { runId, agentId, round, responseLength: result.text.length },
-            'Agent responded in round-table',
-          );
-        } else {
-          // sendToAgent returns null on CLI bridge errors (non-zero exit,
-          // parse failure, non-ok status). Phase 17.1 gap-fix: surface this
-          // as a failure-bubble in the transcript so the user isn't met
-          // with silence.
-          agentFailureReason = result === null ? 'cli-bridge-null' : 'empty-text';
-        }
-      } catch (err: any) {
-        log.error(
-          { error: err.message, runId, agentId, round },
-          'Agent threw in round-table, continuing',
-        );
-        agentFailureReason = err.message || 'unknown-throw';
-      }
-
-      if (agentFailureReason) {
-        // Phase 17.1-07 (DEFECT-17-C): surface the failure in the transcript
-        // as a one-line marker so the user sees who failed instead of
-        // silence. We emit a normal `agent_message` (NOT a new event type)
-        // so SSE replay / chip rendering / scene grouping all keep working
-        // unchanged. The `metadata.errorKind: 'agent_failure'` flag lets
-        // future UI bits (or the sentinel) distinguish a real reply from a
-        // failure marker. Phase 19: the round still counts toward N (per
-        // CONTEXT.md decisions: "the round still counts toward N, the loop
-        // continues, but log a warning"). No early-stop.
-        try {
-          await router.persistAndPublish(tenantId, {
-            type: 'agent_message',
-            agentId,
-            runId,
-            tenantId,
-            content: {
-              text: `(${displayName} failed to respond — see logs for details)`,
-            },
-            metadata: {
-              errorKind: 'agent_failure',
-              errorMessage: agentFailureReason,
-              round,
-            },
-          });
-        } catch (publishErr: any) {
-          log.error(
-            { error: publishErr.message, runId, agentId, round },
-            'Failed to publish agent_failure marker event',
-          );
-        }
+      } finally {
+        // Phase 19-03: presence_thinking_end is guaranteed to fire — even if
+        // the bridge call throws synchronously above. The web run-store will
+        // also clear the indicator early on the matching agent_message, so
+        // a stuck indicator requires BOTH the agent to throw AND the _end
+        // emission to fail (defense in depth per the threat register).
+        await emitPresence(router, tenantId, runId, agentId, 'end');
       }
     }
 
